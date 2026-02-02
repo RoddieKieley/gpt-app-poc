@@ -17,10 +17,10 @@
 
 **Purpose**: Minimal runnable skeleton and build tooling
 
-- [ ] T001 Create root project scaffolding files in `package.json`, `tsconfig.json`, `vite.config.ts`
-- [ ] T002 [P] Add UI entry point scaffold in `mcp-app.html`
-- [ ] T003 [P] Add UI script scaffold in `src/mcp-app.ts`
-- [ ] T004 [P] Add MCP server scaffold in `server.ts`
+- [x] T001 Create root project scaffolding files in `package.json`, `tsconfig.json`, `vite.config.ts`
+- [x] T002 [P] Add UI entry point scaffold in `mcp-app.html`
+- [x] T003 [P] Add UI script scaffold in `src/mcp-app.ts`
+- [x] T004 [P] Add MCP server scaffold in `server.ts`
 
 ---
 
@@ -30,9 +30,9 @@
 
 **⚠️ CRITICAL**: No user story work can begin until this phase is complete
 
-- [ ] T005 Configure Vite single-file build to output `dist/mcp-app.html` in `vite.config.ts`
-- [ ] T006 Wire npm scripts for build and serve in `package.json`
-- [ ] T007 Implement HTTP MCP transport skeleton and Express server boot in `server.ts`
+- [x] T005 Configure Vite single-file build to output `dist/mcp-app.html` in `vite.config.ts`
+- [x] T006 Wire npm scripts for build and serve in `package.json`
+- [x] T007 Implement HTTP MCP transport skeleton and Express server boot in `server.ts`
 
 **Checkpoint**: Foundation ready - user story implementation can now begin
 
@@ -46,11 +46,11 @@
 
 ### Implementation for User Story 1
 
-- [ ] T008 [US1] Define `hello-world` tool contract and ui:// resource registration in `server.ts`
-- [ ] T009 [US1] Serve the bundled UI resource from `dist/mcp-app.html` in `server.ts`
-- [ ] T010 [US1] Implement Hello World UI rendering and tool-result handling in `src/mcp-app.ts`
-- [ ] T011 [US1] Implement UI-triggered tool call and updated greeting in `src/mcp-app.ts`
-- [ ] T012 [US1] Ensure initial greeting appears in `mcp-app.html` and is updated by UI logic
+- [x] T008 [US1] Define `hello-world` tool contract and ui:// resource registration in `server.ts`
+- [x] T009 [US1] Serve the bundled UI resource from `dist/mcp-app.html` in `server.ts`
+- [x] T010 [US1] Implement Hello World UI rendering and tool-result handling in `src/mcp-app.ts`
+- [x] T011 [US1] Implement UI-triggered tool call and updated greeting in `src/mcp-app.ts`
+- [x] T012 [US1] Ensure initial greeting appears in `mcp-app.html` and is updated by UI logic
 
 **Checkpoint**: User Story 1 is functional and independently testable
 
