@@ -83,4 +83,4 @@ and delivered in small, independently testable increments.
 - Reviews MUST verify compliance with this constitution; non-compliant changes
   must be revised before merge.
 
-**Version**: 0.1.0 | **Ratified**: TODO(RATIFICATION_DATE) | **Last Amended**: 2026-02-02
+**Version**: 0.1.0 | **Ratified**: 2026-02-02 | **Last Amended**: 2026-02-02
