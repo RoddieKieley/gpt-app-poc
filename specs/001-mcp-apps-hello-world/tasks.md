@@ -75,8 +75,8 @@
 
 **Purpose**: Quality checks and documentation alignment
 
-- [ ] T015 [P] Validate quickstart steps and update `specs/001-mcp-apps-hello-world/quickstart.md` if needed
-- [ ] T016 [P] Review constitution compliance for MCP Apps strictness and text fallback behavior
+- [x] T015 [P] Validate quickstart steps and update `specs/001-mcp-apps-hello-world/quickstart.md` if needed
+- [x] T016 [P] Review constitution compliance for MCP Apps strictness and text fallback behavior
 
 ---
 

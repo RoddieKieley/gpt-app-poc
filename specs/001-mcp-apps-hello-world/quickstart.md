@@ -23,3 +23,8 @@ npm run serve
 - Call the `hello-world` tool and confirm:
   - A text greeting is returned.
   - The UI renders and can trigger a second greeting update.
+- Call the tool from a text-only host and confirm the response still explains success without UI.
+
+## Compliance Checks
+- Verify no host-specific runtime APIs are used in the UI.
+- Confirm all UI flows have a complete text fallback.
