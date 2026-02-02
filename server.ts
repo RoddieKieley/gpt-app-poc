@@ -46,7 +46,7 @@ registerAppTool(
       content: [
         {
           type: "text",
-          text: `Hello, ${name}!`,
+          text: `Hello, ${name}! If the UI is not available, this text confirms the tool ran successfully.`,
         },
       ],
     };
@@ -59,10 +59,24 @@ registerAppResource(
   resourceUri,
   { mimeType: RESOURCE_MIME_TYPE },
   async () => {
-    const html = await fs.readFile(
-      path.join(__dirname, "dist", "mcp-app.html"),
-      "utf-8",
-    );
+    let html: string;
+    try {
+      html = await fs.readFile(
+        path.join(__dirname, "dist", "mcp-app.html"),
+        "utf-8",
+      );
+    } catch (error) {
+      html = `<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <title>MCP Apps Hello World</title>
+  </head>
+  <body>
+    <p>UI bundle unavailable. Use the text response as fallback.</p>
+  </body>
+</html>`;
+    }
     return {
       contents: [
         {

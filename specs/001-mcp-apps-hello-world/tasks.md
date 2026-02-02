@@ -64,8 +64,8 @@
 
 ### Implementation for User Story 2
 
-- [ ] T013 [US2] Ensure `hello-world` tool response includes a complete text fallback in `server.ts`
-- [ ] T014 [US2] Add fallback/error messaging for failed UI interactions in `server.ts` and `src/mcp-app.ts`
+- [x] T013 [US2] Ensure `hello-world` tool response includes a complete text fallback in `server.ts`
+- [x] T014 [US2] Add fallback/error messaging for failed UI interactions in `server.ts` and `src/mcp-app.ts`
 
 **Checkpoint**: User Story 2 is functional and independently testable
 

@@ -26,6 +26,7 @@ refreshBtn.addEventListener("click", async () => {
     const text = result.content?.find((item) => item.type === "text")?.text;
     statusEl.textContent = text ?? "Hello from the UI.";
   } catch (error) {
-    statusEl.textContent = "Tool call failed. Check server logs.";
+    statusEl.textContent =
+      "Tool call failed. Use the text response as fallback.";
   }
 });
