@@ -5,6 +5,12 @@
 **Status**: Draft  
 **Input**: User description: "Create a first-iteration specification for a strict MCP Apps–compliant Hello World ChatGPT App, including a complete project structure, ui:// resource behavior, JSON-RPC UI bridge, and text fallback requirements."
 
+## Clarifications
+
+### Session 2026-02-02
+
+- Q: Which MCP transport(s) must the Hello World server support in this increment? → A: HTTP (streamable) only
+
 ## User Scenarios & Testing *(mandatory)*
 
 ### User Story 1 - Verify MCP Apps Hello World (Priority: P1)
@@ -53,12 +59,14 @@ A user in a text-only or non-UI host receives a complete, readable response that
 - **FR-005**: The system MUST remain host-agnostic and portable across MCP Apps-compatible clients without relying on host-specific behavior.
 - **FR-006**: If the UI cannot render or an interaction fails, the system MUST provide a readable error or fallback message in text.
 - **FR-007**: The delivery MUST include a complete, documented project skeleton covering server, UI, and build/run steps that enables a new contributor to run the Hello World experience without additional guidance.
+- **FR-008**: The system MUST be reachable via an HTTP-based MCP transport for this increment.
 
 ## Assumptions & Dependencies
 
 - The host supports MCP tool invocation, and UI rendering may or may not be available.
 - No diagnostics collection, credentials, or external system access are required for this first increment.
 - The delivered project skeleton includes all files needed to run the Hello World experience locally.
+- This increment limits MCP transport support to HTTP.
 
 ## Success Criteria *(mandatory)*
 
