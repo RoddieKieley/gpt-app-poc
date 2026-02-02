@@ -82,6 +82,13 @@
   Fill them out with the right functional requirements.
 -->
 
+<!--
+  If diagnostics or system data are involved, include explicit requirements for:
+  - Human permission and human-provided credentials
+  - Read-only collection via approved MCP servers
+  - Redaction and least-scope handling
+-->
+
 ### Functional Requirements
 
 - **FR-001**: System MUST [specific capability, e.g., "allow users to create accounts"]

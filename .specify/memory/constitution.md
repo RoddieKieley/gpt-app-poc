@@ -1,50 +1,86 @@
-# [PROJECT_NAME] Constitution
-<!-- Example: Spec Constitution, TaskFlow Constitution, etc. -->
+<!--
+Sync Impact Report
+- Version change: none -> 0.1.0
+- Modified principles: none (initial constitution)
+- Added sections: Security & Data Handling, Architecture & Compliance, Development Workflow & Quality Gates
+- Removed sections: placeholder template tokens
+- Templates requiring updates:
+  - .specify/templates/plan-template.md (updated)
+  - .specify/templates/spec-template.md (updated)
+  - .specify/templates/tasks-template.md (updated)
+- Follow-up TODOs:
+  - TODO(RATIFICATION_DATE): original adoption date not provided
+-->
+# GPT App PoC Constitution
 
 ## Core Principles
 
-### [PRINCIPLE_1_NAME]
-<!-- Example: I. Library-First -->
-[PRINCIPLE_1_DESCRIPTION]
-<!-- Example: Every feature starts as a standalone library; Libraries must be self-contained, independently testable, documented; Clear purpose required - no organizational-only libraries -->
+### 1. Support-Workflow Fidelity
+The system MUST model the Red Hat support case lifecycle (severity, diagnostics,
+escalation) and treat sosreport/must-gather-equivalent artifacts as primary
+diagnostics. Outputs MUST be repeatable and optimized for support engineer use.
 
-### [PRINCIPLE_2_NAME]
-<!-- Example: II. CLI Interface -->
-[PRINCIPLE_2_DESCRIPTION]
-<!-- Example: Every library exposes functionality via CLI; Text in/out protocol: stdin/args → stdout, errors → stderr; Support JSON + human-readable formats -->
+### 2. Human-Authorized Diagnostics
+Diagnostics MAY be executed only via approved read-only MCP servers, and only
+with explicit human permission and human-provided credentials. The app MUST NOT
+run diagnostics implicitly or perform any write/state-changing operations.
 
-### [PRINCIPLE_3_NAME]
-<!-- Example: III. Test-First (NON-NEGOTIABLE) -->
-[PRINCIPLE_3_DESCRIPTION]
-<!-- Example: TDD mandatory: Tests written → User approved → Tests fail → Then implement; Red-Green-Refactor cycle strictly enforced -->
+### 3. Privacy-First Diagnostics
+The system MUST minimize data exposure, guide redaction, and prompt for review
+before ingesting or sharing diagnostics. Sensitive data MUST be treated as
+explicitly protected by default.
 
-### [PRINCIPLE_4_NAME]
-<!-- Example: IV. Integration Testing -->
-[PRINCIPLE_4_DESCRIPTION]
-<!-- Example: Focus areas requiring integration tests: New library contract tests, Contract changes, Inter-service communication, Shared schemas -->
+### 4. Strict MCP Apps Compliance
+Implement MCP core and the MCP Apps extension only (ui:// resources and JSON-RPC
+UI bridge). Do NOT rely on ChatGPT-specific runtime APIs or host-only metadata.
 
-### [PRINCIPLE_5_NAME]
-<!-- Example: V. Observability, VI. Versioning & Breaking Changes, VII. Simplicity -->
-[PRINCIPLE_5_DESCRIPTION]
-<!-- Example: Text I/O ensures debuggability; Structured logging required; Or: MAJOR.MINOR.BUILD format; Or: Start simple, YAGNI principles -->
+### 5. Graceful Degradation
+Every UI flow MUST include a complete text fallback so CLI and non-UI hosts
+remain fully usable and informative.
 
-## [SECTION_2_NAME]
-<!-- Example: Additional Constraints, Security Requirements, Performance Standards, etc. -->
+### 6. Portability and Interop
+Server logic MUST be host-agnostic and portable across MCP-aware clients without
+branching on the host environment.
 
-[SECTION_2_CONTENT]
-<!-- Example: Technology stack requirements, compliance standards, deployment policies, etc. -->
+### 7. Incremental Spec-Driven Delivery
+Each feature MUST be introduced through an explicit spec, plan, and task list,
+and delivered in small, independently testable increments.
 
-## [SECTION_3_NAME]
-<!-- Example: Development Workflow, Review Process, Quality Gates, etc. -->
+## Security & Data Handling
 
-[SECTION_3_CONTENT]
-<!-- Example: Code review requirements, testing gates, deployment approval process, etc. -->
+- Diagnostics collection MUST use approved MCP servers with explicit human
+  consent and human-provided credentials. All diagnostics MUST be read-only.
+- Sensitive data (IPs, hostnames, credentials, keys, tokens) MUST be identified
+  and redacted before analysis or sharing.
+- Data ingestion MUST be opt-in with clear prompts; default to redaction and
+  least-scope collection.
+- Acceptable sources include sosreport, must-gather, logs, and approved MCP
+  servers that provide data/metrics in formats required by sosreport and
+  must-gather outputs; unsolicited collection is prohibited.
+- Retention MUST be minimal and explicitly authorized.
+
+## Architecture & Compliance
+
+- MCP server MUST implement initialize, tools/list, and tools/call and return
+  ui:// resources with mcp.app annotations when UI is required.
+- UI MUST communicate via MCP Apps JSON-RPC postMessage only; no window.openai or
+  host-specific runtime dependencies.
+- Tool responses MUST always include content text fallbacks.
+
+## Development Workflow & Quality Gates
+
+- Each increment MUST include spec.md, plan.md, and tasks.md updates.
+- Tests are REQUIRED for diagnostics tool calls, redaction logic, and text
+  fallback behavior.
+- Security review is REQUIRED for any new diagnostic data access or permissions.
+- PRs MUST cite which constitution principles are addressed.
 
 ## Governance
-<!-- Example: Constitution supersedes all other practices; Amendments require documentation, approval, migration plan -->
 
-[GOVERNANCE_RULES]
-<!-- Example: All PRs/reviews must verify compliance; Complexity must be justified; Use [GUIDANCE_FILE] for runtime development guidance -->
+- This constitution supersedes all other project documentation.
+- Amendments require a written rationale, migration plan, and semantic version
+  bump recorded in this file.
+- Reviews MUST verify compliance with this constitution; non-compliant changes
+  must be revised before merge.
 
-**Version**: [CONSTITUTION_VERSION] | **Ratified**: [RATIFICATION_DATE] | **Last Amended**: [LAST_AMENDED_DATE]
-<!-- Example: Version: 2.1.1 | Ratified: 2025-06-13 | Last Amended: 2025-07-16 -->
+**Version**: 0.1.0 | **Ratified**: TODO(RATIFICATION_DATE) | **Last Amended**: 2026-02-02

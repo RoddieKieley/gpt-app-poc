@@ -31,7 +31,11 @@
 
 *GATE: Must pass before Phase 0 research. Re-check after Phase 1 design.*
 
-[Gates determined based on constitution file]
+- Diagnostics are executed only via approved read-only MCP servers with explicit
+  human permission and human-provided credentials.
+- MCP Apps compliance: ui:// resources + JSON-RPC UI bridge, no host-specific APIs.
+- All UI flows include text fallbacks for non-UI hosts.
+- Redaction and least-scope data handling are enforced for diagnostic data.
 
 ## Project Structure
 
