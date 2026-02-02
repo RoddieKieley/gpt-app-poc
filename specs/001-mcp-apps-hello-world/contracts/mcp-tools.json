@@ -1,0 +1,26 @@
+{
+  "tools": [
+    {
+      "name": "hello-world",
+      "description": "Return a greeting and render the Hello World UI resource when available.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "description": "Optional name to greet."
+          }
+        }
+      },
+      "output": {
+        "content": [
+          {
+            "type": "text",
+            "description": "Text fallback greeting for non-UI hosts."
+          }
+        ],
+        "uiResourceUri": "ui://hello-world/app.html"
+      }
+    }
+  ]
+}
