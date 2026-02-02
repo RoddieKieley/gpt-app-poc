@@ -10,6 +10,7 @@ import express from "express";
 import fs from "node:fs/promises";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
+import { z } from "zod";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
@@ -27,15 +28,9 @@ registerAppTool(
     title: "Hello World",
     description:
       "Returns a greeting and renders a Hello World UI in MCP Apps hosts.",
-    inputSchema: {
-      type: "object",
-      properties: {
-        name: {
-          type: "string",
-          description: "Optional name to greet.",
-        },
-      },
-    },
+    inputSchema: z.object({
+      name: z.string().optional().describe("Optional name to greet."),
+    }),
     _meta: { ui: { resourceUri } },
   },
   async (args) => {
