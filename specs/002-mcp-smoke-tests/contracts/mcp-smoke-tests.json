@@ -1,0 +1,26 @@
+{
+  "mcpSmokeTests": {
+    "server": {
+      "host": "localhost",
+      "port": 3000
+    },
+    "initialize": {
+      "timeoutSeconds": 10
+    },
+    "toolsList": {
+      "requiredTools": [
+        "hello-world"
+      ]
+    },
+    "toolCall": {
+      "tool": "hello-world",
+      "requiresTextFallback": true,
+      "uiResourceUri": "ui://hello-world/app.html"
+    },
+    "uiResource": {
+      "uri": "ui://hello-world/app.html",
+      "expectContent": true,
+      "headlessAutomationRequired": false
+    }
+  }
+}

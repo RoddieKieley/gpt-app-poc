@@ -22,6 +22,7 @@ npm test && npm run lint
 TypeScript (Node.js 18+): Follow standard conventions
 
 ## Recent Changes
+- 002-mcp-smoke-tests: Added TypeScript (Node.js 18+) + @modelcontextprotocol/sdk, @modelcontextprotocol/ext-apps, Express, cors, Vite, vite-plugin-singlefile, tsx
 
 - 001-mcp-apps-hello-world: Added TypeScript (Node.js 18+) + @modelcontextprotocol/sdk, @modelcontextprotocol/ext-apps, Express, cors, Vite, vite-plugin-singlefile, tsx
 
