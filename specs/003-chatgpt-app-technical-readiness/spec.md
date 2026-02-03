@@ -24,6 +24,10 @@ As a maintainer, I want the MCP server and UI resources to carry the required
 metadata (CSP, widgetDomain, tool annotations) so the app is technically
 correct for ChatGPT Apps marketplace requirements.
 
+**Compliance note**: The changes in this increment must remain MCP Apps
+specification compliant (ui:// resources, JSON-RPC UI bridge, no host-specific
+runtime APIs).
+
 **Why this priority**: Correct metadata is required for the app to function
 properly in ChatGPT Apps environments.
 

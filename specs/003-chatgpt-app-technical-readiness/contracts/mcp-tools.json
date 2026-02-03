@@ -1,0 +1,40 @@
+{
+  "tools": [
+    {
+      "name": "hello-world",
+      "title": "Hello World",
+      "description": "Returns a greeting and renders a Hello World UI in MCP Apps hosts.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "description": "Optional name to greet."
+          }
+        },
+        "additionalProperties": false
+      },
+      "annotations": {
+        "readOnlyHint": true,
+        "openWorldHint": false,
+        "destructiveHint": false
+      },
+      "_meta": {
+        "openai/outputTemplate": "ui://hello-world/app.html",
+        "openai/widgetAccessible": true
+      }
+    }
+  ],
+  "resources": [
+    {
+      "uri": "ui://hello-world/app.html",
+      "mimeType": "text/html+skybridge",
+      "_meta": {
+        "openai/widgetDomain": "https://gptapppoc.kieley.io",
+        "openai/widgetCSP": {
+          "connect_domains": ["https://gptapppoc.kieley.io"]
+        }
+      }
+    }
+  ]
+}

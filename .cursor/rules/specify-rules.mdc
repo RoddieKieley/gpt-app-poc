@@ -3,6 +3,8 @@
 Auto-generated from all feature plans. Last updated: 2026-02-02
 
 ## Active Technologies
+- TypeScript (Node.js 18+), ES modules + `@modelcontextprotocol/sdk`, `@modelcontextprotocol/ext-apps`, `express`, `zod`, `cors`, `vite`, `tsx` (003-chatgpt-app-technical-readiness)
+- N/A (no persistence) (003-chatgpt-app-technical-readiness)
 
 - TypeScript (Node.js 18+) + @modelcontextprotocol/sdk, @modelcontextprotocol/ext-apps, Express, cors, Vite, vite-plugin-singlefile, tsx (001-mcp-apps-hello-world)
 
@@ -22,6 +24,7 @@ npm test && npm run lint
 TypeScript (Node.js 18+): Follow standard conventions
 
 ## Recent Changes
+- 003-chatgpt-app-technical-readiness: Added TypeScript (Node.js 18+), ES modules + `@modelcontextprotocol/sdk`, `@modelcontextprotocol/ext-apps`, `express`, `zod`, `cors`, `vite`, `tsx`
 - 002-mcp-smoke-tests: Added TypeScript (Node.js 18+) + @modelcontextprotocol/sdk, @modelcontextprotocol/ext-apps, Express, cors, Vite, vite-plugin-singlefile, tsx
 
 - 001-mcp-apps-hello-world: Added TypeScript (Node.js 18+) + @modelcontextprotocol/sdk, @modelcontextprotocol/ext-apps, Express, cors, Vite, vite-plugin-singlefile, tsx
