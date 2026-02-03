@@ -65,9 +65,9 @@ description: "Tasks for ChatGPT Apps Technical Readiness"
 
 ### Implementation for User Story 2
 
-- [ ] T010 [US2] Add privacy policy endpoint/route in `server.ts` (or static file served by Express)
-- [ ] T011 [US2] Add support contact endpoint/route in `server.ts` (or static file served by Express)
-- [ ] T012 [US2] Document the endpoints in `specs/003-chatgpt-app-technical-readiness/quickstart.md`
+- [X] T010 [US2] Add privacy policy endpoint/route in `server.ts` (or static file served by Express)
+- [X] T011 [US2] Add support contact endpoint/route in `server.ts` (or static file served by Express)
+- [X] T012 [US2] Document the endpoints in `specs/003-chatgpt-app-technical-readiness/quickstart.md`
 
 **Checkpoint**: User Story 2 independently functional
 

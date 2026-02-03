@@ -103,6 +103,35 @@ const app = express();
 app.use(cors());
 app.use(express.json({ limit: "1mb" }));
 
+app.get("/privacy", (_req, res) => {
+  res
+    .status(200)
+    .type("text/plain")
+    .send(
+      [
+        "Privacy Policy",
+        "",
+        "This app only processes the minimum data required to fulfill requests.",
+        "No diagnostic data is collected in this increment.",
+        "For details on data categories, purposes, recipients, and user controls,",
+        "provide a full policy at https://gptapppoc.kieley.io/privacy.",
+      ].join("\n"),
+    );
+});
+
+app.get("/support", (_req, res) => {
+  res
+    .status(200)
+    .type("text/plain")
+    .send(
+      [
+        "Support",
+        "",
+        "For help, visit https://gptapppoc.kieley.io/support.",
+      ].join("\n"),
+    );
+});
+
 app.post("/mcp", async (req, res) => {
   const transport = new StreamableHTTPServerTransport({
     sessionIdGenerator: undefined,

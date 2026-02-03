@@ -39,3 +39,8 @@ Ensure the app domain serves:
 
 - Privacy policy: `https://gptapppoc.kieley.io/privacy`
 - Support contact: `https://gptapppoc.kieley.io/support`
+
+For local verification, the dev server exposes:
+
+- `http://localhost:3001/privacy`
+- `http://localhost:3001/support`
