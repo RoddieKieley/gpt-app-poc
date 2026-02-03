@@ -15,6 +15,7 @@
 - Q: Where should the privacy policy be hosted? → A: On the app domain (target `https://gptapppoc.kieley.io/privacy`).
 - Q: What support contact should the app expose? → A: Support page on the app domain (target `https://gptapppoc.kieley.io/support`).
 - Q: Should the widget be allowed to call tools directly (component-initiated tool access)? → A: Yes, allow widget-initiated calls.
+- Q: How do we handle constitution alignment for ChatGPT Apps metadata? → A: Constitution amended to allow minimal OpenAI widget metadata while still forbidding host-specific runtime APIs.
 
 ## User Scenarios & Testing *(mandatory)*
 

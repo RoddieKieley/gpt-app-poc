@@ -32,7 +32,10 @@ explicitly protected by default.
 
 ### 4. Strict MCP Apps Compliance
 Implement MCP core and the MCP Apps extension only (ui:// resources and JSON-RPC
-UI bridge). Do NOT rely on ChatGPT-specific runtime APIs or host-only metadata.
+UI bridge). Do NOT rely on ChatGPT-specific runtime APIs or host-only metadata,
+except for the minimal OpenAI widget metadata required for ChatGPT Apps
+distribution (e.g., `openai/widgetDomain`, `openai/widgetCSP`,
+`openai/widgetAccessible`).
 
 ### 5. Graceful Degradation
 Every UI flow MUST include a complete text fallback so CLI and non-UI hosts
@@ -64,7 +67,9 @@ and delivered in small, independently testable increments.
 - MCP server MUST implement initialize, tools/list, and tools/call and return
   ui:// resources with mcp.app annotations when UI is required.
 - UI MUST communicate via MCP Apps JSON-RPC postMessage only; no window.openai or
-  host-specific runtime dependencies.
+  host-specific runtime dependencies. The only allowed host-specific usage is
+  OpenAI widget metadata required for ChatGPT Apps distribution
+  (`openai/widgetDomain`, `openai/widgetCSP`, `openai/widgetAccessible`).
 - Tool responses MUST always include content text fallbacks.
 
 ## Development Workflow & Quality Gates
@@ -83,4 +88,4 @@ and delivered in small, independently testable increments.
 - Reviews MUST verify compliance with this constitution; non-compliant changes
   must be revised before merge.
 
-**Version**: 0.1.0 | **Ratified**: 2026-02-02 | **Last Amended**: 2026-02-02
+**Version**: 0.1.1 | **Ratified**: 2026-02-02 | **Last Amended**: 2026-02-03

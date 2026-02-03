@@ -31,6 +31,7 @@ no-auth and host-agnostic per the constitution.
   **Pass**: No diagnostics tooling in scope.
 - MCP Apps compliance: ui:// resources + JSON-RPC UI bridge, no host-specific APIs.  
   **Pass**: UI uses MCP Apps JSON-RPC via `@modelcontextprotocol/ext-apps`.
+  Constitution amended to allow minimal OpenAI widget metadata for ChatGPT Apps.
 - All UI flows include text fallbacks for non-UI hosts.  
   **Pass**: Tool response includes text fallback; maintain in changes.
 - Redaction and least-scope data handling are enforced for diagnostic data.  
@@ -85,6 +86,7 @@ root; feature artifacts live under `specs/003-chatgpt-app-technical-readiness/`.
   **Pass**: No diagnostics tooling in scope.
 - MCP Apps compliance: ui:// resources + JSON-RPC UI bridge, no host-specific APIs.  
   **Pass**: UI uses MCP Apps JSON-RPC via `@modelcontextprotocol/ext-apps`.
+  Constitution amended to allow minimal OpenAI widget metadata for ChatGPT Apps.
 - All UI flows include text fallbacks for non-UI hosts.  
   **Pass**: Tool response includes text fallback; maintain in changes.
 - Redaction and least-scope data handling are enforced for diagnostic data.  
