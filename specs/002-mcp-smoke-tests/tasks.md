@@ -88,8 +88,8 @@
 
 **Purpose**: Improvements that affect multiple user stories
 
-- [ ] T018 [P] Update `README.md` Testing section with `npm run test:mcp` usage
-- [ ] T019 Run `specs/002-mcp-smoke-tests/quickstart.md` steps to confirm accuracy
+- [x] T018 [P] Update `README.md` Testing section with `npm run test:mcp` usage
+- [x] T019 Run `specs/002-mcp-smoke-tests/quickstart.md` steps to confirm accuracy
 
 ---
 

@@ -31,3 +31,7 @@ See:
 - Install dependencies: `npm install`
 - Run the server: `npm run serve`
 - Build the UI bundle: `npm run build`
+
+## Testing
+
+- MCP smoke tests (after build): `npm run test:mcp`
