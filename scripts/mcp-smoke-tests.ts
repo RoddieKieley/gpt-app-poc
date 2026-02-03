@@ -182,14 +182,17 @@ const main = async () => {
   }
 
   if (failures.length > 0) {
-    if (stdoutLines.length > 0) {
-      console.error("Server stdout:");
-      console.error(stdoutLines.filter(Boolean).join("\n"));
-    }
-    if (stderrLines.length > 0) {
-      console.error("Server stderr:");
-      console.error(stderrLines.filter(Boolean).join("\n"));
-    }
+    console.error("Failed checks:");
+    failures.forEach((failure) => {
+      console.error(`- ${failure}`);
+    });
+
+    console.error("Server stdout:");
+    console.error(stdoutLines.length > 0 ? stdoutLines.filter(Boolean).join("\n") : "(empty)");
+
+    console.error("Server stderr:");
+    console.error(stderrLines.length > 0 ? stderrLines.filter(Boolean).join("\n") : "(empty)");
+
     console.error(`Smoke tests failed (${failures.length}).`);
     process.exit(1);
   }

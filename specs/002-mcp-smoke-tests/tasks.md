@@ -72,13 +72,13 @@
 
 ### Tests for User Story 2 (TEST-FIRST) ⚠️
 
-- [ ] T014 [US2] Add failing-output assertions for labeled checks in `scripts/mcp-smoke-tests.ts`
-- [ ] T015 [US2] Add a failure-path assertion that includes captured server stdout/stderr in `scripts/mcp-smoke-tests.ts`
+- [x] T014 [US2] Add failing-output assertions for labeled checks in `scripts/mcp-smoke-tests.ts`
+- [x] T015 [US2] Add a failure-path assertion that includes captured server stdout/stderr in `scripts/mcp-smoke-tests.ts`
 
 ### Implementation for User Story 2
 
-- [ ] T016 [US2] Implement per-check labeling and structured failure reporting in `scripts/mcp-smoke-tests.ts`
-- [ ] T017 [US2] Surface captured server stdout/stderr on failures in `scripts/mcp-smoke-tests.ts`
+- [x] T016 [US2] Implement per-check labeling and structured failure reporting in `scripts/mcp-smoke-tests.ts`
+- [x] T017 [US2] Surface captured server stdout/stderr on failures in `scripts/mcp-smoke-tests.ts`
 
 **Checkpoint**: Failures clearly name the check and include server output.
 
