@@ -93,8 +93,8 @@ description: "Tasks for ChatGPT Apps Technical Readiness"
 **Purpose**: Improvements that affect multiple user stories
 
 - [X] T015 [P] Run `npm run test:mcp` and confirm updated checks pass
-- [ ] T016 Update `README.md` with technical readiness notes and URLs (optional but recommended)
-- [ ] T017 Validate constitution compliance for MCP Apps bridge and text fallbacks
+- [X] T016 Update `README.md` with technical readiness notes and URLs (optional but recommended)
+- [X] T017 Validate constitution compliance for MCP Apps bridge and text fallbacks
 
 ---
 

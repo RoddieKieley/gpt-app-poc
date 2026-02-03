@@ -35,3 +35,11 @@ See:
 ## Testing
 
 - MCP smoke tests (after build): `npm run test:mcp`
+
+## ChatGPT Apps Technical Readiness
+
+Technical readiness details live under `specs/003-chatgpt-app-technical-readiness/`.
+
+- MCP endpoint: `http://localhost:3001/mcp` (dev), `https://gptapppoc.kieley.io/mcp` (prod)
+- Privacy policy: `http://localhost:3001/privacy` (dev), `https://gptapppoc.kieley.io/privacy` (prod)
+- Support contact: `http://localhost:3001/support` (dev), `https://gptapppoc.kieley.io/support` (prod)
