@@ -4,8 +4,8 @@
 - [x] UI resource includes `openai/widgetDomain: https://gptapppoc.kieley.io`
 - [x] UI resource includes `openai/widgetCSP.connect_domains` with only `https://gptapppoc.kieley.io`
 - [x] UI resource renders and text fallback works in non-UI host
-- [ ] Privacy policy served at `https://gptapppoc.kieley.io/privacy`
-- [ ] Support contact served at `https://gptapppoc.kieley.io/support`
+- [x] Privacy policy served at `https://gptapppoc.kieley.io/privacy`
+- [x] Support contact served at `https://gptapppoc.kieley.io/support`
 - [x] No iframe usage (`frame_domains` absent)
 - [x] No restricted data collection in tool inputs
 - [x] No OAuth metadata or protected-resource endpoints
