@@ -31,7 +31,8 @@ description: "Tasks for ChatGPT Apps Technical Readiness"
 
 **⚠️ CRITICAL**: No user story work can begin until this phase is complete
 
-- [ ] T002 Define technical readiness checklist in `specs/003-chatgpt-app-technical-readiness/checklists/technical-readiness.md`
+- [ ] T002 Create checklist directory in `specs/003-chatgpt-app-technical-readiness/checklists/`
+- [ ] T003 Define technical readiness checklist in `specs/003-chatgpt-app-technical-readiness/checklists/technical-readiness.md`
 
 **Checkpoint**: Foundation ready - user story implementation can now begin in parallel
 
@@ -45,11 +46,12 @@ description: "Tasks for ChatGPT Apps Technical Readiness"
 
 ### Implementation for User Story 1
 
-- [ ] T003 [US1] Add tool annotations + widget-access metadata in `server.ts`
-- [ ] T004 [US1] Add widget metadata (`openai/widgetDomain`, `openai/widgetCSP`) in `server.ts` UI resource registration
-- [ ] T005 [US1] Align UI resource output template/metadata with `specs/003-chatgpt-app-technical-readiness/contracts/mcp-tools.json`
-- [ ] T006 [US1] Ensure text fallback remains intact in `server.ts` tool response
-- [ ] T007 [US1] Update `scripts/mcp-smoke-tests.ts` to validate new tool annotations and UI resource metadata
+- [ ] T004 [US1] Add tool annotations (`readOnlyHint`, `openWorldHint`, `destructiveHint`) in `server.ts`
+- [ ] T005 [US1] Add widget-access metadata (`openai/widgetAccessible`) in `server.ts` tool definition
+- [ ] T006 [US1] Add widget metadata (`openai/widgetDomain`, `openai/widgetCSP.connect_domains`) in `server.ts` UI resource registration
+- [ ] T007 [US1] Align UI resource output template/metadata with `specs/003-chatgpt-app-technical-readiness/contracts/mcp-tools.json`
+- [ ] T008 [US1] Ensure text fallback remains intact in `server.ts` tool response
+- [ ] T009 [US1] Update `scripts/mcp-smoke-tests.ts` to validate tool annotations and UI resource metadata keys
 
 **Checkpoint**: User Story 1 fully functional and independently testable
 
@@ -63,9 +65,9 @@ description: "Tasks for ChatGPT Apps Technical Readiness"
 
 ### Implementation for User Story 2
 
-- [ ] T008 [US2] Add privacy policy endpoint/route in `server.ts` (or static file served by Express)
-- [ ] T009 [US2] Add support contact endpoint/route in `server.ts` (or static file served by Express)
-- [ ] T010 [US2] Document the endpoints in `specs/003-chatgpt-app-technical-readiness/quickstart.md`
+- [ ] T010 [US2] Add privacy policy endpoint/route in `server.ts` (or static file served by Express)
+- [ ] T011 [US2] Add support contact endpoint/route in `server.ts` (or static file served by Express)
+- [ ] T012 [US2] Document the endpoints in `specs/003-chatgpt-app-technical-readiness/quickstart.md`
 
 **Checkpoint**: User Story 2 independently functional
 
@@ -79,8 +81,8 @@ description: "Tasks for ChatGPT Apps Technical Readiness"
 
 ### Implementation for User Story 3
 
-- [ ] T011 [US3] Populate `specs/003-chatgpt-app-technical-readiness/checklists/technical-readiness.md` with steps for metadata, CSP, UI rendering, and policy endpoints
-- [ ] T012 [US3] Add checklist reference in `specs/003-chatgpt-app-technical-readiness/quickstart.md`
+- [ ] T013 [US3] Populate `specs/003-chatgpt-app-technical-readiness/checklists/technical-readiness.md` with steps for metadata, CSP, UI rendering, and policy endpoints
+- [ ] T014 [US3] Add checklist reference in `specs/003-chatgpt-app-technical-readiness/quickstart.md`
 
 **Checkpoint**: User Story 3 independently functional
 
@@ -90,9 +92,9 @@ description: "Tasks for ChatGPT Apps Technical Readiness"
 
 **Purpose**: Improvements that affect multiple user stories
 
-- [ ] T013 [P] Run `npm run test:mcp` and confirm updated checks pass
-- [ ] T014 Update `README.md` with technical readiness notes and URLs (optional but recommended)
-- [ ] T015 Validate constitution compliance for MCP Apps bridge and text fallbacks
+- [ ] T015 [P] Run `npm run test:mcp` and confirm updated checks pass
+- [ ] T016 Update `README.md` with technical readiness notes and URLs (optional but recommended)
+- [ ] T017 Validate constitution compliance for MCP Apps bridge and text fallbacks
 
 ---
 
@@ -120,9 +122,9 @@ description: "Tasks for ChatGPT Apps Technical Readiness"
 
 ### Parallel Opportunities
 
-- T003 and T004 can be parallel once Phase 2 completes
-- T008 and T009 can be parallel once Phase 2 completes
-- T011 and T012 can be parallel once Phase 2 completes
+- T004 and T005 can be parallel once Phase 2 completes
+- T010 and T011 can be parallel once Phase 2 completes
+- T013 and T014 can be parallel once Phase 2 completes
 
 ---
 
