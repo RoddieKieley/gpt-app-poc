@@ -33,6 +33,7 @@
 - [ ] T003 Define shared constants (host, port 3000, timeouts, tool name) in `scripts/mcp-smoke-tests.ts`
 - [ ] T004 Implement a JSON-RPC HTTP request helper in `scripts/mcp-smoke-tests.ts`
 - [ ] T005 Implement server process lifecycle helpers (start/stop, stdout/stderr capture) in `scripts/mcp-smoke-tests.ts`
+- [ ] T006 Add a preflight check for built output (`dist/mcp-app.html`) in `scripts/mcp-smoke-tests.ts`
 
 **Checkpoint**: Foundation ready - user story implementation can now begin
 
@@ -48,16 +49,16 @@
 
 > **NOTE: Write these tests FIRST, ensure they FAIL before implementation**
 
-- [ ] T006 [US1] Add a check list stub with failing assertions in `scripts/mcp-smoke-tests.ts` for init, tools/list, tool call, and UI resource fetch
-- [ ] T007 [US1] Add a timeout test stub (10 seconds) in `scripts/mcp-smoke-tests.ts` for MCP initialization
+- [ ] T007 [US1] Add a check list stub with failing assertions in `scripts/mcp-smoke-tests.ts` for init, tools/list, tool call, and UI resource fetch
+- [ ] T008 [US1] Add a timeout test stub (10 seconds) in `scripts/mcp-smoke-tests.ts` for MCP initialization
 
 ### Implementation for User Story 1
 
-- [ ] T008 [US1] Implement MCP initialize request with 10s timeout in `scripts/mcp-smoke-tests.ts`
-- [ ] T009 [US1] Implement `tools/list` validation for `hello-world` in `scripts/mcp-smoke-tests.ts`
-- [ ] T010 [US1] Implement `tools/call` for `hello-world` and validate text fallback in `scripts/mcp-smoke-tests.ts`
-- [ ] T011 [US1] Implement UI resource retrieval and content check in `scripts/mcp-smoke-tests.ts`
-- [ ] T012 [US1] Wire exit codes and success summary output in `scripts/mcp-smoke-tests.ts`
+- [ ] T009 [US1] Implement MCP initialize request with 10s timeout in `scripts/mcp-smoke-tests.ts`
+- [ ] T010 [US1] Implement `tools/list` validation for `hello-world` in `scripts/mcp-smoke-tests.ts`
+- [ ] T011 [US1] Implement `tools/call` for `hello-world` and validate text fallback in `scripts/mcp-smoke-tests.ts`
+- [ ] T012 [US1] Implement UI resource retrieval and content check in `scripts/mcp-smoke-tests.ts`
+- [ ] T013 [US1] Wire exit codes and success summary output in `scripts/mcp-smoke-tests.ts`
 
 **Checkpoint**: User Story 1 smoke tests pass against built output with a single command.
 
@@ -71,13 +72,13 @@
 
 ### Tests for User Story 2 (TEST-FIRST) ⚠️
 
-- [ ] T013 [US2] Add failing-output assertions for labeled checks in `scripts/mcp-smoke-tests.ts`
-- [ ] T014 [US2] Add a failure-path assertion that includes captured server stdout/stderr in `scripts/mcp-smoke-tests.ts`
+- [ ] T014 [US2] Add failing-output assertions for labeled checks in `scripts/mcp-smoke-tests.ts`
+- [ ] T015 [US2] Add a failure-path assertion that includes captured server stdout/stderr in `scripts/mcp-smoke-tests.ts`
 
 ### Implementation for User Story 2
 
-- [ ] T015 [US2] Implement per-check labeling and structured failure reporting in `scripts/mcp-smoke-tests.ts`
-- [ ] T016 [US2] Surface captured server stdout/stderr on failures in `scripts/mcp-smoke-tests.ts`
+- [ ] T016 [US2] Implement per-check labeling and structured failure reporting in `scripts/mcp-smoke-tests.ts`
+- [ ] T017 [US2] Surface captured server stdout/stderr on failures in `scripts/mcp-smoke-tests.ts`
 
 **Checkpoint**: Failures clearly name the check and include server output.
 
@@ -87,8 +88,8 @@
 
 **Purpose**: Improvements that affect multiple user stories
 
-- [ ] T017 [P] Update `README.md` Testing section with `npm run test:mcp` usage
-- [ ] T018 Run `specs/002-mcp-smoke-tests/quickstart.md` steps to confirm accuracy
+- [ ] T018 [P] Update `README.md` Testing section with `npm run test:mcp` usage
+- [ ] T019 Run `specs/002-mcp-smoke-tests/quickstart.md` steps to confirm accuracy
 
 ---
 
