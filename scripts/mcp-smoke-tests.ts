@@ -155,10 +155,21 @@ const main = async () => {
   try {
     await check("MCP initialize", initializeWithRetry, failures);
 
-    await check("tools/list includes hello-world", async () => {
-      const result = (await jsonRpc("tools/list")) as { tools?: { name: string }[] };
-      const names = result?.tools?.map((tool) => tool.name) ?? [];
-      assert.ok(names.includes(TOOL_NAME), "hello-world tool missing");
+    await check("tools/list includes hello-world metadata", async () => {
+      const result = (await jsonRpc("tools/list")) as {
+        tools?: {
+          name: string;
+          annotations?: { readOnlyHint?: boolean; openWorldHint?: boolean; destructiveHint?: boolean };
+          _meta?: Record<string, unknown>;
+        }[];
+      };
+      const tool = result?.tools?.find((item) => item.name === TOOL_NAME);
+      assert.ok(tool, "hello-world tool missing");
+      assert.equal(tool?.annotations?.readOnlyHint, true, "readOnlyHint not set");
+      assert.equal(tool?.annotations?.openWorldHint, false, "openWorldHint not set");
+      assert.equal(tool?.annotations?.destructiveHint, false, "destructiveHint not set");
+      assert.equal(tool?._meta?.["openai/widgetAccessible"], true, "widgetAccessible not set");
+      assert.equal(tool?._meta?.["openai/outputTemplate"], UI_RESOURCE_URI, "outputTemplate mismatch");
     }, failures);
 
     await check("tools/call returns text fallback", async () => {
@@ -170,12 +181,22 @@ const main = async () => {
       assert.ok(text && text.trim().length > 0, "text fallback missing");
     }, failures);
 
-    await check("UI resource is retrievable", async () => {
+    await check("UI resource is retrievable with metadata", async () => {
       const result = (await jsonRpc("resources/read", {
         uri: UI_RESOURCE_URI,
-      })) as { contents?: { text?: string }[] };
-      const text = result?.contents?.[0]?.text;
+      })) as {
+        contents?: { text?: string; _meta?: Record<string, unknown> }[];
+      };
+      const resource = result?.contents?.[0];
+      const text = resource?.text;
       assert.ok(text && text.trim().length > 0, "UI resource content missing");
+      assert.equal(
+        resource?._meta?.["openai/widgetDomain"],
+        "https://gptapppoc.kieley.io",
+        "widgetDomain mismatch",
+      );
+      const widgetCsp = resource?._meta?.["openai/widgetCSP"] as { connect_domains?: string[] } | undefined;
+      assert.ok(widgetCsp?.connect_domains?.includes("https://gptapppoc.kieley.io"), "widgetCSP connect_domains missing");
     }, failures);
   } finally {
     await stopServer(server);

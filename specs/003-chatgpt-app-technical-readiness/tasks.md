@@ -21,7 +21,7 @@ description: "Tasks for ChatGPT Apps Technical Readiness"
 
 **Purpose**: Project initialization and basic structure
 
-- [ ] T001 Verify existing server/UI build pipeline in `package.json` supports planned changes
+- [X] T001 Verify existing server/UI build pipeline in `package.json` supports planned changes
 
 ---
 
@@ -31,8 +31,8 @@ description: "Tasks for ChatGPT Apps Technical Readiness"
 
 **⚠️ CRITICAL**: No user story work can begin until this phase is complete
 
-- [ ] T002 Create checklist directory in `specs/003-chatgpt-app-technical-readiness/checklists/`
-- [ ] T003 Define technical readiness checklist in `specs/003-chatgpt-app-technical-readiness/checklists/technical-readiness.md`
+- [X] T002 Create checklist directory in `specs/003-chatgpt-app-technical-readiness/checklists/`
+- [X] T003 Define technical readiness checklist in `specs/003-chatgpt-app-technical-readiness/checklists/technical-readiness.md`
 
 **Checkpoint**: Foundation ready - user story implementation can now begin in parallel
 
@@ -46,12 +46,12 @@ description: "Tasks for ChatGPT Apps Technical Readiness"
 
 ### Implementation for User Story 1
 
-- [ ] T004 [US1] Add tool annotations (`readOnlyHint`, `openWorldHint`, `destructiveHint`) in `server.ts`
-- [ ] T005 [US1] Add widget-access metadata (`openai/widgetAccessible`) in `server.ts` tool definition
-- [ ] T006 [US1] Add widget metadata (`openai/widgetDomain`, `openai/widgetCSP.connect_domains`) in `server.ts` UI resource registration
-- [ ] T007 [US1] Align UI resource output template/metadata with `specs/003-chatgpt-app-technical-readiness/contracts/mcp-tools.json`
-- [ ] T008 [US1] Ensure text fallback remains intact in `server.ts` tool response
-- [ ] T009 [US1] Update `scripts/mcp-smoke-tests.ts` to validate tool annotations and UI resource metadata keys
+- [X] T004 [US1] Add tool annotations (`readOnlyHint`, `openWorldHint`, `destructiveHint`) in `server.ts`
+- [X] T005 [US1] Add widget-access metadata (`openai/widgetAccessible`) in `server.ts` tool definition
+- [X] T006 [US1] Add widget metadata (`openai/widgetDomain`, `openai/widgetCSP.connect_domains`) in `server.ts` UI resource registration
+- [X] T007 [US1] Align UI resource output template/metadata with `specs/003-chatgpt-app-technical-readiness/contracts/mcp-tools.json`
+- [X] T008 [US1] Ensure text fallback remains intact in `server.ts` tool response
+- [X] T009 [US1] Update `scripts/mcp-smoke-tests.ts` to validate tool annotations and UI resource metadata keys
 
 **Checkpoint**: User Story 1 fully functional and independently testable
 

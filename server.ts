@@ -31,7 +31,16 @@ registerAppTool(
     inputSchema: z.object({
       name: z.string().optional().describe("Optional name to greet."),
     }),
-    _meta: { ui: { resourceUri } },
+    annotations: {
+      readOnlyHint: true,
+      openWorldHint: false,
+      destructiveHint: false,
+    },
+    _meta: {
+      ui: { resourceUri },
+      "openai/outputTemplate": resourceUri,
+      "openai/widgetAccessible": true,
+    },
   },
   async (args) => {
     const name = typeof args?.name === "string" && args.name.trim()
@@ -77,6 +86,12 @@ registerAppResource(
         {
           uri: resourceUri,
           mimeType: RESOURCE_MIME_TYPE,
+          _meta: {
+            "openai/widgetDomain": "https://gptapppoc.kieley.io",
+            "openai/widgetCSP": {
+              connect_domains: ["https://gptapppoc.kieley.io"],
+            },
+          },
           text: html,
         },
       ],
