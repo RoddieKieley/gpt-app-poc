@@ -99,10 +99,12 @@ app.post("/mcp", async (req, res) => {
   await transport.handleRequest(req, res, req.body);
 });
 
-app.listen(3001, (err) => {
+const port = Number.parseInt(process.env.PORT ?? "", 10) || 3001;
+
+app.listen(port, (err) => {
   if (err) {
     console.error("Error starting server:", err);
     process.exit(1);
   }
-  console.log("Server listening on http://localhost:3001/mcp");
+  console.log(`Server listening on http://localhost:${port}/mcp`);
 });

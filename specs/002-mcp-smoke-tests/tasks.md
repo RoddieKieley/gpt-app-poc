@@ -19,8 +19,8 @@
 
 **Purpose**: Project initialization and basic structure
 
-- [ ] T001 Create `scripts/mcp-smoke-tests.ts` with a minimal CLI entry and TODO markers for checks
-- [ ] T002 [P] Add `test:mcp` npm script in `package.json` to invoke `scripts/mcp-smoke-tests.ts`
+- [x] T001 Create `scripts/mcp-smoke-tests.ts` with a minimal CLI entry and TODO markers for checks
+- [x] T002 [P] Add `test:mcp` npm script in `package.json` to invoke `scripts/mcp-smoke-tests.ts`
 
 ---
 
@@ -30,10 +30,10 @@
 
 **⚠️ CRITICAL**: No user story work can begin until this phase is complete
 
-- [ ] T003 Define shared constants (host, port 3000, timeouts, tool name) in `scripts/mcp-smoke-tests.ts`
-- [ ] T004 Implement a JSON-RPC HTTP request helper in `scripts/mcp-smoke-tests.ts`
-- [ ] T005 Implement server process lifecycle helpers (start/stop, stdout/stderr capture) in `scripts/mcp-smoke-tests.ts`
-- [ ] T006 Add a preflight check for built output (`dist/mcp-app.html`) in `scripts/mcp-smoke-tests.ts`
+- [x] T003 Define shared constants (host, port 3000, timeouts, tool name) in `scripts/mcp-smoke-tests.ts`
+- [x] T004 Implement a JSON-RPC HTTP request helper in `scripts/mcp-smoke-tests.ts`
+- [x] T005 Implement server process lifecycle helpers (start/stop, stdout/stderr capture) in `scripts/mcp-smoke-tests.ts`
+- [x] T006 Add a preflight check for built output (`dist/mcp-app.html`) in `scripts/mcp-smoke-tests.ts`
 
 **Checkpoint**: Foundation ready - user story implementation can now begin
 
@@ -49,16 +49,16 @@
 
 > **NOTE: Write these tests FIRST, ensure they FAIL before implementation**
 
-- [ ] T007 [US1] Add a check list stub with failing assertions in `scripts/mcp-smoke-tests.ts` for init, tools/list, tool call, and UI resource fetch
-- [ ] T008 [US1] Add a timeout test stub (10 seconds) in `scripts/mcp-smoke-tests.ts` for MCP initialization
+- [x] T007 [US1] Add a check list stub with failing assertions in `scripts/mcp-smoke-tests.ts` for init, tools/list, tool call, and UI resource fetch
+- [x] T008 [US1] Add a timeout test stub (10 seconds) in `scripts/mcp-smoke-tests.ts` for MCP initialization
 
 ### Implementation for User Story 1
 
-- [ ] T009 [US1] Implement MCP initialize request with 10s timeout in `scripts/mcp-smoke-tests.ts`
-- [ ] T010 [US1] Implement `tools/list` validation for `hello-world` in `scripts/mcp-smoke-tests.ts`
-- [ ] T011 [US1] Implement `tools/call` for `hello-world` and validate text fallback in `scripts/mcp-smoke-tests.ts`
-- [ ] T012 [US1] Implement UI resource retrieval and content check in `scripts/mcp-smoke-tests.ts`
-- [ ] T013 [US1] Wire exit codes and success summary output in `scripts/mcp-smoke-tests.ts`
+- [x] T009 [US1] Implement MCP initialize request with 10s timeout in `scripts/mcp-smoke-tests.ts`
+- [x] T010 [US1] Implement `tools/list` validation for `hello-world` in `scripts/mcp-smoke-tests.ts`
+- [x] T011 [US1] Implement `tools/call` for `hello-world` and validate text fallback in `scripts/mcp-smoke-tests.ts`
+- [x] T012 [US1] Implement UI resource retrieval and content check in `scripts/mcp-smoke-tests.ts`
+- [x] T013 [US1] Wire exit codes and success summary output in `scripts/mcp-smoke-tests.ts`
 
 **Checkpoint**: User Story 1 smoke tests pass against built output with a single command.
 

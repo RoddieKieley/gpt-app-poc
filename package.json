@@ -5,7 +5,8 @@
   "type": "module",
   "scripts": {
     "build": "INPUT=mcp-app.html vite build",
-    "serve": "tsx server.ts"
+    "serve": "tsx server.ts",
+    "test:mcp": "tsx scripts/mcp-smoke-tests.ts"
   },
   "repository": {
     "type": "git",
