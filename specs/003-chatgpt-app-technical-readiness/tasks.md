@@ -81,8 +81,8 @@ description: "Tasks for ChatGPT Apps Technical Readiness"
 
 ### Implementation for User Story 3
 
-- [ ] T013 [US3] Populate `specs/003-chatgpt-app-technical-readiness/checklists/technical-readiness.md` with steps for metadata, CSP, UI rendering, and policy endpoints
-- [ ] T014 [US3] Add checklist reference in `specs/003-chatgpt-app-technical-readiness/quickstart.md`
+- [X] T013 [US3] Populate `specs/003-chatgpt-app-technical-readiness/checklists/technical-readiness.md` with steps for metadata, CSP, UI rendering, and policy endpoints
+- [X] T014 [US3] Add checklist reference in `specs/003-chatgpt-app-technical-readiness/quickstart.md`
 
 **Checkpoint**: User Story 3 independently functional
 

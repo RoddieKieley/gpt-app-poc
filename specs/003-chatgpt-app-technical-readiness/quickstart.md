@@ -33,6 +33,11 @@ npm run test:mcp
    - `openai/widgetDomain` is `https://gptapppoc.kieley.io`.
    - `openai/widgetCSP` allowlists only `https://gptapppoc.kieley.io`.
 
+## Technical Readiness Checklist
+
+Complete `specs/003-chatgpt-app-technical-readiness/checklists/technical-readiness.md`
+before moving to broader distribution readiness.
+
 ## Policy Endpoints
 
 Ensure the app domain serves:
