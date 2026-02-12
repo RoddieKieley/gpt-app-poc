@@ -256,16 +256,24 @@ registerAppResource(
   jiraResourceUri,
   { mimeType: RESOURCE_MIME_TYPE },
   async () => {
-    const html = `<!doctype html>
+    let html: string;
+    try {
+      html = await fs.readFile(
+        path.join(__dirname, "dist", "mcp-app.html"),
+        "utf-8",
+      );
+    } catch (_error) {
+      html = `<!doctype html>
 <html lang="en">
   <head>
     <meta charset="utf-8" />
     <title>Jira Attachments</title>
   </head>
   <body>
-    <p>Use the MCP Jira tools from this widget. If UI is unavailable, use text responses.</p>
+    <p>UI bundle unavailable. Use Jira text tool responses as fallback.</p>
   </body>
 </html>`;
+    }
     return {
       contents: [
         {

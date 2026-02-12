@@ -7,10 +7,10 @@
     "build": "INPUT=mcp-app.html vite build",
     "serve": "tsx server.ts",
     "test:mcp": "tsx scripts/mcp-smoke-tests.ts",
-    "test:unit": "tsx --test tests/unit/**/*.test.ts",
-    "test:contract": "tsx --test tests/contract/**/*.test.ts",
-    "test:integration": "tsx --test tests/integration/**/*.test.ts",
-    "test:regression": "tsx --test tests/regression/**/*.test.ts",
+    "test:unit": "tsx --test --test-concurrency=1 tests/unit/**/*.test.ts",
+    "test:contract": "tsx --test --test-concurrency=1 tests/contract/**/*.test.ts",
+    "test:integration": "tsx --test --test-concurrency=1 tests/integration/**/*.test.ts",
+    "test:regression": "tsx --test --test-concurrency=1 tests/regression/**/*.test.ts",
     "test:jira": "npm run test:unit && npm run test:contract && npm run test:integration && npm run test:regression"
   },
   "repository": {
