@@ -1,15 +1,14 @@
 <!--
 Sync Impact Report
-- Version change: none -> 0.1.0
-- Modified principles: none (initial constitution)
-- Added sections: Security & Data Handling, Architecture & Compliance, Development Workflow & Quality Gates
+- Version change: 0.1.1 -> 0.2.0
+- Modified principles: 3. Privacy-First Diagnostics
+- Added principles: 8. Secret Boundary for Tokens and Credentials
+- Added sections: Amendment Record
 - Removed sections: placeholder template tokens
 - Templates requiring updates:
-  - .specify/templates/plan-template.md (updated)
-  - .specify/templates/spec-template.md (updated)
-  - .specify/templates/tasks-template.md (updated)
+  - none
 - Follow-up TODOs:
-  - TODO(RATIFICATION_DATE): original adoption date not provided
+  - none
 -->
 # GPT App PoC Constitution
 
@@ -49,6 +48,11 @@ branching on the host environment.
 Each feature MUST be introduced through an explicit spec, plan, and task list,
 and delivered in small, independently testable increments.
 
+### 8. Secret Boundary for Tokens and Credentials
+Personal access tokens (PATs), API keys, and credentials MUST be handled only by
+trusted backend services. Secrets MUST NOT appear in MCP tool arguments, tool
+results, prompts, model-visible transcripts, or application logs.
+
 ## Security & Data Handling
 
 - Diagnostics collection MUST use approved MCP servers with explicit human
@@ -61,6 +65,13 @@ and delivered in small, independently testable increments.
   servers that provide data/metrics in formats required by sosreport and
   must-gather outputs; unsolicited collection is prohibited.
 - Retention MUST be minimal and explicitly authorized.
+- PATs and similar secrets MUST be entered only through secure backend endpoints,
+  encrypted at rest, and accessed via opaque references (for example,
+  `connection_id`) in MCP tool calls.
+- Secrets MUST be redacted from logs by default. Logging of `Authorization`
+  headers, raw tokens, and secret-bearing request bodies is prohibited.
+- Credential handling MUST enforce least privilege, explicit revoke/disconnect
+  flows, and bounded lifetime (TTL/expiry) for stored secrets.
 
 ## Architecture & Compliance
 
@@ -71,6 +82,9 @@ and delivered in small, independently testable increments.
   OpenAI widget metadata required for ChatGPT Apps distribution
   (`openai/widgetDomain`, `openai/widgetCSP`, `openai/widgetAccessible`).
 - Tool responses MUST always include content text fallbacks.
+- Features that integrate third-party services (for example Jira) MUST use
+  backend-mediated authentication and pass only non-secret identifiers through
+  MCP tool interfaces.
 
 ## Development Workflow & Quality Gates
 
@@ -78,7 +92,22 @@ and delivered in small, independently testable increments.
 - Tests are REQUIRED for diagnostics tool calls, redaction logic, and text
   fallback behavior.
 - Security review is REQUIRED for any new diagnostic data access or permissions.
+- Features that introduce credential handling MUST include tests proving secrets
+  are never emitted in MCP tool payloads, responses, or logs.
 - PRs MUST cite which constitution principles are addressed.
+
+## Amendment Record
+
+### 2026-02-11: PAT and MCP App Secret-Handling Guardrails
+- **Rationale**: Upcoming Jira attachment workflows require user-provided PATs.
+  The project needs explicit, enforceable constraints to prevent secret leakage
+  into model-visible channels and logs.
+- **Migration Plan**:
+  - Add backend-only credential intake and storage using encrypted-at-rest
+    persistence.
+  - Refactor any secret-bearing MCP interfaces to opaque reference-based flows.
+  - Add regression tests for token redaction and transcript-safe tool payloads.
+  - Update feature specs and PR checklists to cite Principle 8.
 
 ## Governance
 
@@ -88,4 +117,4 @@ and delivered in small, independently testable increments.
 - Reviews MUST verify compliance with this constitution; non-compliant changes
   must be revised before merge.
 
-**Version**: 0.1.1 | **Ratified**: 2026-02-02 | **Last Amended**: 2026-02-03
+**Version**: 0.2.0 | **Ratified**: 2026-02-02 | **Last Amended**: 2026-02-11
