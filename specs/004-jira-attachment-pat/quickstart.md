@@ -43,9 +43,26 @@ MCP endpoint is served at `http://localhost:3001/mcp` in local development.
 ```bash
 npm run test:mcp
 npx tsx scripts/jira-token-boundary-tests.ts
+npm run test:jira
 ```
 
 ## Text fallback validation
 
 For each tool action (`connect`, `status`, `list-attachments`, `attach`,
 `disconnect`), verify a complete text response exists when UI is unavailable.
+
+## Jira sandbox assumptions for local verification
+
+- Use a dedicated Jira test project and PAT with least required permissions.
+- Set `JIRA_MOCK_MODE=1` for CI/local deterministic tests that do not call real Jira.
+- For real Jira validation, unset mock mode and provide a reachable HTTPS Jira base URL.
+
+## Validation results
+
+- Contract tests: validate schema and opaque reference boundaries.
+- Integration tests: validate connect/list/upload/disconnect lifecycle behavior.
+- Regression tests: validate no PAT leakage in tool payloads and log sanitization.
+- Latest run status:
+  - `npm run test:jira` -> PASS
+  - `npm run test:mcp` -> PASS
+  - `npx tsx scripts/jira-token-boundary-tests.ts` -> PASS

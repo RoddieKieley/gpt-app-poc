@@ -18,10 +18,10 @@
 
 **Purpose**: Prepare repository scaffolding, test harness, and baseline docs for secure Jira feature work.
 
-- [ ] T001 Create Jira/security module and test directory scaffolding in `src/jira/`, `src/security/`, `tests/contract/`, `tests/integration/`, `tests/regression/`, and `tests/unit/` (FR: FR-012; SC: SC-001)
-- [ ] T002 Add test scripts for contract/integration/regression suites in `package.json` (FR: FR-012; SC: SC-001, SC-006)
-- [ ] T003 [P] Add Jira feature environment variable template and TTL config guidance in `.env.example` (FR: FR-009; SC: SC-004)
-- [ ] T004 [P] Add developer test fixture documentation for Jira sandbox assumptions in `specs/004-jira-attachment-pat/quickstart.md` (FR: FR-010; SC: SC-006)
+- [x] T001 Create Jira/security module and test directory scaffolding in `src/jira/`, `src/security/`, `tests/contract/`, `tests/integration/`, `tests/regression/`, and `tests/unit/` (FR: FR-012; SC: SC-001)
+- [x] T002 Add test scripts for contract/integration/regression suites in `package.json` (FR: FR-012; SC: SC-001, SC-006)
+- [x] T003 [P] Add Jira feature environment variable template and TTL config guidance in `.env.example` (FR: FR-009; SC: SC-004)
+- [x] T004 [P] Add developer test fixture documentation for Jira sandbox assumptions in `specs/004-jira-attachment-pat/quickstart.md` (FR: FR-010; SC: SC-006)
 
 ---
 
@@ -31,14 +31,14 @@
 
 **⚠️ CRITICAL**: No story implementation begins until this phase is complete.
 
-- [ ] T005 Implement PAT intake input validation schema (HTTPS URL, PAT presence, no echo fields) in `src/jira/jira-tool-schemas.ts` (FR: FR-001, FR-011; SC: SC-001, SC-006)
-- [ ] T006 Implement encrypted token vault persistence interface and storage adapter in `src/security/token-vault.ts` (FR: FR-002, FR-003; SC: SC-001)
-- [ ] T007 [P] Implement credential lifecycle state logic (connected/expired/revoked + TTL checks) in `src/security/connection-lifecycle.ts` (FR: FR-004, FR-008, FR-009; SC: SC-004)
-- [ ] T008 [P] Implement log/payload redaction utility for PAT-like strings and auth headers in `src/security/redaction.ts` (FR: FR-002, FR-012; SC: SC-001)
-- [ ] T009 Implement Jira error normalization map for 401/403/404/413/network failures in `src/jira/jira-error-mapping.ts` (FR: FR-010; SC: SC-006)
-- [ ] T010 Implement user-scope authorization guard for `connection_id` ownership checks in `src/security/connection-lifecycle.ts` (FR: FR-007; SC: SC-005)
-- [ ] T011 Wire security middleware and sanitized logging hooks into API/MCP request pipeline in `server.ts` (FR: FR-002, FR-011, FR-012; SC: SC-001)
-- [ ] T012 Add foundational unit tests for vault encryption contract, redaction behavior, and lifecycle transitions in `tests/unit/token-vault.test.ts`, `tests/unit/redaction.test.ts`, and `tests/unit/connection-lifecycle.test.ts` (FR: FR-002, FR-003, FR-008, FR-009; SC: SC-001, SC-004)
+- [x] T005 Implement PAT intake input validation schema (HTTPS URL, PAT presence, no echo fields) in `src/jira/jira-tool-schemas.ts` (FR: FR-001, FR-011; SC: SC-001, SC-006)
+- [x] T006 Implement encrypted token vault persistence interface and storage adapter in `src/security/token-vault.ts` (FR: FR-002, FR-003; SC: SC-001)
+- [x] T007 [P] Implement credential lifecycle state logic (connected/expired/revoked + TTL checks) in `src/security/connection-lifecycle.ts` (FR: FR-004, FR-008, FR-009; SC: SC-004)
+- [x] T008 [P] Implement log/payload redaction utility for PAT-like strings and auth headers in `src/security/redaction.ts` (FR: FR-002, FR-012; SC: SC-001)
+- [x] T009 Implement Jira error normalization map for 401/403/404/413/network failures in `src/jira/jira-error-mapping.ts` (FR: FR-010; SC: SC-006)
+- [x] T010 Implement user-scope authorization guard for `connection_id` ownership checks in `src/security/connection-lifecycle.ts` (FR: FR-007; SC: SC-005)
+- [x] T011 Wire security middleware and sanitized logging hooks into API/MCP request pipeline in `server.ts` (FR: FR-002, FR-011, FR-012; SC: SC-001)
+- [x] T012 Add foundational unit tests for vault encryption contract, redaction behavior, and lifecycle transitions in `tests/unit/token-vault.test.ts`, `tests/unit/redaction.test.ts`, and `tests/unit/connection-lifecycle.test.ts` (FR: FR-002, FR-003, FR-008, FR-009; SC: SC-001, SC-004)
 
 **Checkpoint**: Token boundary, encrypted persistence, lifecycle enforcement, and redaction protections are in place.
 
@@ -52,18 +52,18 @@
 
 ### Tests for User Story 1
 
-- [ ] T013 [P] [US1] Add contract tests for `POST /api/jira/connections` and `GET /api/jira/connections/{connection_id}` in `tests/contract/jira-connections.contract.test.ts` (FR: FR-001, FR-004, FR-011; SC: SC-001, SC-002)
-- [ ] T014 [P] [US1] Add regression tests asserting PAT never appears in MCP tool args/results/transcript-safe outputs in `tests/regression/no-pat-leakage-mcp.test.ts` (FR: FR-002; SC: SC-001)
-- [ ] T015 [P] [US1] Add regression tests asserting PAT/auth headers never appear in logs and error payloads in `tests/regression/no-pat-leakage-logs.test.ts` (FR: FR-002, FR-012; SC: SC-001)
-- [ ] T016 [P] [US1] Add integration test for connect success + status verification + TTL-expired status behavior in `tests/integration/jira-connection.lifecycle.test.ts` (FR: FR-001, FR-004, FR-009; SC: SC-002, SC-004)
+- [x] T013 [P] [US1] Add contract tests for `POST /api/jira/connections` and `GET /api/jira/connections/{connection_id}` in `tests/contract/jira-connections.contract.test.ts` (FR: FR-001, FR-004, FR-011; SC: SC-001, SC-002)
+- [x] T014 [P] [US1] Add regression tests asserting PAT never appears in MCP tool args/results/transcript-safe outputs in `tests/regression/no-pat-leakage-mcp.test.ts` (FR: FR-002; SC: SC-001)
+- [x] T015 [P] [US1] Add regression tests asserting PAT/auth headers never appear in logs and error payloads in `tests/regression/no-pat-leakage-logs.test.ts` (FR: FR-002, FR-012; SC: SC-001)
+- [x] T016 [P] [US1] Add integration test for connect success + status verification + TTL-expired status behavior in `tests/integration/jira-connection.lifecycle.test.ts` (FR: FR-001, FR-004, FR-009; SC: SC-002, SC-004)
 
 ### Implementation for User Story 1
 
-- [ ] T017 [US1] Implement backend connect endpoint for Jira base URL + PAT intake and immediate vault write in `server.ts` (FR: FR-001, FR-002, FR-003; SC: SC-001, SC-002)
-- [ ] T018 [US1] Implement connection status endpoint returning non-sensitive metadata only in `server.ts` (FR: FR-004, FR-010; SC: SC-006)
-- [ ] T019 [US1] Implement MCP tool schema/handler for `jira_connection_status` with opaque `connection_id` only in `src/jira/jira-tool-schemas.ts` and `src/jira/jira-tool-handlers.ts` (FR: FR-004, FR-011; SC: SC-001)
-- [ ] T020 [US1] Add UI bridge flow for secure connect/status interactions with text fallback rendering in `src/mcp-app.ts` and `mcp-app.html` (FR: FR-001, FR-004, FR-011; SC: SC-001, SC-006)
-- [ ] T021 [US1] Emit sanitized security events for connect/status operations in `src/security/security-events.ts` and `server.ts` (FR: FR-012; SC: SC-001)
+- [x] T017 [US1] Implement backend connect endpoint for Jira base URL + PAT intake and immediate vault write in `server.ts` (FR: FR-001, FR-002, FR-003; SC: SC-001, SC-002)
+- [x] T018 [US1] Implement connection status endpoint returning non-sensitive metadata only in `server.ts` (FR: FR-004, FR-010; SC: SC-006)
+- [x] T019 [US1] Implement MCP tool schema/handler for `jira_connection_status` with opaque `connection_id` only in `src/jira/jira-tool-schemas.ts` and `src/jira/jira-tool-handlers.ts` (FR: FR-004, FR-011; SC: SC-001)
+- [x] T020 [US1] Add UI bridge flow for secure connect/status interactions with text fallback rendering in `src/mcp-app.ts` and `mcp-app.html` (FR: FR-001, FR-004, FR-011; SC: SC-001, SC-006)
+- [x] T021 [US1] Emit sanitized security events for connect/status operations in `src/security/security-events.ts` and `server.ts` (FR: FR-012; SC: SC-001)
 
 **Checkpoint**: US1 is independently functional and demonstrable as MVP.
 
@@ -77,19 +77,19 @@
 
 ### Tests for User Story 2
 
-- [ ] T022 [P] [US2] Add contract tests for `GET /api/jira/issues/{issue_key}/attachments` and `POST /api/jira/issues/{issue_key}/attachments` in `tests/contract/jira-attachments.contract.test.ts` (FR: FR-005, FR-006, FR-010; SC: SC-003, SC-006)
-- [ ] T023 [P] [US2] Add integration tests for list/upload success against Jira test fixture in `tests/integration/jira-attachments.success.test.ts` (FR: FR-005, FR-006; SC: SC-003)
-- [ ] T024 [P] [US2] Add integration tests for 401/403/404/size-limit failure mapping in `tests/integration/jira-attachments.failures.test.ts` (FR: FR-010; SC: SC-006)
-- [ ] T025 [P] [US2] Add regression tests proving MCP tools for list/upload reject secret fields and accept only opaque refs in `tests/regression/mcp-opaque-reference-enforcement.test.ts` (FR: FR-011; SC: SC-001)
+- [x] T022 [P] [US2] Add contract tests for `GET /api/jira/issues/{issue_key}/attachments` and `POST /api/jira/issues/{issue_key}/attachments` in `tests/contract/jira-attachments.contract.test.ts` (FR: FR-005, FR-006, FR-010; SC: SC-003, SC-006)
+- [x] T023 [P] [US2] Add integration tests for list/upload success against Jira test fixture in `tests/integration/jira-attachments.success.test.ts` (FR: FR-005, FR-006; SC: SC-003)
+- [x] T024 [P] [US2] Add integration tests for 401/403/404/size-limit failure mapping in `tests/integration/jira-attachments.failures.test.ts` (FR: FR-010; SC: SC-006)
+- [x] T025 [P] [US2] Add regression tests proving MCP tools for list/upload reject secret fields and accept only opaque refs in `tests/regression/mcp-opaque-reference-enforcement.test.ts` (FR: FR-011; SC: SC-001)
 
 ### Implementation for User Story 2
 
-- [ ] T026 [US2] Implement Jira API client operations for list and upload with sanitized request/response handling in `src/jira/jira-client.ts` (FR: FR-005, FR-006, FR-010; SC: SC-003, SC-006)
-- [ ] T027 [US2] Implement artifact reference validation (exists/readable/size boundary) in `src/jira/artifact-selection.ts` (FR: FR-006, FR-010; SC: SC-006)
-- [ ] T028 [US2] Implement server endpoints for list and attach using `connection_id` vault resolution in `server.ts` (FR: FR-005, FR-006, FR-011; SC: SC-001, SC-003)
-- [ ] T029 [US2] Implement MCP tools `jira_list_attachments` and `jira_attach_artifact` with text fallbacks in `src/jira/jira-tool-schemas.ts` and `src/jira/jira-tool-handlers.ts` (FR: FR-005, FR-006, FR-011; SC: SC-001, SC-006)
-- [ ] T030 [US2] Add UI workflow for issue key/artifact selection and action feedback in `src/mcp-app.ts` and `mcp-app.html` (FR: FR-005, FR-006, FR-010; SC: SC-003, SC-006)
-- [ ] T031 [US2] Emit sanitized security events for list/upload outcomes (success and failures) in `src/security/security-events.ts` and `server.ts` (FR: FR-012; SC: SC-001)
+- [x] T026 [US2] Implement Jira API client operations for list and upload with sanitized request/response handling in `src/jira/jira-client.ts` (FR: FR-005, FR-006, FR-010; SC: SC-003, SC-006)
+- [x] T027 [US2] Implement artifact reference validation (exists/readable/size boundary) in `src/jira/artifact-selection.ts` (FR: FR-006, FR-010; SC: SC-006)
+- [x] T028 [US2] Implement server endpoints for list and attach using `connection_id` vault resolution in `server.ts` (FR: FR-005, FR-006, FR-011; SC: SC-001, SC-003)
+- [x] T029 [US2] Implement MCP tools `jira_list_attachments` and `jira_attach_artifact` with text fallbacks in `src/jira/jira-tool-schemas.ts` and `src/jira/jira-tool-handlers.ts` (FR: FR-005, FR-006, FR-011; SC: SC-001, SC-006)
+- [x] T030 [US2] Add UI workflow for issue key/artifact selection and action feedback in `src/mcp-app.ts` and `mcp-app.html` (FR: FR-005, FR-006, FR-010; SC: SC-003, SC-006)
+- [x] T031 [US2] Emit sanitized security events for list/upload outcomes (success and failures) in `src/security/security-events.ts` and `server.ts` (FR: FR-012; SC: SC-001)
 
 **Checkpoint**: US2 works independently using an existing connection.
 
@@ -103,17 +103,17 @@
 
 ### Tests for User Story 3
 
-- [ ] T032 [P] [US3] Add contract tests for `DELETE /api/jira/connections/{connection_id}` and revoked-state status responses in `tests/contract/jira-disconnect.contract.test.ts` (FR: FR-008, FR-009; SC: SC-004)
-- [ ] T033 [P] [US3] Add integration tests for disconnect + immediate operation denial + reconnect recovery in `tests/integration/jira-disconnect.lifecycle.test.ts` (FR: FR-008, FR-009, FR-010; SC: SC-004, SC-006)
-- [ ] T034 [P] [US3] Add regression test for cross-user `connection_id` misuse denial post-revoke and pre-revoke in `tests/regression/connection-isolation.test.ts` (FR: FR-007; SC: SC-005)
+- [x] T032 [P] [US3] Add contract tests for `DELETE /api/jira/connections/{connection_id}` and revoked-state status responses in `tests/contract/jira-disconnect.contract.test.ts` (FR: FR-008, FR-009; SC: SC-004)
+- [x] T033 [P] [US3] Add integration tests for disconnect + immediate operation denial + reconnect recovery in `tests/integration/jira-disconnect.lifecycle.test.ts` (FR: FR-008, FR-009, FR-010; SC: SC-004, SC-006)
+- [x] T034 [P] [US3] Add regression test for cross-user `connection_id` misuse denial post-revoke and pre-revoke in `tests/regression/connection-isolation.test.ts` (FR: FR-007; SC: SC-005)
 
 ### Implementation for User Story 3
 
-- [ ] T035 [US3] Implement revoke/disconnect endpoint and immediate credential invalidation in `server.ts` and `src/security/connection-lifecycle.ts` (FR: FR-008, FR-009; SC: SC-004)
-- [ ] T036 [US3] Implement MCP tool `jira_disconnect` with opaque reference handling and text fallback in `src/jira/jira-tool-schemas.ts` and `src/jira/jira-tool-handlers.ts` (FR: FR-008, FR-011; SC: SC-001, SC-004)
-- [ ] T037 [US3] Enforce revoked/expired guards in list/upload/connect-status code paths in `server.ts` and `src/jira/jira-tool-handlers.ts` (FR: FR-009, FR-010; SC: SC-004, SC-006)
-- [ ] T038 [US3] Add UI disconnect action and revoked-state guidance in `src/mcp-app.ts` and `mcp-app.html` (FR: FR-008, FR-010; SC: SC-006)
-- [ ] T039 [US3] Emit sanitized revoke/expiry security events in `src/security/security-events.ts` and `server.ts` (FR: FR-012; SC: SC-001, SC-004)
+- [x] T035 [US3] Implement revoke/disconnect endpoint and immediate credential invalidation in `server.ts` and `src/security/connection-lifecycle.ts` (FR: FR-008, FR-009; SC: SC-004)
+- [x] T036 [US3] Implement MCP tool `jira_disconnect` with opaque reference handling and text fallback in `src/jira/jira-tool-schemas.ts` and `src/jira/jira-tool-handlers.ts` (FR: FR-008, FR-011; SC: SC-001, SC-004)
+- [x] T037 [US3] Enforce revoked/expired guards in list/upload/connect-status code paths in `server.ts` and `src/jira/jira-tool-handlers.ts` (FR: FR-009, FR-010; SC: SC-004, SC-006)
+- [x] T038 [US3] Add UI disconnect action and revoked-state guidance in `src/mcp-app.ts` and `mcp-app.html` (FR: FR-008, FR-010; SC: SC-006)
+- [x] T039 [US3] Emit sanitized revoke/expiry security events in `src/security/security-events.ts` and `server.ts` (FR: FR-012; SC: SC-001, SC-004)
 
 **Checkpoint**: US3 independently enforces revoke and TTL boundaries.
 
@@ -123,12 +123,12 @@
 
 **Purpose**: Final hardening, docs, and operational guidance across all stories.
 
-- [ ] T040 [P] Add end-to-end script covering connect/status/list/attach/disconnect happy path and failure path checks in `scripts/jira-token-boundary-tests.ts` (FR: FR-001, FR-005, FR-006, FR-008, FR-010; SC: SC-001, SC-003, SC-004, SC-006)
-- [ ] T041 [P] Update MCP smoke tests to include Jira tool discovery and text fallback assertions in `scripts/mcp-smoke-tests.ts` (FR: FR-011, FR-012; SC: SC-001, SC-006)
-- [ ] T042 Add security model documentation (secret boundary, allowed secret ingress, forbidden surfaces, threat notes) in `docs/security-model.md` (FR: FR-002, FR-003, FR-011; SC: SC-001)
-- [ ] T043 Add operator guidance for key management, TTL/revocation operations, and incident response in `docs/operator-guide.md` (FR: FR-008, FR-009, FR-012; SC: SC-004, SC-006)
-- [ ] T044 Update feature usage and developer workflow documentation in `README.md` and `specs/004-jira-attachment-pat/quickstart.md` (FR: FR-010; SC: SC-006)
-- [ ] T045 Run full validation pass and record results for contract/integration/regression suites in `specs/004-jira-attachment-pat/quickstart.md` (FR: FR-012; SC: SC-001, SC-006)
+- [x] T040 [P] Add end-to-end script covering connect/status/list/attach/disconnect happy path and failure path checks in `scripts/jira-token-boundary-tests.ts` (FR: FR-001, FR-005, FR-006, FR-008, FR-010; SC: SC-001, SC-003, SC-004, SC-006)
+- [x] T041 [P] Update MCP smoke tests to include Jira tool discovery and text fallback assertions in `scripts/mcp-smoke-tests.ts` (FR: FR-011, FR-012; SC: SC-001, SC-006)
+- [x] T042 Add security model documentation (secret boundary, allowed secret ingress, forbidden surfaces, threat notes) in `docs/security-model.md` (FR: FR-002, FR-003, FR-011; SC: SC-001)
+- [x] T043 Add operator guidance for key management, TTL/revocation operations, and incident response in `docs/operator-guide.md` (FR: FR-008, FR-009, FR-012; SC: SC-004, SC-006)
+- [x] T044 Update feature usage and developer workflow documentation in `README.md` and `specs/004-jira-attachment-pat/quickstart.md` (FR: FR-010; SC: SC-006)
+- [x] T045 Run full validation pass and record results for contract/integration/regression suites in `specs/004-jira-attachment-pat/quickstart.md` (FR: FR-012; SC: SC-001, SC-006)
 
 ---
 

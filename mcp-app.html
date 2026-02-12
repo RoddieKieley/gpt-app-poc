@@ -3,16 +3,29 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>MCP Apps Hello World</title>
+    <title>MCP Apps Jira Attachments</title>
   </head>
   <body>
     <main>
-      <h1>MCP Apps Hello World</h1>
-      <p>
-        <strong>Status:</strong>
-        <span id="status">Waiting for tool result...</span>
-      </p>
-      <button id="refresh-btn" type="button">Update greeting</button>
+      <h1>Jira Attachment Assistant</h1>
+      <p><strong>Status:</strong> <span id="status">Ready.</span></p>
+      <section>
+        <h2>Connect Jira</h2>
+        <input id="jira-url" type="url" placeholder="https://jira.example.com" />
+        <input id="jira-pat" type="password" placeholder="PAT (never shown in tool calls)" />
+        <button id="connect-btn" type="button">Connect</button>
+      </section>
+      <section>
+        <h2>Connection Actions</h2>
+        <input id="connection-id" type="text" placeholder="connection_id" />
+        <input id="issue-key" type="text" placeholder="ISSUE-123" />
+        <input id="artifact-ref" type="text" placeholder="/tmp/sosreport.tar.xz" />
+        <button id="status-btn" type="button">Check status</button>
+        <button id="list-btn" type="button">List attachments</button>
+        <button id="attach-btn" type="button">Attach artifact</button>
+        <button id="disconnect-btn" type="button">Disconnect</button>
+      </section>
+      <p>If UI is unavailable, all server tools return text fallbacks.</p>
     </main>
     <script type="module" src="/src/mcp-app.ts"></script>
   </body>

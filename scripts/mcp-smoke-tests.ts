@@ -10,6 +10,12 @@ const MCP_PATH = "/mcp";
 const MCP_URL = `http://${HOST}:${PORT}${MCP_PATH}`;
 const TOOL_NAME = "hello-world";
 const UI_RESOURCE_URI = "ui://hello-world/app.html";
+const REQUIRED_JIRA_TOOLS = [
+  "jira_connection_status",
+  "jira_list_attachments",
+  "jira_attach_artifact",
+  "jira_disconnect",
+];
 const INIT_TIMEOUT_MS = 10_000;
 
 type JsonRpcResponse =
@@ -170,6 +176,12 @@ const main = async () => {
       assert.equal(tool?.annotations?.destructiveHint, false, "destructiveHint not set");
       assert.equal(tool?._meta?.["openai/widgetAccessible"], true, "widgetAccessible not set");
       assert.equal(tool?._meta?.["openai/outputTemplate"], UI_RESOURCE_URI, "outputTemplate mismatch");
+      for (const required of REQUIRED_JIRA_TOOLS) {
+        assert.ok(
+          result.tools?.some((item) => item.name === required),
+          `missing Jira tool ${required}`,
+        );
+      }
     }, failures);
 
     await check("tools/call returns text fallback", async () => {
@@ -179,6 +191,15 @@ const main = async () => {
       })) as { content?: { type: string; text?: string }[] };
       const text = result?.content?.find((item) => item.type === "text")?.text;
       assert.ok(text && text.trim().length > 0, "text fallback missing");
+    }, failures);
+
+    await check("jira tools return text fallback on safe errors", async () => {
+      const result = (await jsonRpc("tools/call", {
+        name: "jira_connection_status",
+        arguments: { connection_id: "missing-connection" },
+      })) as { content?: { type: string; text?: string }[] };
+      const text = result?.content?.find((item) => item.type === "text")?.text;
+      assert.ok(text && text.trim().length > 0, "jira text fallback missing");
     }, failures);
 
     await check("UI resource is retrievable with metadata", async () => {

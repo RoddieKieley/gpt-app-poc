@@ -35,6 +35,12 @@ See:
 ## Testing
 
 - MCP smoke tests (after build): `npm run test:mcp`
+- Jira feature tests:
+  - `npm run test:unit`
+  - `npm run test:contract`
+  - `npm run test:integration`
+  - `npm run test:regression`
+  - `npm run test:jira`
 
 ## ChatGPT Apps Technical Readiness
 
@@ -43,3 +49,11 @@ Technical readiness details live under `specs/003-chatgpt-app-technical-readines
 - MCP endpoint: `http://localhost:3001/mcp` (dev), `https://gptapppoc.kieley.io/mcp` (prod)
 - Privacy policy: `http://localhost:3001/privacy` (dev), `https://gptapppoc.kieley.io/privacy` (prod)
 - Support contact: `http://localhost:3001/support` (dev), `https://gptapppoc.kieley.io/support` (prod)
+
+## Jira Attachment Security Behavior
+
+- PATs are accepted only by backend connection endpoint (`POST /api/jira/connections`).
+- PATs are encrypted at rest in backend token vault storage.
+- MCP tools never accept or return PATs; they use opaque `connection_id` references.
+- Tool and API flows always provide text fallbacks for non-UI MCP clients.
+- Revoke and TTL-expiry block all protected Jira operations until reconnect.

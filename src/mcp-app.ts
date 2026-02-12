@@ -1,162 +1,122 @@
 import { App } from "@modelcontextprotocol/ext-apps";
 
 const statusEl = document.getElementById("status");
-const refreshBtn = document.getElementById("refresh-btn");
+const connectBtn = document.getElementById("connect-btn");
+const statusBtn = document.getElementById("status-btn");
+const listBtn = document.getElementById("list-btn");
+const attachBtn = document.getElementById("attach-btn");
+const disconnectBtn = document.getElementById("disconnect-btn");
+const jiraUrlEl = document.getElementById("jira-url") as HTMLInputElement | null;
+const jiraPatEl = document.getElementById("jira-pat") as HTMLInputElement | null;
+const connectionIdEl = document.getElementById("connection-id") as HTMLInputElement | null;
+const issueKeyEl = document.getElementById("issue-key") as HTMLInputElement | null;
+const artifactRefEl = document.getElementById("artifact-ref") as HTMLInputElement | null;
 
-if (!statusEl || !refreshBtn) {
+if (
+  !statusEl || !connectBtn || !statusBtn || !listBtn || !attachBtn || !disconnectBtn ||
+  !jiraUrlEl || !jiraPatEl || !connectionIdEl || !issueKeyEl || !artifactRefEl
+) {
   throw new Error("Missing required UI elements.");
 }
 
-// #region agent log
-fetch("http://127.0.0.1:7242/ingest/ca329fe8-e581-4ddd-aeba-af4e7618e3c2",{
-  method:"POST",
-  headers:{"Content-Type":"application/json"},
-  body:JSON.stringify({
-    location:"src/mcp-app.ts:13",
-    message:"ui_init",
-    data:{
-      href: window.location.href,
-      hasParent: window.parent !== window,
-      referrer: document.referrer || null
-    },
-    timestamp:Date.now(),
-    sessionId:"debug-session",
-    runId:"repro1",
-    hypothesisId:"H1"
-  })
-}).catch(()=>{});
-// #endregion agent log
-
-const app = new App({ name: "MCP Apps Hello World", version: "1.0.0" });
+const app = new App({ name: "MCP Apps Jira Attachments", version: "1.0.0" });
 
 try {
-  // #region agent log
-  fetch("http://127.0.0.1:7242/ingest/ca329fe8-e581-4ddd-aeba-af4e7618e3c2",{
-    method:"POST",
-    headers:{"Content-Type":"application/json"},
-    body:JSON.stringify({
-      location:"src/mcp-app.ts:28",
-      message:"app_connect_start",
-      data:{},
-      timestamp:Date.now(),
-      sessionId:"debug-session",
-      runId:"repro1",
-      hypothesisId:"H1"
-    })
-  }).catch(()=>{});
-  // #endregion agent log
   app.connect();
-  // #region agent log
-  fetch("http://127.0.0.1:7242/ingest/ca329fe8-e581-4ddd-aeba-af4e7618e3c2",{
-    method:"POST",
-    headers:{"Content-Type":"application/json"},
-    body:JSON.stringify({
-      location:"src/mcp-app.ts:40",
-      message:"app_connect_called",
-      data:{},
-      timestamp:Date.now(),
-      sessionId:"debug-session",
-      runId:"repro1",
-      hypothesisId:"H1"
-    })
-  }).catch(()=>{});
-  // #endregion agent log
 } catch (error) {
   const message = error instanceof Error ? error.message : String(error);
-  // #region agent log
-  fetch("http://127.0.0.1:7242/ingest/ca329fe8-e581-4ddd-aeba-af4e7618e3c2",{
-    method:"POST",
-    headers:{"Content-Type":"application/json"},
-    body:JSON.stringify({
-      location:"src/mcp-app.ts:53",
-      message:"app_connect_error",
-      data:{message},
-      timestamp:Date.now(),
-      sessionId:"debug-session",
-      runId:"repro1",
-      hypothesisId:"H1"
-    })
-  }).catch(()=>{});
-  // #endregion agent log
+  statusEl.textContent = `Widget connection failed: ${message}`;
 }
 
 app.ontoolresult = (result) => {
   const text = result.content?.find((item) => item.type === "text")?.text;
-  // #region agent log
-  fetch("http://127.0.0.1:7242/ingest/ca329fe8-e581-4ddd-aeba-af4e7618e3c2",{
-    method:"POST",
-    headers:{"Content-Type":"application/json"},
-    body:JSON.stringify({
-      location:"src/mcp-app.ts:65",
-      message:"tool_result",
-      data:{hasText: Boolean(text)},
-      timestamp:Date.now(),
-      sessionId:"debug-session",
-      runId:"repro1",
-      hypothesisId:"H2"
-    })
-  }).catch(()=>{});
-  // #endregion agent log
-  statusEl.textContent = text ?? "Hello from the UI.";
+  statusEl.textContent = text ?? "Tool executed.";
 };
 
-refreshBtn.addEventListener("click", async () => {
-  statusEl.textContent = "Calling tool...";
-  // #region agent log
-  fetch("http://127.0.0.1:7242/ingest/ca329fe8-e581-4ddd-aeba-af4e7618e3c2",{
-    method:"POST",
-    headers:{"Content-Type":"application/json"},
-    body:JSON.stringify({
-      location:"src/mcp-app.ts:75",
-      message:"tool_call_start",
-      data:{name:"hello-world"},
-      timestamp:Date.now(),
-      sessionId:"debug-session",
-      runId:"repro1",
-      hypothesisId:"H2"
-    })
-  }).catch(()=>{});
-  // #endregion agent log
+const callTool = async (name: string, args: Record<string, unknown>) => {
   try {
     const result = await app.callServerTool({
-      name: "hello-world",
-      arguments: {},
+      name,
+      arguments: args,
     });
     const text = result.content?.find((item) => item.type === "text")?.text;
-    // #region agent log
-    fetch("http://127.0.0.1:7242/ingest/ca329fe8-e581-4ddd-aeba-af4e7618e3c2",{
-      method:"POST",
-      headers:{"Content-Type":"application/json"},
-      body:JSON.stringify({
-        location:"src/mcp-app.ts:92",
-        message:"tool_call_success",
-        data:{hasText: Boolean(text)},
-        timestamp:Date.now(),
-        sessionId:"debug-session",
-        runId:"repro1",
-        hypothesisId:"H2"
-      })
-    }).catch(()=>{});
-    // #endregion agent log
-    statusEl.textContent = text ?? "Hello from the UI.";
+    statusEl.textContent = text ?? "Operation completed.";
   } catch (error) {
     const message = error instanceof Error ? error.message : String(error);
-    // #region agent log
-    fetch("http://127.0.0.1:7242/ingest/ca329fe8-e581-4ddd-aeba-af4e7618e3c2",{
-      method:"POST",
-      headers:{"Content-Type":"application/json"},
-      body:JSON.stringify({
-        location:"src/mcp-app.ts:107",
-        message:"tool_call_error",
-        data:{message},
-        timestamp:Date.now(),
-        sessionId:"debug-session",
-        runId:"repro1",
-        hypothesisId:"H2"
-      })
-    }).catch(()=>{});
-    // #endregion agent log
-    statusEl.textContent =
-      "Tool call failed. Use the text response as fallback.";
+    statusEl.textContent = `Operation failed: ${message}`;
   }
+};
+
+connectBtn.addEventListener("click", async () => {
+  const jiraBaseUrl = jiraUrlEl.value.trim();
+  const pat = jiraPatEl.value;
+  if (!jiraBaseUrl || !pat) {
+    statusEl.textContent = "Jira URL and PAT are required.";
+    return;
+  }
+  try {
+    const response = await fetch("/api/jira/connections", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ jira_base_url: jiraBaseUrl, pat }),
+    });
+    const body = await response.json() as { connection_id?: string; text?: string };
+    if (!response.ok) {
+      statusEl.textContent = body.text ?? "Connection failed.";
+      return;
+    }
+    if (body.connection_id) {
+      connectionIdEl.value = body.connection_id;
+    }
+    jiraPatEl.value = "";
+    statusEl.textContent = body.text ?? "Connected.";
+  } catch {
+    statusEl.textContent = "Connection request failed.";
+  }
+});
+
+statusBtn.addEventListener("click", async () => {
+  const connectionId = connectionIdEl.value.trim();
+  if (!connectionId) {
+    statusEl.textContent = "connection_id is required.";
+    return;
+  }
+  await callTool("jira_connection_status", { connection_id: connectionId });
+});
+
+listBtn.addEventListener("click", async () => {
+  const connectionId = connectionIdEl.value.trim();
+  const issueKey = issueKeyEl.value.trim();
+  if (!connectionId || !issueKey) {
+    statusEl.textContent = "connection_id and issue key are required.";
+    return;
+  }
+  await callTool("jira_list_attachments", {
+    connection_id: connectionId,
+    issue_key: issueKey,
+  });
+});
+
+attachBtn.addEventListener("click", async () => {
+  const connectionId = connectionIdEl.value.trim();
+  const issueKey = issueKeyEl.value.trim();
+  const artifactRef = artifactRefEl.value.trim();
+  if (!connectionId || !issueKey || !artifactRef) {
+    statusEl.textContent = "connection_id, issue key, and artifact path are required.";
+    return;
+  }
+  await callTool("jira_attach_artifact", {
+    connection_id: connectionId,
+    issue_key: issueKey,
+    artifact_ref: artifactRef,
+  });
+});
+
+disconnectBtn.addEventListener("click", async () => {
+  const connectionId = connectionIdEl.value.trim();
+  if (!connectionId) {
+    statusEl.textContent = "connection_id is required.";
+    return;
+  }
+  await callTool("jira_disconnect", { connection_id: connectionId });
 });
