@@ -7,6 +7,7 @@ import {
 } from "@modelcontextprotocol/ext-apps/server";
 import cors from "cors";
 import express from "express";
+import { randomUUID } from "node:crypto";
 import fs from "node:fs/promises";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
@@ -294,6 +295,7 @@ registerAppResource(
 
 export const createApp = () => {
   const app = express();
+  const mcpTransports = new Map<string, StreamableHTTPServerTransport>();
   app.use(cors());
   app.use(express.json({ limit: "1mb" }));
 
@@ -523,15 +525,58 @@ export const createApp = () => {
     }
   });
 
-  app.post("/mcp", async (req, res) => {
-    const transport = new StreamableHTTPServerTransport({
-      sessionIdGenerator: undefined,
-      enableJsonResponse: true,
-    });
+  app.all("/mcp", async (req, res) => {
+    try {
+      const headerValue = req.header("mcp-session-id");
+      const sessionId = typeof headerValue === "string" && headerValue.trim().length > 0
+        ? headerValue
+        : undefined;
 
-    res.on("close", () => transport.close());
-    await server.connect(transport);
-    await transport.handleRequest(req, res, req.body);
+      let transport: StreamableHTTPServerTransport | undefined;
+      if (sessionId) {
+        transport = mcpTransports.get(sessionId);
+      } else if (req.method === "POST") {
+        let registeredSessionId: string | undefined;
+        transport = new StreamableHTTPServerTransport({
+          sessionIdGenerator: () => randomUUID(),
+          enableJsonResponse: true,
+          onsessioninitialized: (newSessionId) => {
+            registeredSessionId = newSessionId;
+            mcpTransports.set(newSessionId, transport!);
+          },
+        });
+
+        transport.onclose = () => {
+          if (registeredSessionId) {
+            mcpTransports.delete(registeredSessionId);
+          }
+        };
+
+        await server.connect(transport);
+      }
+
+      if (!transport) {
+        if (!sessionId && req.method !== "POST") {
+          return res.status(400).json({
+            code: "invalid_request",
+            message: "Session required for non-POST MCP requests.",
+          });
+        }
+
+        return res.status(404).json({
+          code: "session_not_found",
+          message: "MCP session not found.",
+        });
+      }
+
+      await transport.handleRequest(req, res, req.body);
+      return;
+    } catch (error) {
+      return res.status(500).json({
+        code: "internal_error",
+        message: safeError(error).message,
+      });
+    }
   });
 
   return app;
