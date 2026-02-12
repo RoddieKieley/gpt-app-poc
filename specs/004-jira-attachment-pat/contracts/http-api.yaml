@@ -1,0 +1,241 @@
+openapi: 3.0.3
+info:
+  title: Jira Token Vault Boundary API
+  version: 0.1.0
+  description: >
+    Backend-only endpoints for creating and managing Jira PAT-backed connections.
+    Endpoints returning connection references must never return credential material.
+servers:
+  - url: https://gptapppoc.kieley.io
+paths:
+  /api/jira/connections:
+    post:
+      summary: Create Jira connection from base URL + PAT
+      description: >
+        Accepts end-user PAT through backend-only channel, stores encrypted credential,
+        and returns opaque connection reference and non-sensitive status.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                jira_base_url:
+                  type: string
+                  format: uri
+                pat:
+                  type: string
+                  writeOnly: true
+              required: [jira_base_url, pat]
+              additionalProperties: false
+      responses:
+        "201":
+          description: Connection created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ConnectionStatus"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/InvalidCredentials"
+        "422":
+          $ref: "#/components/responses/ValidationError"
+  /api/jira/connections/{connection_id}:
+    get:
+      summary: Get connection status
+      parameters:
+        - $ref: "#/components/parameters/ConnectionId"
+      responses:
+        "200":
+          description: Current non-sensitive connection status
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ConnectionStatus"
+        "404":
+          $ref: "#/components/responses/NotFound"
+    delete:
+      summary: Revoke and disconnect connection
+      parameters:
+        - $ref: "#/components/parameters/ConnectionId"
+      responses:
+        "204":
+          description: Revoked
+        "404":
+          $ref: "#/components/responses/NotFound"
+  /api/jira/issues/{issue_key}/attachments:
+    get:
+      summary: List Jira issue attachments
+      parameters:
+        - $ref: "#/components/parameters/IssueKey"
+        - $ref: "#/components/parameters/ConnectionIdHeader"
+      responses:
+        "200":
+          description: Attachment metadata list
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  issue_key:
+                    type: string
+                  attachments:
+                    type: array
+                    items:
+                      $ref: "#/components/schemas/Attachment"
+                required: [issue_key, attachments]
+        "401":
+          $ref: "#/components/responses/InvalidCredentials"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/NotFound"
+    post:
+      summary: Attach local artifact to Jira issue
+      parameters:
+        - $ref: "#/components/parameters/IssueKey"
+        - $ref: "#/components/parameters/ConnectionIdHeader"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                artifact_ref:
+                  type: string
+              required: [artifact_ref]
+              additionalProperties: false
+      responses:
+        "201":
+          description: Attachment uploaded
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Attachment"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/InvalidCredentials"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "413":
+          description: Artifact exceeds accepted size
+components:
+  parameters:
+    ConnectionId:
+      name: connection_id
+      in: path
+      required: true
+      schema:
+        type: string
+    IssueKey:
+      name: issue_key
+      in: path
+      required: true
+      schema:
+        type: string
+    ConnectionIdHeader:
+      name: X-Connection-Id
+      in: header
+      required: true
+      schema:
+        type: string
+      description: Opaque connection reference; no secret tokens allowed.
+  schemas:
+    ConnectionStatus:
+      type: object
+      properties:
+        connection_id:
+          type: string
+        jira_base_url:
+          type: string
+          format: uri
+        status:
+          type: string
+          enum: [connected, expired, revoked, error]
+        expires_at:
+          type: string
+          format: date-time
+        last_verified_at:
+          type: string
+          format: date-time
+          nullable: true
+        text:
+          type: string
+          description: Text fallback message for non-UI clients.
+      required: [connection_id, jira_base_url, status, expires_at, text]
+    Attachment:
+      type: object
+      properties:
+        issue_key:
+          type: string
+        attachment_id:
+          type: string
+        filename:
+          type: string
+        size_bytes:
+          type: integer
+        created_at:
+          type: string
+          format: date-time
+        text:
+          type: string
+          description: Text fallback message for non-UI clients.
+      required: [issue_key, attachment_id, filename, size_bytes, created_at, text]
+    ErrorBody:
+      type: object
+      properties:
+        code:
+          type: string
+          enum:
+            - invalid_credentials
+            - forbidden
+            - not_found
+            - artifact_invalid
+            - connection_expired
+            - connection_revoked
+            - upstream_unavailable
+            - validation_error
+            - unexpected_error
+        message:
+          type: string
+        text:
+          type: string
+          description: Text fallback for non-UI clients.
+      required: [code, message, text]
+  responses:
+    BadRequest:
+      description: Invalid input
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/ErrorBody"
+    ValidationError:
+      description: Validation failure
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/ErrorBody"
+    InvalidCredentials:
+      description: Credential invalid or expired
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/ErrorBody"
+    Forbidden:
+      description: Permission denied
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/ErrorBody"
+    NotFound:
+      description: Resource not found
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/ErrorBody"
