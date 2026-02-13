@@ -1,0 +1,26 @@
+{
+  "tools": [
+    {
+      "name": "list_skills",
+      "title": "List Available Skills",
+      "description": "Returns the canonical skill URI(s) for repo-local skills. Read-only; no side effects. Use the returned URI with MCP resources/read to fetch skill content.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {},
+        "additionalProperties": false
+      },
+      "annotations": {
+        "readOnlyHint": true,
+        "openWorldHint": false,
+        "destructiveHint": false
+      },
+      "responseRequirement": "Response MUST include user-actionable text (e.g., skill name, description, and canonical URI in plain text) and MUST reference the same canonical URI used for resources/read: skill://hello-world/SKILL.md",
+      "securityBoundary": {
+        "secretInputsAllowed": false,
+        "secretOutputsAllowed": false,
+        "notes": "Read-only discovery; no credentials or secrets."
+      }
+    }
+  ],
+  "textFallbackRequirement": "Tool response must include plain-text content so non-UI hosts can use the skill URI."
+}

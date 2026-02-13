@@ -1,0 +1,14 @@
+{
+  "resources": [
+    {
+      "uri": "skill://hello-world/SKILL.md",
+      "name": "hello-world-skill",
+      "description": "Repo-local Hello World skill definition (SKILL.md).",
+      "mimeType": "text/markdown",
+      "sourcePath": "skills/hello-world/SKILL.md",
+      "notes": "Canonical URI for MCP resources/read and resources/list. Same URI returned by discovery tool."
+    }
+  ],
+  "listSupport": true,
+  "readSupport": true
+}
