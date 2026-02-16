@@ -42,6 +42,30 @@ No Jira or Linux flow changes. Existing tests preserved.
 - **Smoke tests**: After implementation, `npm run test:mcp` should pass and include checks for (a) skill resource readable at canonical URI, (b) skill resource listed, (c) discovery tool returns same URI and text fallback.
 - **Jira**: All existing Jira tools and tests must continue to pass unchanged.
 
+## Manual verification notes
+
+- Confirm `resources/list` includes `skill://hello-world/SKILL.md`.
+- Confirm `resources/read` for `skill://hello-world/SKILL.md` returns markdown with "Hello World Skill".
+- Confirm `tools/list` includes `list_skills` as read-only when Increment 2 is complete.
+- Confirm `tools/call` for `list_skills` returns text fallback containing `skill://hello-world/SKILL.md`.
+- Confirm Jira tool contracts still expose only:
+  - `jira_connection_status`
+  - `jira_list_attachments`
+  - `jira_attach_artifact`
+  - `jira_disconnect`
+
+## Validation results
+
+- `npm run test:mcp` -> PASS
+  - Verified `resources/list` includes `skill://hello-world/SKILL.md`
+  - Verified `resources/read` returns markdown (`text/markdown`) for the canonical skill URI
+  - Verified `list_skills` returns text fallback containing `skill://hello-world/SKILL.md`
+- `npm run test:jira` -> PASS
+  - Unit: 4 passed
+  - Contract: 5 passed
+  - Integration: 4 passed
+  - Regression: 5 passed (including Jira surface preservation)
+
 ## Contracts
 
 - Skill resource: `specs/005-mcp-skill-discovery/contracts/skill-resource.json`

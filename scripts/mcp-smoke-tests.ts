@@ -9,13 +9,41 @@ const PORT = 3000;
 const MCP_PATH = "/mcp";
 const MCP_URL = `http://${HOST}:${PORT}${MCP_PATH}`;
 const TOOL_NAME = "hello-world";
+const SKILL_TOOL_NAME = "list_skills";
 const UI_RESOURCE_URI = "ui://hello-world/app.html";
+const JIRA_RESOURCE_URI = "ui://jira-attachments/app.html";
+const SKILL_RESOURCE_URI = "skill://hello-world/SKILL.md";
 const REQUIRED_JIRA_TOOLS = [
   "jira_connection_status",
   "jira_list_attachments",
   "jira_attach_artifact",
   "jira_disconnect",
 ];
+const REQUIRED_JIRA_TOOL_METADATA: Record<
+  string,
+  { readOnlyHint: boolean; destructiveHint: boolean; outputTemplate: string }
+> = {
+  jira_connection_status: {
+    readOnlyHint: true,
+    destructiveHint: false,
+    outputTemplate: JIRA_RESOURCE_URI,
+  },
+  jira_list_attachments: {
+    readOnlyHint: true,
+    destructiveHint: false,
+    outputTemplate: JIRA_RESOURCE_URI,
+  },
+  jira_attach_artifact: {
+    readOnlyHint: false,
+    destructiveHint: false,
+    outputTemplate: JIRA_RESOURCE_URI,
+  },
+  jira_disconnect: {
+    readOnlyHint: false,
+    destructiveHint: true,
+    outputTemplate: JIRA_RESOURCE_URI,
+  },
+};
 const INIT_TIMEOUT_MS = 10_000;
 
 type JsonRpcResponse =
@@ -177,11 +205,27 @@ const main = async () => {
       assert.equal(tool?._meta?.["openai/widgetAccessible"], true, "widgetAccessible not set");
       assert.equal(tool?._meta?.["openai/outputTemplate"], UI_RESOURCE_URI, "outputTemplate mismatch");
       for (const required of REQUIRED_JIRA_TOOLS) {
-        assert.ok(
-          result.tools?.some((item) => item.name === required),
-          `missing Jira tool ${required}`,
+        const jiraTool = result.tools?.find((item) => item.name === required);
+        assert.ok(jiraTool, `missing Jira tool ${required}`);
+        const expected = REQUIRED_JIRA_TOOL_METADATA[required];
+        assert.equal(jiraTool?.annotations?.readOnlyHint, expected.readOnlyHint, `${required} readOnlyHint mismatch`);
+        assert.equal(
+          jiraTool?.annotations?.destructiveHint,
+          expected.destructiveHint,
+          `${required} destructiveHint mismatch`,
+        );
+        assert.equal(
+          jiraTool?._meta?.["openai/outputTemplate"],
+          expected.outputTemplate,
+          `${required} outputTemplate mismatch`,
         );
       }
+
+      const listSkills = result?.tools?.find((item) => item.name === SKILL_TOOL_NAME);
+      assert.ok(listSkills, "list_skills tool missing");
+      assert.equal(listSkills?.annotations?.readOnlyHint, true, "list_skills readOnlyHint mismatch");
+      assert.equal(listSkills?.annotations?.openWorldHint, false, "list_skills openWorldHint mismatch");
+      assert.equal(listSkills?.annotations?.destructiveHint, false, "list_skills destructiveHint mismatch");
     }, failures);
 
     await check("tools/call returns text fallback", async () => {
@@ -218,6 +262,37 @@ const main = async () => {
       );
       const widgetCsp = resource?._meta?.["openai/widgetCSP"] as { connect_domains?: string[] } | undefined;
       assert.ok(widgetCsp?.connect_domains?.includes("https://gptapppoc.kieley.io"), "widgetCSP connect_domains missing");
+    }, failures);
+
+    await check("resources/list includes canonical skill URI", async () => {
+      const result = (await jsonRpc("resources/list")) as {
+        resources?: { uri?: string }[];
+      };
+      assert.ok(
+        result.resources?.some((item) => item.uri === SKILL_RESOURCE_URI),
+        "skill resource URI missing from resources/list",
+      );
+    }, failures);
+
+    await check("skill resource read returns markdown content", async () => {
+      const result = (await jsonRpc("resources/read", {
+        uri: SKILL_RESOURCE_URI,
+      })) as { contents?: { text?: string; mimeType?: string }[] };
+      const resource = result?.contents?.[0];
+      assert.equal(resource?.mimeType, "text/markdown", "skill resource MIME mismatch");
+      const text = resource?.text ?? "";
+      assert.ok(text.trim().length > 0, "skill resource content missing");
+      assert.ok(text.includes("Hello World Skill"), "skill resource content unexpected");
+    }, failures);
+
+    await check("list_skills returns text fallback and canonical URI", async () => {
+      const result = (await jsonRpc("tools/call", {
+        name: SKILL_TOOL_NAME,
+        arguments: {},
+      })) as { content?: { type: string; text?: string }[] };
+      const text = result?.content?.find((item) => item.type === "text")?.text ?? "";
+      assert.ok(text.trim().length > 0, "list_skills text fallback missing");
+      assert.ok(text.includes(SKILL_RESOURCE_URI), "list_skills canonical URI missing");
     }, failures);
   } finally {
     await stopServer(server);

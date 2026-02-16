@@ -42,6 +42,13 @@ See:
   - `npm run test:regression`
   - `npm run test:jira`
 
+## Runtime Skill Discovery
+
+- Canonical Hello World skill resource URI: `skill://hello-world/SKILL.md`
+- Repo-local skill source file: `skills/hello-world/SKILL.md`
+- Read-only discovery tool: `list_skills` (returns text fallback plus the canonical URI)
+- Jira tools/contracts/tests remain unchanged by this feature.
+
 ## ChatGPT Apps Technical Readiness
 
 Technical readiness details live under `specs/003-chatgpt-app-technical-readiness/`.

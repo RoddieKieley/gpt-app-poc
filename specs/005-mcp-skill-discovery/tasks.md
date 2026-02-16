@@ -18,9 +18,9 @@
 
 **Purpose**: Prepare minimal scaffolding for skill resource work and test coverage.
 
-- [ ] T001 Create skill directory scaffolding at `skills/hello-world/` for repo-local skill content
-- [ ] T002 Create initial skill document at `skills/hello-world/SKILL.md` with Hello World skill metadata and instructions
-- [ ] T003 [P] Add feature-specific test notes for manual verification steps in `specs/005-mcp-skill-discovery/quickstart.md`
+- [x] T001 Create skill directory scaffolding at `skills/hello-world/` for repo-local skill content
+- [x] T002 Create initial skill document at `skills/hello-world/SKILL.md` with Hello World skill metadata and instructions
+- [x] T003 [P] Add feature-specific test notes for manual verification steps in `specs/005-mcp-skill-discovery/quickstart.md`
 
 ---
 
@@ -30,9 +30,9 @@
 
 **⚠️ CRITICAL**: No user story implementation begins until this phase is complete.
 
-- [ ] T004 Add canonical constants for skill URI (`skill://hello-world/SKILL.md`) and source path (`skills/hello-world/SKILL.md`) in `server.ts`
-- [ ] T005 [P] Add helper logic for markdown skill content loading and text fallback messaging in `server.ts`
-- [ ] T006 [P] Add regression-safety assertions baseline for existing Jira tools presence/metadata in `scripts/mcp-smoke-tests.ts`
+- [x] T004 Add canonical constants for skill URI (`skill://hello-world/SKILL.md`) and source path (`skills/hello-world/SKILL.md`) in `server.ts`
+- [x] T005 [P] Add helper logic for markdown skill content loading and text fallback messaging in `server.ts`
+- [x] T006 [P] Add regression-safety assertions baseline for existing Jira tools presence/metadata in `scripts/mcp-smoke-tests.ts`
 
 **Checkpoint**: Canonical URI/path and shared safety checks are ready.
 
@@ -46,15 +46,15 @@
 
 ### Tests for User Story 1
 
-- [ ] T007 [P] [US1] Extend resource discovery checks for `resources/list` to include `skill://hello-world/SKILL.md` in `scripts/mcp-smoke-tests.ts`
-- [ ] T008 [P] [US1] Extend resource read checks to validate markdown payload and expected content from `skills/hello-world/SKILL.md` in `scripts/mcp-smoke-tests.ts`
-- [ ] T009 [P] [US1] Add regression test asserting Jira tool contracts remain intact after resource addition in `tests/regression/jira-surface-preservation.test.ts`
+- [x] T007 [P] [US1] Extend resource discovery checks for `resources/list` to include `skill://hello-world/SKILL.md` in `scripts/mcp-smoke-tests.ts`
+- [x] T008 [P] [US1] Extend resource read checks to validate markdown payload and expected content from `skills/hello-world/SKILL.md` in `scripts/mcp-smoke-tests.ts`
+- [x] T009 [P] [US1] Add regression test asserting Jira tool contracts remain intact after resource addition in `tests/regression/jira-surface-preservation.test.ts`
 
 ### Implementation for User Story 1
 
-- [ ] T010 [US1] Register canonical skill resource with markdown MIME in `server.ts`
-- [ ] T011 [US1] Implement skill resource read handler that loads `skills/hello-world/SKILL.md` and returns safe fallback text if unavailable in `server.ts`
-- [ ] T012 [US1] Verify existing UI resources remain unchanged while adding skill resource registration in `server.ts`
+- [x] T010 [US1] Register canonical skill resource with markdown MIME in `server.ts`
+- [x] T011 [US1] Implement skill resource read handler that loads `skills/hello-world/SKILL.md` and returns safe fallback text if unavailable in `server.ts`
+- [x] T012 [US1] Verify existing UI resources remain unchanged while adding skill resource registration in `server.ts`
 
 **Checkpoint**: US1 is fully functional and independently testable (MVP complete).
 
@@ -68,15 +68,15 @@
 
 ### Tests for User Story 2
 
-- [ ] T013 [P] [US2] Extend tool list checks to verify discovery tool registration and read-only annotations in `scripts/mcp-smoke-tests.ts`
-- [ ] T014 [P] [US2] Extend tool call checks to validate text fallback and canonical URI reference in `scripts/mcp-smoke-tests.ts`
-- [ ] T015 [P] [US2] Add regression test confirming Jira tool names and metadata are unchanged after discovery tool addition in `tests/regression/jira-surface-preservation.test.ts`
+- [x] T013 [P] [US2] Extend tool list checks to verify discovery tool registration and read-only annotations in `scripts/mcp-smoke-tests.ts`
+- [x] T014 [P] [US2] Extend tool call checks to validate text fallback and canonical URI reference in `scripts/mcp-smoke-tests.ts`
+- [x] T015 [P] [US2] Add regression test confirming Jira tool names and metadata are unchanged after discovery tool addition in `tests/regression/jira-surface-preservation.test.ts`
 
 ### Implementation for User Story 2
 
-- [ ] T016 [US2] Register `list_skills` read-only MCP tool schema/metadata in `server.ts`
-- [ ] T017 [US2] Implement `list_skills` handler returning plain-text fallback plus canonical URI reference in `server.ts`
-- [ ] T018 [US2] Ensure discovery tool response remains host-agnostic and does not alter Jira logic paths in `server.ts`
+- [x] T016 [US2] Register `list_skills` read-only MCP tool schema/metadata in `server.ts`
+- [x] T017 [US2] Implement `list_skills` handler returning plain-text fallback plus canonical URI reference in `server.ts`
+- [x] T018 [US2] Ensure discovery tool response remains host-agnostic and does not alter Jira logic paths in `server.ts`
 
 **Checkpoint**: US2 works independently and preserves US1 behavior.
 
@@ -86,10 +86,10 @@
 
 **Purpose**: Final validation, documentation sync, and regression safety confirmation.
 
-- [ ] T019 [P] Update feature validation steps/results for resource + discovery tool in `specs/005-mcp-skill-discovery/quickstart.md`
-- [ ] T020 Run `npm run test:mcp` and record pass/fail output in `specs/005-mcp-skill-discovery/quickstart.md`
-- [ ] T021 Run `npm run test:jira` to verify no Jira behavior changes and record summary in `specs/005-mcp-skill-discovery/quickstart.md`
-- [ ] T022 [P] Update feature overview and usage notes in `README.md` (skill resource URI + discovery tool, explicitly no Jira flow changes)
+- [x] T019 [P] Update feature validation steps/results for resource + discovery tool in `specs/005-mcp-skill-discovery/quickstart.md`
+- [x] T020 Run `npm run test:mcp` and record pass/fail output in `specs/005-mcp-skill-discovery/quickstart.md`
+- [x] T021 Run `npm run test:jira` to verify no Jira behavior changes and record summary in `specs/005-mcp-skill-discovery/quickstart.md`
+- [x] T022 [P] Update feature overview and usage notes in `README.md` (skill resource URI + discovery tool, explicitly no Jira flow changes)
 
 ---
 

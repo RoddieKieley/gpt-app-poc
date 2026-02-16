@@ -43,6 +43,21 @@ const server = new McpServer({
 });
 
 const resourceUri = "ui://hello-world/app.html";
+const SKILL_RESOURCE_URI = "skill://hello-world/SKILL.md";
+const SKILL_RESOURCE_SOURCE_PATH = path.join(__dirname, "skills", "hello-world", "SKILL.md");
+const SKILL_RESOURCE_MIME_TYPE = "text/markdown";
+const SKILL_RESOURCE_FALLBACK = `# Hello World Skill
+
+Skill content is temporarily unavailable from the repository.
+URI: ${SKILL_RESOURCE_URI}`;
+
+const loadHelloWorldSkillMarkdown = async (): Promise<string> => {
+  try {
+    return await fs.readFile(SKILL_RESOURCE_SOURCE_PATH, "utf-8");
+  } catch (_error) {
+    return SKILL_RESOURCE_FALLBACK;
+  }
+};
 
 registerAppTool(
   server,
@@ -78,6 +93,34 @@ registerAppTool(
       ],
     };
   },
+);
+
+registerAppTool(
+  server,
+  "list_skills",
+  {
+    title: "List Available Skills",
+    description: "Returns canonical URI(s) for repo-local skills.",
+    inputSchema: z.object({}),
+    annotations: {
+      readOnlyHint: true,
+      openWorldHint: false,
+      destructiveHint: false,
+    },
+    _meta: {
+      ui: { resourceUri },
+      "openai/outputTemplate": resourceUri,
+      "openai/widgetAccessible": true,
+    },
+  },
+  async () => ({
+    content: [
+      {
+        type: "text",
+        text: `Available skill: ${SKILL_RESOURCE_URI}\nUse resources/read with the URI to load markdown skill content.`,
+      },
+    ],
+  }),
 );
 
 const jiraResourceUri = "ui://jira-attachments/app.html";
@@ -249,6 +292,21 @@ registerAppResource(
       ],
     };
   },
+);
+
+server.registerResource(
+  "hello-world-skill",
+  SKILL_RESOURCE_URI,
+  { mimeType: SKILL_RESOURCE_MIME_TYPE },
+  async () => ({
+    contents: [
+      {
+        uri: SKILL_RESOURCE_URI,
+        mimeType: SKILL_RESOURCE_MIME_TYPE,
+        text: await loadHelloWorldSkillMarkdown(),
+      },
+    ],
+  }),
 );
 
 registerAppResource(
