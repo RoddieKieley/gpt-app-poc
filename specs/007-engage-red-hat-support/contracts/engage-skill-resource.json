@@ -1,0 +1,36 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://gpt-app-poc.local/specs/007-engage-red-hat-support/contracts/engage-skill-resource.json",
+  "resource": {
+    "uri": "skill://engage-red-hat-support/SKILL.md",
+    "mimeType": "text/markdown",
+    "title": "Engage Red Hat Support Skill",
+    "description": "Text-first guidance for Linux support engagement workflow."
+  },
+  "requiredSections": [
+    "Summary",
+    "When To Use",
+    "Instructions",
+    "Expected Outcome"
+  ],
+  "workflowRequirements": {
+    "linuxOnlyStatementRequired": true,
+    "stepOrderRequired": [
+      "secure PAT intake",
+      "connection verification",
+      "generate_sosreport",
+      "fetch_sosreport",
+      "jira_attach_artifact"
+    ],
+    "nonUiHostActionabilityRequired": true
+  },
+  "securityBoundary": {
+    "mustStatePatBoundary": true,
+    "mustStateOpaqueConnectionIdUse": true,
+    "forbiddenSecretMentionsInToolArgs": [
+      "pat",
+      "token",
+      "authorization"
+    ]
+  }
+}

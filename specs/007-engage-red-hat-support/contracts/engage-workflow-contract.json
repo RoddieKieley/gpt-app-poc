@@ -1,0 +1,88 @@
+{
+  "workflow": "engage_red_hat_support",
+  "mode": "option_a_ui_skill_orchestration",
+  "description": "Linux-only support engagement workflow orchestrated by UI/skill using existing tools and secure PAT intake endpoint.",
+  "preconditions": {
+    "product": {
+      "allowedValues": ["linux"],
+      "rejectMessage": "Only Linux is supported in this workflow."
+    },
+    "jiraConnection": {
+      "creationEndpoint": "POST /api/jira/connections",
+      "verificationEndpoint": "GET /api/jira/connections/{connection_id}",
+      "mustBeVerifiedBeforeDiagnostics": true
+    }
+  },
+  "sequence": [
+    {
+      "step": 1,
+      "name": "verify_connection",
+      "type": "tool_or_http",
+      "allowedCalls": [
+        "jira_connection_status(connection_id)",
+        "GET /api/jira/connections/{connection_id}"
+      ],
+      "requiredInputs": ["connection_id"],
+      "stopOnFailure": true
+    },
+    {
+      "step": 2,
+      "name": "generate_diagnostics",
+      "type": "tool",
+      "tool": "generate_sosreport",
+      "requiredInputs": [],
+      "produces": ["fetch_reference"],
+      "stopOnFailure": true
+    },
+    {
+      "step": 3,
+      "name": "fetch_diagnostics",
+      "type": "tool",
+      "tool": "fetch_sosreport",
+      "requiredInputs": ["fetch_reference"],
+      "produces": ["archive_path", "size_bytes", "sha256"],
+      "stopOnFailure": true
+    },
+    {
+      "step": 4,
+      "name": "attach_to_jira_issue",
+      "type": "tool",
+      "tool": "jira_attach_artifact",
+      "requiredInputs": ["connection_id", "issue_key", "artifact_ref"],
+      "inputMapping": {
+        "artifact_ref": "step3.archive_path"
+      },
+      "stopOnFailure": true
+    }
+  ],
+  "securityBoundary": {
+    "secretInputsAllowedInMcpTools": false,
+    "secretOutputsAllowedInMcpTools": false,
+    "secretInputsAllowedOnlyAt": [
+      "POST /api/jira/connections"
+    ],
+    "opaqueReference": "connection_id",
+    "forbiddenFields": [
+      "pat",
+      "token",
+      "access_token",
+      "authorization",
+      "auth_header",
+      "secret"
+    ]
+  },
+  "fallbackRequirements": {
+    "nonUiHostBehavior": "Text-only instructions must provide equivalent sequence, required inputs, and retry guidance.",
+    "toolResponseTextRequired": true
+  },
+  "compatibilityRequirements": {
+    "preserveExistingToolNamesAndSchemas": true,
+    "preserveExistingResources": true,
+    "preserveExistingRegressionTests": true
+  },
+  "failureHandling": {
+    "strategy": "stop_on_failed_step",
+    "retryGuidanceRequired": true,
+    "stepSpecificErrorMessaging": true
+  }
+}

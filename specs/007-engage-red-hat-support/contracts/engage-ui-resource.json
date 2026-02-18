@@ -1,0 +1,54 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://gpt-app-poc.local/specs/007-engage-red-hat-support/contracts/engage-ui-resource.json",
+  "resource": {
+    "uri": "ui://engage-red-hat-support/app.html",
+    "mimeType": "text/html;profile=mcp-app",
+    "title": "Engage Red Hat Support",
+    "description": "UI resource for Linux support engagement workflow using existing Jira and sosreport tools."
+  },
+  "metadataRequirements": {
+    "requiredToolMeta": [
+      "ui.resourceUri",
+      "openai/outputTemplate",
+      "openai/widgetAccessible"
+    ],
+    "requiredResourceMeta": [
+      "openai/widgetDomain",
+      "openai/widgetCSP"
+    ],
+    "widgetDomain": "https://gptapppoc.kieley.io",
+    "widgetCspConnectDomainsMustInclude": [
+      "https://gptapppoc.kieley.io"
+    ]
+  },
+  "uiBehavior": {
+    "orchestrationMode": "option_a",
+    "linuxOnlyGate": true,
+    "requiredInputs": [
+      "jira_base_url",
+      "pat",
+      "issue_key"
+    ],
+    "requiredProgressStates": [
+      "connection_verified",
+      "generating",
+      "fetching",
+      "attaching",
+      "completed",
+      "failed"
+    ],
+    "textFallbackRequired": true
+  },
+  "securityBoundary": {
+    "patEnteredInUiOnlyForSecureEndpoint": true,
+    "patMustBeClearedAfterIntake": true,
+    "toolCallsMustUseOpaqueConnectionIdOnly": true,
+    "forbiddenInToolPayloads": [
+      "pat",
+      "token",
+      "access_token",
+      "authorization"
+    ]
+  }
+}
