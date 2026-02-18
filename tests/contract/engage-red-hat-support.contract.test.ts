@@ -9,7 +9,6 @@ type JsonRpcResponse =
 
 const ENGAGE_UI_URI = "ui://engage-red-hat-support/app.html";
 const ENGAGE_SKILL_URI = "skill://engage-red-hat-support/SKILL.md";
-const HELLO_SKILL_URI = "skill://hello-world/SKILL.md";
 
 test("engage resources are discoverable with required metadata", async () => {
   process.env.NODE_ENV = "test";
@@ -64,7 +63,6 @@ test("engage resources are discoverable with required metadata", async () => {
     const uris = new Set((resources.resources ?? []).map((entry) => entry.uri));
     assert.ok(uris.has(ENGAGE_UI_URI), "missing engage ui resource");
     assert.ok(uris.has(ENGAGE_SKILL_URI), "missing engage skill resource");
-    assert.ok(uris.has(HELLO_SKILL_URI), "missing hello-world skill resource");
 
     const uiRead = (await jsonRpc("resources/read", { uri: ENGAGE_UI_URI })) as {
       contents?: Array<{ mimeType?: string; _meta?: Record<string, unknown>; text?: string }>;
@@ -87,7 +85,6 @@ test("engage resources are discoverable with required metadata", async () => {
       arguments: {},
     })) as { content?: Array<{ type?: string; text?: string }> };
     const skillText = listedSkills.content?.find((entry) => entry.type === "text")?.text ?? "";
-    assert.ok(skillText.includes(HELLO_SKILL_URI), "list_skills missing hello skill");
     assert.ok(skillText.includes(ENGAGE_SKILL_URI), "list_skills missing engage skill");
   } finally {
     srv.close();

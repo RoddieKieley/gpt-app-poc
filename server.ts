@@ -40,13 +40,10 @@ const lifecycleStore = new ConnectionLifecycleStore();
 const tokenVault = new TokenVault();
 
 const server = new McpServer({
-  name: "MCP Apps Hello World",
+  name: "GPT App POC",
   version: "1.0.0",
 });
 
-const resourceUri = "ui://hello-world/app.html";
-const SKILL_RESOURCE_URI = "skill://hello-world/SKILL.md";
-const SKILL_RESOURCE_SOURCE_PATH = path.join(__dirname, "skills", "hello-world", "SKILL.md");
 const ENGAGE_SKILL_RESOURCE_URI = "skill://engage-red-hat-support/SKILL.md";
 const ENGAGE_SKILL_RESOURCE_SOURCE_PATH = path.join(
   __dirname,
@@ -55,10 +52,6 @@ const ENGAGE_SKILL_RESOURCE_SOURCE_PATH = path.join(
   "SKILL.md",
 );
 const SKILL_RESOURCE_MIME_TYPE = "text/markdown";
-const SKILL_RESOURCE_FALLBACK = `# Hello World Skill
-
-Skill content is temporarily unavailable from the repository.
-URI: ${SKILL_RESOURCE_URI}`;
 const ENGAGE_SKILL_RESOURCE_FALLBACK = `# Engage Red Hat Support
 
 Skill content is temporarily unavailable from the repository.
@@ -73,49 +66,9 @@ const loadSkillMarkdown = async (sourcePath: string, fallback: string): Promise<
   }
 };
 
-const loadHelloWorldSkillMarkdown = async (): Promise<string> => {
-  return loadSkillMarkdown(SKILL_RESOURCE_SOURCE_PATH, SKILL_RESOURCE_FALLBACK);
-};
-
 const loadEngageSkillMarkdown = async (): Promise<string> => {
   return loadSkillMarkdown(ENGAGE_SKILL_RESOURCE_SOURCE_PATH, ENGAGE_SKILL_RESOURCE_FALLBACK);
 };
-
-registerAppTool(
-  server,
-  "hello-world",
-  {
-    title: "Hello World",
-    description:
-      "Returns a greeting and renders a Hello World UI in MCP Apps hosts.",
-    inputSchema: z.object({
-      name: z.string().optional().describe("Optional name to greet."),
-    }),
-    annotations: {
-      readOnlyHint: true,
-      openWorldHint: false,
-      destructiveHint: false,
-    },
-    _meta: {
-      ui: { resourceUri },
-      "openai/outputTemplate": resourceUri,
-      "openai/widgetAccessible": true,
-    },
-  },
-  async (args) => {
-    const name = typeof args?.name === "string" && args.name.trim()
-      ? args.name.trim()
-      : "World";
-    return {
-      content: [
-        {
-          type: "text",
-          text: `Hello, ${name}! If the UI is not available, this text confirms the tool ran successfully.`,
-        },
-      ],
-    };
-  },
-);
 
 registerAppTool(
   server,
@@ -130,8 +83,8 @@ registerAppTool(
       destructiveHint: false,
     },
     _meta: {
-      ui: { resourceUri },
-      "openai/outputTemplate": resourceUri,
+      ui: { resourceUri: engageResourceUri },
+      "openai/outputTemplate": engageResourceUri,
       "openai/widgetAccessible": true,
     },
   },
@@ -140,8 +93,8 @@ registerAppTool(
       {
         type: "text",
         text: [
-          `Available skills: ${SKILL_RESOURCE_URI}, ${ENGAGE_SKILL_RESOURCE_URI}`,
-          "Use resources/read with a listed URI to load markdown skill content.",
+          `Available skill: ${ENGAGE_SKILL_RESOURCE_URI}`,
+          "Use resources/read with that URI to load markdown skill content.",
         ].join("\n"),
       },
     ],
@@ -161,8 +114,8 @@ registerAppTool(
       destructiveHint: false,
     },
     _meta: {
-      ui: { resourceUri },
-      "openai/outputTemplate": resourceUri,
+      ui: { resourceUri: engageResourceUri },
+      "openai/outputTemplate": engageResourceUri,
       "openai/widgetAccessible": true,
     },
   },
@@ -182,15 +135,13 @@ registerAppTool(
       destructiveHint: false,
     },
     _meta: {
-      ui: { resourceUri },
-      "openai/outputTemplate": resourceUri,
+      ui: { resourceUri: engageResourceUri },
+      "openai/outputTemplate": engageResourceUri,
       "openai/widgetAccessible": true,
     },
   },
   async (args) => handleFetchSosreport(args),
 );
-
-const jiraResourceUri = "ui://jira-attachments/app.html";
 
 registerAppTool(
   server,
@@ -205,8 +156,8 @@ registerAppTool(
       destructiveHint: false,
     },
     _meta: {
-      ui: { resourceUri: jiraResourceUri },
-      "openai/outputTemplate": jiraResourceUri,
+      ui: { resourceUri: engageResourceUri },
+      "openai/outputTemplate": engageResourceUri,
       "openai/widgetAccessible": true,
     },
   },
@@ -232,8 +183,8 @@ registerAppTool(
       destructiveHint: false,
     },
     _meta: {
-      ui: { resourceUri: jiraResourceUri },
-      "openai/outputTemplate": jiraResourceUri,
+      ui: { resourceUri: engageResourceUri },
+      "openai/outputTemplate": engageResourceUri,
       "openai/widgetAccessible": true,
     },
   },
@@ -268,8 +219,8 @@ registerAppTool(
       destructiveHint: false,
     },
     _meta: {
-      ui: { resourceUri: jiraResourceUri },
-      "openai/outputTemplate": jiraResourceUri,
+      ui: { resourceUri: engageResourceUri },
+      "openai/outputTemplate": engageResourceUri,
       "openai/widgetAccessible": true,
     },
   },
@@ -305,8 +256,8 @@ registerAppTool(
       destructiveHint: true,
     },
     _meta: {
-      ui: { resourceUri: jiraResourceUri },
-      "openai/outputTemplate": jiraResourceUri,
+      ui: { resourceUri: engageResourceUri },
+      "openai/outputTemplate": engageResourceUri,
       "openai/widgetAccessible": true,
     },
   },
@@ -317,63 +268,6 @@ registerAppTool(
       args.connection_id,
     );
   },
-);
-
-registerAppResource(
-  server,
-  resourceUri,
-  resourceUri,
-  { mimeType: RESOURCE_MIME_TYPE },
-  async () => {
-    let html: string;
-    try {
-      html = await fs.readFile(
-        path.join(__dirname, "dist", "mcp-app.html"),
-        "utf-8",
-      );
-    } catch (error) {
-      html = `<!doctype html>
-<html lang="en">
-  <head>
-    <meta charset="utf-8" />
-    <title>MCP Apps Hello World</title>
-  </head>
-  <body>
-    <p>UI bundle unavailable. Use the text response as fallback.</p>
-  </body>
-</html>`;
-    }
-    return {
-      contents: [
-        {
-          uri: resourceUri,
-          mimeType: RESOURCE_MIME_TYPE,
-          _meta: {
-            "openai/widgetDomain": "https://gptapppoc.kieley.io",
-            "openai/widgetCSP": {
-              connect_domains: ["https://gptapppoc.kieley.io"],
-            },
-          },
-          text: html,
-        },
-      ],
-    };
-  },
-);
-
-server.registerResource(
-  "hello-world-skill",
-  SKILL_RESOURCE_URI,
-  { mimeType: SKILL_RESOURCE_MIME_TYPE },
-  async () => ({
-    contents: [
-      {
-        uri: SKILL_RESOURCE_URI,
-        mimeType: SKILL_RESOURCE_MIME_TYPE,
-        text: await loadHelloWorldSkillMarkdown(),
-      },
-    ],
-  }),
 );
 
 server.registerResource(
@@ -419,48 +313,6 @@ registerAppResource(
       contents: [
         {
           uri: engageResourceUri,
-          mimeType: RESOURCE_MIME_TYPE,
-          _meta: {
-            "openai/widgetDomain": "https://gptapppoc.kieley.io",
-            "openai/widgetCSP": {
-              connect_domains: ["https://gptapppoc.kieley.io"],
-            },
-          },
-          text: html,
-        },
-      ],
-    };
-  },
-);
-
-registerAppResource(
-  server,
-  jiraResourceUri,
-  jiraResourceUri,
-  { mimeType: RESOURCE_MIME_TYPE },
-  async () => {
-    let html: string;
-    try {
-      html = await fs.readFile(
-        path.join(__dirname, "dist", "mcp-app.html"),
-        "utf-8",
-      );
-    } catch (_error) {
-      html = `<!doctype html>
-<html lang="en">
-  <head>
-    <meta charset="utf-8" />
-    <title>Jira Attachments</title>
-  </head>
-  <body>
-    <p>UI bundle unavailable. Use Jira text tool responses as fallback.</p>
-  </body>
-</html>`;
-    }
-    return {
-      contents: [
-        {
-          uri: jiraResourceUri,
           mimeType: RESOURCE_MIME_TYPE,
           _meta: {
             "openai/widgetDomain": "https://gptapppoc.kieley.io",

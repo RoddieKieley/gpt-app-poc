@@ -8,11 +8,10 @@ const HOST = "localhost";
 const PORT = 3000;
 const MCP_PATH = "/mcp";
 const MCP_URL = `http://${HOST}:${PORT}${MCP_PATH}`;
-const TOOL_NAME = "hello-world";
+const TOOL_NAME = "list_skills";
 const SKILL_TOOL_NAME = "list_skills";
-const UI_RESOURCE_URI = "ui://hello-world/app.html";
-const JIRA_RESOURCE_URI = "ui://jira-attachments/app.html";
-const SKILL_RESOURCE_URI = "skill://hello-world/SKILL.md";
+const UI_RESOURCE_URI = "ui://engage-red-hat-support/app.html";
+const SKILL_RESOURCE_URI = "skill://engage-red-hat-support/SKILL.md";
 const REQUIRED_JIRA_TOOLS = [
   "jira_connection_status",
   "jira_list_attachments",
@@ -26,22 +25,22 @@ const REQUIRED_JIRA_TOOL_METADATA: Record<
   jira_connection_status: {
     readOnlyHint: true,
     destructiveHint: false,
-    outputTemplate: JIRA_RESOURCE_URI,
+    outputTemplate: UI_RESOURCE_URI,
   },
   jira_list_attachments: {
     readOnlyHint: true,
     destructiveHint: false,
-    outputTemplate: JIRA_RESOURCE_URI,
+    outputTemplate: UI_RESOURCE_URI,
   },
   jira_attach_artifact: {
     readOnlyHint: false,
     destructiveHint: false,
-    outputTemplate: JIRA_RESOURCE_URI,
+    outputTemplate: UI_RESOURCE_URI,
   },
   jira_disconnect: {
     readOnlyHint: false,
     destructiveHint: true,
-    outputTemplate: JIRA_RESOURCE_URI,
+    outputTemplate: UI_RESOURCE_URI,
   },
 };
 const INIT_TIMEOUT_MS = 10_000;
@@ -189,7 +188,7 @@ const main = async () => {
   try {
     await check("MCP initialize", initializeWithRetry, failures);
 
-    await check("tools/list includes hello-world metadata", async () => {
+    await check("tools/list includes list_skills metadata", async () => {
       const result = (await jsonRpc("tools/list")) as {
         tools?: {
           name: string;
@@ -198,7 +197,7 @@ const main = async () => {
         }[];
       };
       const tool = result?.tools?.find((item) => item.name === TOOL_NAME);
-      assert.ok(tool, "hello-world tool missing");
+      assert.ok(tool, "list_skills tool missing");
       assert.equal(tool?.annotations?.readOnlyHint, true, "readOnlyHint not set");
       assert.equal(tool?.annotations?.openWorldHint, false, "openWorldHint not set");
       assert.equal(tool?.annotations?.destructiveHint, false, "destructiveHint not set");
@@ -228,7 +227,7 @@ const main = async () => {
       assert.equal(listSkills?.annotations?.destructiveHint, false, "list_skills destructiveHint mismatch");
     }, failures);
 
-    await check("tools/call returns text fallback", async () => {
+    await check("tools/call list_skills returns text fallback", async () => {
       const result = (await jsonRpc("tools/call", {
         name: TOOL_NAME,
         arguments: {},
@@ -282,7 +281,7 @@ const main = async () => {
       assert.equal(resource?.mimeType, "text/markdown", "skill resource MIME mismatch");
       const text = resource?.text ?? "";
       assert.ok(text.trim().length > 0, "skill resource content missing");
-      assert.ok(text.includes("Hello World Skill"), "skill resource content unexpected");
+      assert.ok(text.includes("Engage Red Hat Support Skill"), "skill resource content unexpected");
     }, failures);
 
     await check("list_skills returns text fallback and canonical URI", async () => {

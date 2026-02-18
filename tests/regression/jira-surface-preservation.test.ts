@@ -19,22 +19,22 @@ const EXPECTED_JIRA_METADATA: Record<
   jira_connection_status: {
     readOnlyHint: true,
     destructiveHint: false,
-    outputTemplate: "ui://jira-attachments/app.html",
+    outputTemplate: "ui://engage-red-hat-support/app.html",
   },
   jira_list_attachments: {
     readOnlyHint: true,
     destructiveHint: false,
-    outputTemplate: "ui://jira-attachments/app.html",
+    outputTemplate: "ui://engage-red-hat-support/app.html",
   },
   jira_attach_artifact: {
     readOnlyHint: false,
     destructiveHint: false,
-    outputTemplate: "ui://jira-attachments/app.html",
+    outputTemplate: "ui://engage-red-hat-support/app.html",
   },
   jira_disconnect: {
     readOnlyHint: false,
     destructiveHint: true,
-    outputTemplate: "ui://jira-attachments/app.html",
+    outputTemplate: "ui://engage-red-hat-support/app.html",
   },
 };
 

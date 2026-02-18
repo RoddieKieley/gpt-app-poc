@@ -5,10 +5,9 @@ type JsonRpcResponse =
   | { jsonrpc: "2.0"; id: number; result: unknown }
   | { jsonrpc: "2.0"; id: number; error: { code: number; message: string } };
 
-const SKILL_RESOURCE_URI = "skill://hello-world/SKILL.md";
 const ENGAGE_SKILL_RESOURCE_URI = "skill://engage-red-hat-support/SKILL.md";
 
-test("skill discovery tool and resource behavior remain unchanged", async () => {
+test("skill discovery exposes engage resource and list_skills output", async () => {
   process.env.NODE_ENV = "test";
   const { createApp } = await import("../../server.js");
   const app = createApp();
@@ -55,21 +54,19 @@ test("skill discovery tool and resource behavior remain unchanged", async () => 
       body: JSON.stringify({ jsonrpc: "2.0", method: "initialized" }),
     });
     const resources = (await jsonRpc("resources/list")) as { resources?: Array<{ uri?: string }> };
-    assert.ok(resources.resources?.some((entry) => entry.uri === SKILL_RESOURCE_URI));
     assert.ok(resources.resources?.some((entry) => entry.uri === ENGAGE_SKILL_RESOURCE_URI));
 
     const readResult = (await jsonRpc("resources/read", {
-      uri: SKILL_RESOURCE_URI,
+      uri: ENGAGE_SKILL_RESOURCE_URI,
     })) as { contents?: Array<{ mimeType?: string; text?: string }> };
     assert.equal(readResult.contents?.[0]?.mimeType, "text/markdown");
-    assert.ok((readResult.contents?.[0]?.text ?? "").includes("Hello World Skill"));
+    assert.ok((readResult.contents?.[0]?.text ?? "").includes("Engage Red Hat Support Skill"));
 
     const toolResult = (await jsonRpc("tools/call", {
       name: "list_skills",
       arguments: {},
     })) as { content?: Array<{ type: string; text?: string }> };
     const text = toolResult.content?.find((item) => item.type === "text")?.text ?? "";
-    assert.ok(text.includes(SKILL_RESOURCE_URI), "list_skills response missing canonical URI");
     assert.ok(text.includes(ENGAGE_SKILL_RESOURCE_URI), "list_skills response missing engage URI");
   } finally {
     srv.close();

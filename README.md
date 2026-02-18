@@ -44,8 +44,8 @@ See:
 
 ## Runtime Skill Discovery
 
-- Canonical Hello World skill resource URI: `skill://hello-world/SKILL.md`
-- Repo-local skill source file: `skills/hello-world/SKILL.md`
+- Canonical Engage skill resource URI: `skill://engage-red-hat-support/SKILL.md`
+- Repo-local skill source file: `skills/engage-red-hat-support/SKILL.md`
 - Read-only discovery tool: `list_skills` (returns text fallback plus the canonical URI)
 - Jira tools/contracts/tests remain unchanged by this feature.
 

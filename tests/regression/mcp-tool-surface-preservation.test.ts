@@ -6,7 +6,6 @@ type JsonRpcResponse =
   | { jsonrpc: "2.0"; id: number; error: { code: number; message: string } };
 
 const REQUIRED_TOOLS = [
-  "hello-world",
   "list_skills",
   "generate_sosreport",
   "fetch_sosreport",
@@ -16,10 +15,7 @@ const REQUIRED_TOOLS = [
   "jira_disconnect",
 ] as const;
 const REQUIRED_RESOURCES = [
-  "ui://hello-world/app.html",
-  "ui://jira-attachments/app.html",
   "ui://engage-red-hat-support/app.html",
-  "skill://hello-world/SKILL.md",
   "skill://engage-red-hat-support/SKILL.md",
 ] as const;
 

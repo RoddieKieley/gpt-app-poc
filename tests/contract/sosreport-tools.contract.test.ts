@@ -65,14 +65,14 @@ test("sosreport tools are registered with expected metadata", async () => {
     assert.equal(generateTool?.annotations?.readOnlyHint, false);
     assert.equal(generateTool?.annotations?.destructiveHint, false);
     assert.equal(generateTool?.annotations?.openWorldHint, false);
-    assert.equal(generateTool?._meta?.["openai/outputTemplate"], "ui://hello-world/app.html");
+    assert.equal(generateTool?._meta?.["openai/outputTemplate"], "ui://engage-red-hat-support/app.html");
 
     const fetchTool = listed.tools?.find((tool) => tool.name === "fetch_sosreport");
     assert.ok(fetchTool, "fetch_sosreport tool missing");
     assert.equal(fetchTool?.annotations?.readOnlyHint, true);
     assert.equal(fetchTool?.annotations?.destructiveHint, false);
     assert.equal(fetchTool?.annotations?.openWorldHint, false);
-    assert.equal(fetchTool?._meta?.["openai/outputTemplate"], "ui://hello-world/app.html");
+    assert.equal(fetchTool?._meta?.["openai/outputTemplate"], "ui://engage-red-hat-support/app.html");
   } finally {
     srv.close();
   }
