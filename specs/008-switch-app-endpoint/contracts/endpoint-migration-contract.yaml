@@ -1,0 +1,79 @@
+openapi: 3.0.3
+info:
+  title: Endpoint Migration Verification Contract
+  version: 1.0.0
+  description: |
+    Verification-focused contract describing expected observable behavior after
+    switching development endpoint references from the legacy host to the new
+    ngrok host in scoped runtime, test, smoke, and top-level documentation files.
+servers:
+  - url: https://leisured-carina-unpromotable.ngrok-free.dev
+    description: Active development endpoint after migration
+paths:
+  /_contract/endpoint-migration:
+    get:
+      summary: Retrieve endpoint migration acceptance criteria snapshot
+      description: |
+        This is a planning contract artifact used to define expected testable
+        outcomes for the migration. It does not require a new runtime endpoint.
+      operationId: getEndpointMigrationContract
+      responses:
+        "200":
+          description: Migration criteria represented as a machine-checkable payload
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - activeEndpoint
+                  - legacyEndpoint
+                  - inScopeFiles
+                  - outOfScopePaths
+                  - requiredChecks
+                properties:
+                  activeEndpoint:
+                    type: string
+                    const: https://leisured-carina-unpromotable.ngrok-free.dev
+                  legacyEndpoint:
+                    type: string
+                    const: https://gptapppoc.kieley.io
+                  inScopeFiles:
+                    type: array
+                    minItems: 4
+                    items:
+                      type: string
+                    example:
+                      - server.ts
+                      - scripts/mcp-smoke-tests.ts
+                      - tests/contract/engage-red-hat-support.contract.test.ts
+                      - README.md
+                  outOfScopePaths:
+                    type: array
+                    items:
+                      type: string
+                    example:
+                      - specs/**
+                  requiredChecks:
+                    type: array
+                    minItems: 3
+                    items:
+                      type: string
+                    example:
+                      - npm run test:contract passes
+                      - npm run test:mcp passes
+                      - no non-spec gptapppoc.kieley.io references remain
+components:
+  schemas:
+    EndpointReferenceCheck:
+      type: object
+      required:
+        - path
+        - mustContain
+        - mustNotContain
+      properties:
+        path:
+          type: string
+        mustContain:
+          type: string
+        mustNotContain:
+          type: string
