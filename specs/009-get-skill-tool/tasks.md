@@ -19,9 +19,9 @@
 
 **Purpose**: Align implementation artifacts and test intent before runtime changes.
 
-- [ ] T001 Reconcile implementation constraints and acceptance checks in `/wip/src/github.com/roddiekieley/gpt-app-poc/specs/009-get-skill-tool/plan.md`
-- [ ] T002 Confirm request/response validation contract details in `/wip/src/github.com/roddiekieley/gpt-app-poc/specs/009-get-skill-tool/contracts/get-skill-contract.json`
-- [ ] T003 Define executable validation flow and commands in `/wip/src/github.com/roddiekieley/gpt-app-poc/specs/009-get-skill-tool/quickstart.md`
+- [X] T001 Reconcile implementation constraints and acceptance checks in `/wip/src/github.com/roddiekieley/gpt-app-poc/specs/009-get-skill-tool/plan.md`
+- [X] T002 Confirm request/response validation contract details in `/wip/src/github.com/roddiekieley/gpt-app-poc/specs/009-get-skill-tool/contracts/get-skill-contract.json`
+- [X] T003 Define executable validation flow and commands in `/wip/src/github.com/roddiekieley/gpt-app-poc/specs/009-get-skill-tool/quickstart.md`
 
 ---
 
@@ -31,9 +31,9 @@
 
 **⚠️ CRITICAL**: No user-story implementation starts until this phase is complete.
 
-- [ ] T004 Add baseline tool-surface guardrails for existing Jira/sosreport/list_skills entries in `/wip/src/github.com/roddiekieley/gpt-app-poc/tests/regression/mcp-tool-surface-preservation.test.ts`
-- [ ] T005 [P] Add baseline skill resource preservation assertions for `resources/list` and `resources/read` in `/wip/src/github.com/roddiekieley/gpt-app-poc/tests/regression/skill-resource-preservation.test.ts`
-- [ ] T006 [P] Add baseline contract assertions for engage skill discovery/resource-read behavior in `/wip/src/github.com/roddiekieley/gpt-app-poc/tests/contract/engage-red-hat-support.contract.test.ts`
+- [X] T004 Add baseline tool-surface guardrails for existing Jira/sosreport/list_skills entries in `/wip/src/github.com/roddiekieley/gpt-app-poc/tests/regression/mcp-tool-surface-preservation.test.ts`
+- [X] T005 [P] Add baseline skill resource preservation assertions for `resources/list` and `resources/read` in `/wip/src/github.com/roddiekieley/gpt-app-poc/tests/regression/skill-resource-preservation.test.ts`
+- [X] T006 [P] Add baseline contract assertions for engage skill discovery/resource-read behavior in `/wip/src/github.com/roddiekieley/gpt-app-poc/tests/contract/engage-red-hat-support.contract.test.ts`
 
 **Checkpoint**: Existing surfaces are explicitly guarded before new tool logic is added.
 
@@ -47,17 +47,17 @@
 
 ### Tests for User Story 1
 
-- [ ] T007 [P] [US1] Add `tools/list` metadata assertions for `get_skill` in `/wip/src/github.com/roddiekieley/gpt-app-poc/tests/contract/engage-red-hat-support.contract.test.ts`
-- [ ] T008 [P] [US1] Add smoke checks for `tools/list` and valid `tools/call get_skill` in `/wip/src/github.com/roddiekieley/gpt-app-poc/scripts/mcp-smoke-tests.ts`
+- [X] T007 [P] [US1] Add `tools/list` metadata assertions for `get_skill` in `/wip/src/github.com/roddiekieley/gpt-app-poc/tests/contract/engage-red-hat-support.contract.test.ts`
+- [X] T008 [P] [US1] Add smoke checks for `tools/list` and valid `tools/call get_skill` in `/wip/src/github.com/roddiekieley/gpt-app-poc/scripts/mcp-smoke-tests.ts`
 
 ### Implementation for User Story 1
 
-- [ ] T009 [US1] Register `get_skill` via `registerAppTool` with required annotations/metadata in `/wip/src/github.com/roddiekieley/gpt-app-poc/server.ts`
-- [ ] T010 [US1] Add `get_skill` input schema `z.object({ uri: z.string().min(1, "skill URI is required") })` in `/wip/src/github.com/roddiekieley/gpt-app-poc/server.ts`
-- [ ] T011 [US1] Implement valid-URI success path reusing `ENGAGE_SKILL_RESOURCE_URI`, `SKILL_RESOURCE_MIME_TYPE`, and `loadEngageSkillMarkdown` in `/wip/src/github.com/roddiekieley/gpt-app-poc/server.ts`
-- [ ] T012 [US1] Implement success response shape with text fallback in `content` plus `structuredContent { uri, mimeType, text }` in `/wip/src/github.com/roddiekieley/gpt-app-poc/server.ts`
-- [ ] T013 [US1] Add parity assertions between `tools/call get_skill` and `resources/read` in `/wip/src/github.com/roddiekieley/gpt-app-poc/tests/contract/engage-red-hat-support.contract.test.ts`
-- [ ] T014 [US1] Add regression requirement for `get_skill` presence while keeping existing tools intact in `/wip/src/github.com/roddiekieley/gpt-app-poc/tests/regression/mcp-tool-surface-preservation.test.ts`
+- [X] T009 [US1] Register `get_skill` via `registerAppTool` with required annotations/metadata in `/wip/src/github.com/roddiekieley/gpt-app-poc/server.ts`
+- [X] T010 [US1] Add `get_skill` input schema `z.object({ uri: z.string().min(1, "skill URI is required") })` in `/wip/src/github.com/roddiekieley/gpt-app-poc/server.ts`
+- [X] T011 [US1] Implement valid-URI success path reusing `ENGAGE_SKILL_RESOURCE_URI`, `SKILL_RESOURCE_MIME_TYPE`, and `loadEngageSkillMarkdown` in `/wip/src/github.com/roddiekieley/gpt-app-poc/server.ts`
+- [X] T012 [US1] Implement success response shape with text fallback in `content` plus `structuredContent { uri, mimeType, text }` in `/wip/src/github.com/roddiekieley/gpt-app-poc/server.ts`
+- [X] T013 [US1] Add parity assertions between `tools/call get_skill` and `resources/read` in `/wip/src/github.com/roddiekieley/gpt-app-poc/tests/contract/engage-red-hat-support.contract.test.ts`
+- [X] T014 [US1] Add regression requirement for `get_skill` presence while keeping existing tools intact in `/wip/src/github.com/roddiekieley/gpt-app-poc/tests/regression/mcp-tool-surface-preservation.test.ts`
 
 **Checkpoint**: MVP behavior is implemented and independently verifiable for valid engage skill URI retrieval.
 
@@ -71,15 +71,15 @@
 
 ### Tests for User Story 2
 
-- [ ] T015 [P] [US2] Add invalid and unsupported URI contract cases for `get_skill` in `/wip/src/github.com/roddiekieley/gpt-app-poc/tests/contract/engage-red-hat-support.contract.test.ts`
-- [ ] T016 [P] [US2] Add invalid URI smoke checks and remediation-text assertions in `/wip/src/github.com/roddiekieley/gpt-app-poc/scripts/mcp-smoke-tests.ts`
+- [X] T015 [P] [US2] Add invalid and unsupported URI contract cases for `get_skill` in `/wip/src/github.com/roddiekieley/gpt-app-poc/tests/contract/engage-red-hat-support.contract.test.ts`
+- [X] T016 [P] [US2] Add invalid URI smoke checks and remediation-text assertions in `/wip/src/github.com/roddiekieley/gpt-app-poc/scripts/mcp-smoke-tests.ts`
 
 ### Implementation for User Story 2
 
-- [ ] T017 [US2] Harden URI normalization and `skill://` scheme validation in `/wip/src/github.com/roddiekieley/gpt-app-poc/server.ts`
-- [ ] T018 [US2] Restrict resolution to supported registered skill identity and reject unknown URIs in `/wip/src/github.com/roddiekieley/gpt-app-poc/server.ts`
-- [ ] T019 [US2] Return `isError: true` with actionable remediation text and no secret-bearing details for invalid/unsupported URI in `/wip/src/github.com/roddiekieley/gpt-app-poc/server.ts`
-- [ ] T020 [US2] Add regression parity/error-safety checks for `get_skill` without changing `resources/read` behavior in `/wip/src/github.com/roddiekieley/gpt-app-poc/tests/regression/skill-resource-preservation.test.ts`
+- [X] T017 [US2] Harden URI normalization and `skill://` scheme validation in `/wip/src/github.com/roddiekieley/gpt-app-poc/server.ts`
+- [X] T018 [US2] Restrict resolution to supported registered skill identity and reject unknown URIs in `/wip/src/github.com/roddiekieley/gpt-app-poc/server.ts`
+- [X] T019 [US2] Return `isError: true` with actionable remediation text and no secret-bearing details for invalid/unsupported URI in `/wip/src/github.com/roddiekieley/gpt-app-poc/server.ts`
+- [X] T020 [US2] Add regression parity/error-safety checks for `get_skill` without changing `resources/read` behavior in `/wip/src/github.com/roddiekieley/gpt-app-poc/tests/regression/skill-resource-preservation.test.ts`
 
 **Checkpoint**: Validation and error hardening are complete with safe, actionable failure behavior.
 
@@ -89,13 +89,13 @@
 
 **Purpose**: Final regression safety confirmation and full validation runs.
 
-- [ ] T021 [P] Confirm `list_skills` output remains unchanged while `get_skill` is additive in `/wip/src/github.com/roddiekieley/gpt-app-poc/tests/regression/skill-resource-preservation.test.ts`
-- [ ] T022 [P] Confirm `resources/read` behavior for engage skill remains unchanged in `/wip/src/github.com/roddiekieley/gpt-app-poc/tests/contract/engage-red-hat-support.contract.test.ts`
-- [ ] T023 [P] Confirm existing Jira/sosreport tool surfaces remain unchanged in `/wip/src/github.com/roddiekieley/gpt-app-poc/tests/regression/mcp-tool-surface-preservation.test.ts`
-- [ ] T024 Run contract validation (`npm run test:contract`) using scripts defined in `/wip/src/github.com/roddiekieley/gpt-app-poc/package.json`
-- [ ] T025 Run MCP smoke validation (`npm run test:mcp`) using scripts defined in `/wip/src/github.com/roddiekieley/gpt-app-poc/package.json`
-- [ ] T026 Run regression validation (`npm run test:regression`) using scripts defined in `/wip/src/github.com/roddiekieley/gpt-app-poc/package.json`
-- [ ] T027 Update final verification notes and execution evidence in `/wip/src/github.com/roddiekieley/gpt-app-poc/specs/009-get-skill-tool/quickstart.md`
+- [X] T021 [P] Confirm `list_skills` output remains unchanged while `get_skill` is additive in `/wip/src/github.com/roddiekieley/gpt-app-poc/tests/regression/skill-resource-preservation.test.ts`
+- [X] T022 [P] Confirm `resources/read` behavior for engage skill remains unchanged in `/wip/src/github.com/roddiekieley/gpt-app-poc/tests/contract/engage-red-hat-support.contract.test.ts`
+- [X] T023 [P] Confirm existing Jira/sosreport tool surfaces remain unchanged in `/wip/src/github.com/roddiekieley/gpt-app-poc/tests/regression/mcp-tool-surface-preservation.test.ts`
+- [X] T024 Run contract validation (`npm run test:contract`) using scripts defined in `/wip/src/github.com/roddiekieley/gpt-app-poc/package.json`
+- [X] T025 Run MCP smoke validation (`npm run test:mcp`) using scripts defined in `/wip/src/github.com/roddiekieley/gpt-app-poc/package.json`
+- [X] T026 Run regression validation (`npm run test:regression`) using scripts defined in `/wip/src/github.com/roddiekieley/gpt-app-poc/package.json`
+- [X] T027 Update final verification notes and execution evidence in `/wip/src/github.com/roddiekieley/gpt-app-poc/specs/009-get-skill-tool/quickstart.md`
 
 ---
 

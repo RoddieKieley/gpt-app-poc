@@ -68,6 +68,33 @@ test("skill discovery exposes engage resource and list_skills output", async () 
     })) as { content?: Array<{ type: string; text?: string }> };
     const text = toolResult.content?.find((item) => item.type === "text")?.text ?? "";
     assert.ok(text.includes(ENGAGE_SKILL_RESOURCE_URI), "list_skills response missing engage URI");
+
+    const getSkillResult = (await jsonRpc("tools/call", {
+      name: "get_skill",
+      arguments: { uri: ENGAGE_SKILL_RESOURCE_URI },
+    })) as {
+      content?: Array<{ type: string; text?: string }>;
+      structuredContent?: { uri?: string; mimeType?: string; text?: string };
+      isError?: boolean;
+    };
+    assert.equal(getSkillResult.isError, undefined);
+    const getSkillText = getSkillResult.content?.find((item) => item.type === "text")?.text ?? "";
+    assert.ok(getSkillText.includes("URI: skill://engage-red-hat-support/SKILL.md"));
+    assert.equal(getSkillResult.structuredContent?.uri, ENGAGE_SKILL_RESOURCE_URI);
+    assert.equal(getSkillResult.structuredContent?.mimeType, "text/markdown");
+    assert.equal(
+      getSkillResult.structuredContent?.text ?? "",
+      readResult.contents?.[0]?.text ?? "",
+      "get_skill response should match resources/read markdown",
+    );
+
+    const invalid = (await jsonRpc("tools/call", {
+      name: "get_skill",
+      arguments: { uri: "skill://unknown/SKILL.md" },
+    })) as { isError?: boolean; content?: Array<{ type: string; text?: string }> };
+    assert.equal(invalid.isError, true);
+    const invalidText = invalid.content?.find((item) => item.type === "text")?.text ?? "";
+    assert.ok(invalidText.includes("Use list_skills to discover supported URIs"));
   } finally {
     srv.close();
   }

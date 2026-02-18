@@ -89,6 +89,60 @@ test("engage resources are discoverable with required metadata", async () => {
     })) as { content?: Array<{ type?: string; text?: string }> };
     const skillText = listedSkills.content?.find((entry) => entry.type === "text")?.text ?? "";
     assert.ok(skillText.includes(ENGAGE_SKILL_URI), "list_skills missing engage skill");
+
+    const listedTools = (await jsonRpc("tools/list")) as {
+      tools?: Array<{
+        name?: string;
+        annotations?: { readOnlyHint?: boolean; openWorldHint?: boolean; destructiveHint?: boolean };
+      }>;
+    };
+    const getSkillTool = listedTools.tools?.find((tool) => tool.name === "get_skill");
+    assert.ok(getSkillTool, "get_skill missing from tools/list");
+    assert.equal(getSkillTool?.annotations?.readOnlyHint, true);
+    assert.equal(getSkillTool?.annotations?.openWorldHint, false);
+    assert.equal(getSkillTool?.annotations?.destructiveHint, false);
+
+    const getSkillResult = (await jsonRpc("tools/call", {
+      name: "get_skill",
+      arguments: { uri: ENGAGE_SKILL_URI },
+    })) as {
+      content?: Array<{ type?: string; text?: string }>;
+      structuredContent?: { uri?: string; mimeType?: string; text?: string };
+      isError?: boolean;
+    };
+    assert.equal(getSkillResult.isError, undefined);
+    const getSkillText = getSkillResult.content?.find((entry) => entry.type === "text")?.text ?? "";
+    assert.ok(getSkillText.includes("URI: skill://engage-red-hat-support/SKILL.md"));
+    assert.ok(getSkillText.includes("Engage Red Hat Support"));
+    assert.equal(getSkillResult.structuredContent?.uri, ENGAGE_SKILL_URI);
+    assert.equal(getSkillResult.structuredContent?.mimeType, "text/markdown");
+    assert.equal(
+      getSkillResult.structuredContent?.text ?? "",
+      skillRead.contents?.[0]?.text ?? "",
+      "get_skill markdown must match resources/read markdown",
+    );
+
+    const getSkillInvalid = (await jsonRpc("tools/call", {
+      name: "get_skill",
+      arguments: { uri: "invalid://uri" },
+    })) as {
+      isError?: boolean;
+      content?: Array<{ type?: string; text?: string }>;
+    };
+    assert.equal(getSkillInvalid.isError, true);
+    const invalidText = getSkillInvalid.content?.find((entry) => entry.type === "text")?.text ?? "";
+    assert.ok(invalidText.includes("Provide a non-empty skill URI"));
+
+    const getSkillUnsupported = (await jsonRpc("tools/call", {
+      name: "get_skill",
+      arguments: { uri: "skill://unknown/SKILL.md" },
+    })) as {
+      isError?: boolean;
+      content?: Array<{ type?: string; text?: string }>;
+    };
+    assert.equal(getSkillUnsupported.isError, true);
+    const unsupportedText = getSkillUnsupported.content?.find((entry) => entry.type === "text")?.text ?? "";
+    assert.ok(unsupportedText.includes("Use list_skills to discover supported URIs"));
   } finally {
     srv.close();
   }

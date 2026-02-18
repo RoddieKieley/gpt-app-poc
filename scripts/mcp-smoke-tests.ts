@@ -10,6 +10,7 @@ const MCP_PATH = "/mcp";
 const MCP_URL = `http://${HOST}:${PORT}${MCP_PATH}`;
 const TOOL_NAME = "list_skills";
 const SKILL_TOOL_NAME = "list_skills";
+const GET_SKILL_TOOL_NAME = "get_skill";
 const UI_RESOURCE_URI = "ui://engage-red-hat-support/app.html";
 const SKILL_RESOURCE_URI = "skill://engage-red-hat-support/SKILL.md";
 const REQUIRED_JIRA_TOOLS = [
@@ -225,6 +226,13 @@ const main = async () => {
       assert.equal(listSkills?.annotations?.readOnlyHint, true, "list_skills readOnlyHint mismatch");
       assert.equal(listSkills?.annotations?.openWorldHint, false, "list_skills openWorldHint mismatch");
       assert.equal(listSkills?.annotations?.destructiveHint, false, "list_skills destructiveHint mismatch");
+
+      const getSkill = result?.tools?.find((item) => item.name === GET_SKILL_TOOL_NAME);
+      assert.ok(getSkill, "get_skill tool missing");
+      assert.equal(getSkill?.annotations?.readOnlyHint, true, "get_skill readOnlyHint mismatch");
+      assert.equal(getSkill?.annotations?.openWorldHint, false, "get_skill openWorldHint mismatch");
+      assert.equal(getSkill?.annotations?.destructiveHint, false, "get_skill destructiveHint mismatch");
+      assert.equal(getSkill?._meta?.["openai/outputTemplate"], UI_RESOURCE_URI, "get_skill outputTemplate mismatch");
     }, failures);
 
     await check("tools/call list_skills returns text fallback", async () => {
@@ -295,6 +303,51 @@ const main = async () => {
       const text = result?.content?.find((item) => item.type === "text")?.text ?? "";
       assert.ok(text.trim().length > 0, "list_skills text fallback missing");
       assert.ok(text.includes(SKILL_RESOURCE_URI), "list_skills canonical URI missing");
+    }, failures);
+
+    await check("get_skill returns markdown fallback and structured content", async () => {
+      const result = (await jsonRpc("tools/call", {
+        name: GET_SKILL_TOOL_NAME,
+        arguments: { uri: SKILL_RESOURCE_URI },
+      })) as {
+        content?: { type: string; text?: string }[];
+        structuredContent?: { uri?: string; mimeType?: string; text?: string };
+        isError?: boolean;
+      };
+      assert.equal(result.isError, undefined, "get_skill unexpectedly returned error");
+      const text = result?.content?.find((item) => item.type === "text")?.text ?? "";
+      assert.ok(text.includes(`URI: ${SKILL_RESOURCE_URI}`), "get_skill text fallback missing URI");
+      assert.ok(text.includes("Engage Red Hat Support"), "get_skill text fallback missing markdown text");
+      assert.equal(result.structuredContent?.uri, SKILL_RESOURCE_URI, "get_skill structured URI mismatch");
+      assert.equal(result.structuredContent?.mimeType, "text/markdown", "get_skill structured mimeType mismatch");
+      assert.ok((result.structuredContent?.text ?? "").trim().length > 0, "get_skill structured text missing");
+    }, failures);
+
+    await check("get_skill invalid URI fails safely", async () => {
+      const result = (await jsonRpc("tools/call", {
+        name: GET_SKILL_TOOL_NAME,
+        arguments: { uri: "invalid://uri" },
+      })) as { isError?: boolean; content?: { type: string; text?: string }[] };
+      assert.equal(result.isError, true, "invalid URI should fail safely");
+      const text = result?.content?.find((item) => item.type === "text")?.text ?? "";
+      assert.ok(text.includes("Provide a non-empty skill URI"), "invalid URI remediation missing");
+    }, failures);
+
+    await check("get_skill output matches resources/read markdown", async () => {
+      const readResult = (await jsonRpc("resources/read", {
+        uri: SKILL_RESOURCE_URI,
+      })) as { contents?: { text?: string; mimeType?: string }[] };
+      const toolResult = (await jsonRpc("tools/call", {
+        name: GET_SKILL_TOOL_NAME,
+        arguments: { uri: SKILL_RESOURCE_URI },
+      })) as { structuredContent?: { text?: string; mimeType?: string } };
+      assert.equal(readResult.contents?.[0]?.mimeType, "text/markdown");
+      assert.equal(toolResult.structuredContent?.mimeType, "text/markdown");
+      assert.equal(
+        toolResult.structuredContent?.text ?? "",
+        readResult.contents?.[0]?.text ?? "",
+        "get_skill markdown should match resources/read markdown",
+      );
     }, failures);
   } finally {
     await stopServer(server);

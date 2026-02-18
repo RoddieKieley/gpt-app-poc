@@ -70,6 +70,8 @@ const loadEngageSkillMarkdown = async (): Promise<string> => {
   return loadSkillMarkdown(ENGAGE_SKILL_RESOURCE_SOURCE_PATH, ENGAGE_SKILL_RESOURCE_FALLBACK);
 };
 
+const GET_SKILL_INPUT_SCHEMA = z.object({ uri: z.string().min(1, "skill URI is required") });
+
 registerAppTool(
   server,
   "list_skills",
@@ -99,6 +101,70 @@ registerAppTool(
       },
     ],
   }),
+);
+
+registerAppTool(
+  server,
+  "get_skill",
+  {
+    title: "Get Skill Markdown",
+    description: "Returns markdown content for a registered skill URI.",
+    inputSchema: GET_SKILL_INPUT_SCHEMA,
+    annotations: {
+      readOnlyHint: true,
+      openWorldHint: false,
+      destructiveHint: false,
+    },
+    _meta: {
+      ui: { resourceUri: engageResourceUri },
+      "openai/outputTemplate": engageResourceUri,
+      "openai/widgetAccessible": true,
+    },
+  },
+  async (args) => {
+    const normalizedUri = args.uri.trim();
+    if (!normalizedUri.startsWith("skill://")) {
+      return {
+        isError: true,
+        content: [
+          {
+            type: "text",
+            text: "Invalid URI. Provide a non-empty skill URI like skill://engage-red-hat-support/SKILL.md.",
+          },
+        ],
+      };
+    }
+
+    if (normalizedUri !== ENGAGE_SKILL_RESOURCE_URI) {
+      return {
+        isError: true,
+        content: [
+          {
+            type: "text",
+            text: [
+              `Unsupported skill URI: ${normalizedUri}`,
+              `Use list_skills to discover supported URIs. Currently supported: ${ENGAGE_SKILL_RESOURCE_URI}`,
+            ].join("\n"),
+          },
+        ],
+      };
+    }
+
+    const markdown = await loadEngageSkillMarkdown();
+    return {
+      content: [
+        {
+          type: "text",
+          text: [`URI: ${ENGAGE_SKILL_RESOURCE_URI}`, "", markdown].join("\n"),
+        },
+      ],
+      structuredContent: {
+        uri: ENGAGE_SKILL_RESOURCE_URI,
+        mimeType: SKILL_RESOURCE_MIME_TYPE,
+        text: markdown,
+      },
+    };
+  },
 );
 
 registerAppTool(

@@ -70,6 +70,16 @@ npm run test:mcp
 - Existing Jira and sosreport tool/resource surfaces remain unchanged.
 - No secret/token text appears in `get_skill` outputs or errors.
 
+## Verification Results
+
+- 2026-02-18: `npm run test:contract` passed (including engage contract coverage for `get_skill`).
+- 2026-02-18: `npm run test:regression` passed (MCP tool/skill resource preservation unchanged).
+- 2026-02-18: `npm run build` passed.
+- 2026-02-18: `npm run test:mcp` passed with checks for:
+  - `tools/list` includes `get_skill` read-only metadata,
+  - valid and invalid `tools/call get_skill` behavior,
+  - `resources/read` parity with `get_skill` markdown output.
+
 ## Rollback Plan
 
 - Remove `get_skill` registration block from `server.ts`.
