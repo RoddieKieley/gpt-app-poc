@@ -62,6 +62,18 @@ npm run test:regression
 npm run test:jira
 ```
 
+### Targeted sosreport test files
+
+- `tests/unit/sosreport-tool-schemas.test.ts`
+- `tests/unit/sosreport-command.test.ts`
+- `tests/unit/sosreport-paths.test.ts`
+- `tests/contract/sosreport-tools.contract.test.ts`
+- `tests/integration/sosreport-generate.success.test.ts`
+- `tests/integration/sosreport-generate.failures.test.ts`
+- `tests/integration/sosreport-fetch.success.test.ts`
+- `tests/regression/mcp-tool-surface-preservation.test.ts`
+- `tests/regression/skill-resource-preservation.test.ts`
+
 ## Operational note: `/tmp` cleanup
 
 - Fetched archives are copied to `/tmp` for easier local handling.

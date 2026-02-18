@@ -31,6 +31,8 @@ import { ConnectionLifecycleStore } from "./src/security/connection-lifecycle.js
 import { sanitizeForLog, safeError } from "./src/security/redaction.js";
 import { TokenVault } from "./src/security/token-vault.js";
 import { emitSecurityEvent } from "./src/security/security-events.js";
+import { fetchSosreportSchema, generateSosreportSchema } from "./src/sosreport/sosreport-tool-schemas.js";
+import { handleFetchSosreport, handleGenerateSosreport } from "./src/sosreport/sosreport-tool-handlers.js";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const jiraClient = new JiraClient();
@@ -121,6 +123,48 @@ registerAppTool(
       },
     ],
   }),
+);
+
+registerAppTool(
+  server,
+  "generate_sosreport",
+  {
+    title: "Generate Local Sosreport",
+    description: "Generates a local sosreport archive using non-interactive sudo execution.",
+    inputSchema: generateSosreportSchema,
+    annotations: {
+      readOnlyHint: false,
+      openWorldHint: false,
+      destructiveHint: false,
+    },
+    _meta: {
+      ui: { resourceUri },
+      "openai/outputTemplate": resourceUri,
+      "openai/widgetAccessible": true,
+    },
+  },
+  async (args) => handleGenerateSosreport(args),
+);
+
+registerAppTool(
+  server,
+  "fetch_sosreport",
+  {
+    title: "Fetch Local Sosreport Archive",
+    description: "Fetches generated sosreport archive metadata and copies file to /tmp.",
+    inputSchema: fetchSosreportSchema,
+    annotations: {
+      readOnlyHint: true,
+      openWorldHint: false,
+      destructiveHint: false,
+    },
+    _meta: {
+      ui: { resourceUri },
+      "openai/outputTemplate": resourceUri,
+      "openai/widgetAccessible": true,
+    },
+  },
+  async (args) => handleFetchSosreport(args),
 );
 
 const jiraResourceUri = "ui://jira-attachments/app.html";

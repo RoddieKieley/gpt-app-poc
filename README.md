@@ -49,6 +49,32 @@ See:
 - Read-only discovery tool: `list_skills` (returns text fallback plus the canonical URI)
 - Jira tools/contracts/tests remain unchanged by this feature.
 
+## Local Sosreport Tools (Phase 1)
+
+- New MCP tools:
+  - `generate_sosreport`
+  - `fetch_sosreport`
+- Local prerequisites:
+  - `sos` package installed and available in PATH
+  - `/etc/sudoers.d/mcp-sos` configured with `NOPASSWD` entries for required `sos report` execution commands
+- Privilege model:
+  - generation uses `sudo -n` (non-interactive)
+  - interactive password prompting is intentionally unsupported
+- Output behavior:
+  - `generate_sosreport` returns archive metadata and `fetch_reference`
+  - `fetch_sosreport` copies archive to `/tmp` and returns `archive_path`, `size_bytes`, and `sha256`
+  - tool responses always include text fallback content for non-UI hosts
+- Scope boundaries:
+  - local execution only in this increment
+  - no SSH host parameter, no SSH credential lifecycle
+
+### Deferred Phase 2 (Not Implemented)
+
+- SSH execution support
+- Remote connection lifecycle management
+- Host trust and secret management
+- Multi-tenant hardening and rate limits
+
 ## ChatGPT Apps Technical Readiness
 
 Technical readiness details live under `specs/003-chatgpt-app-technical-readiness/`.

@@ -21,3 +21,33 @@
 - Review security event logs for `connect`, `attach`, `revoke`, and denied access patterns.
 - Never request users to paste PATs into prompts or MCP tool calls.
 
+## Local Sosreport Operations (Phase 1)
+
+### Prerequisites
+
+- Install `sos` package on the host running `gpt-app-poc`.
+- Configure non-interactive sudo for sosreport generation:
+  - create `/etc/sudoers.d/mcp-sos`
+  - grant required `sos report` command path with `NOPASSWD`
+- Validate operator setup:
+  - `sudo -n sos report --help` should not prompt for password
+
+### Runtime Notes
+
+- `generate_sosreport` fails fast when `sos` is unavailable.
+- `generate_sosreport` requires `sudo -n`; password prompts are not supported.
+- `fetch_sosreport` reads a validated local archive and writes a copied file to `/tmp`.
+- Returned `/tmp` archive path is intended for `jira_attach_artifact` `artifact_ref` usage.
+
+### Cleanup Guidance
+
+- Periodically remove stale copied archives under `/tmp` according to local retention policy.
+- This phase does not include automated cleanup scheduling.
+
+### Deferred Scope
+
+- SSH-based execution
+- Remote connection lifecycle
+- Host trust and SSH secret management
+- Multi-tenant controls and rate limits
+
