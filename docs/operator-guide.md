@@ -53,3 +53,33 @@
 - Host trust and SSH secret management
 - Multi-tenant controls and rate limits
 
+## Engage Red Hat Support Operations (007)
+
+### Scope and sequencing
+
+- Product scope is Linux-only for this workflow.
+- End-to-end sequence:
+  1. Connect with PAT through `POST /api/jira/connections`.
+  2. Verify active `connection_id` with `jira_connection_status` or `GET /api/jira/connections/{connection_id}`.
+  3. Run `generate_sosreport`.
+  4. Run `fetch_sosreport`.
+  5. Run `jira_attach_artifact` with `connection_id`, `issue_key`, and fetched `artifact_ref`.
+
+### Lifecycle gating
+
+- `connected`: proceed with diagnostics/attach.
+- `expired`: stop and reconnect before continuing.
+- `revoked`: stop and reconnect before continuing.
+
+### Secret boundary reminders
+
+- PAT must only be entered in secure backend intake requests.
+- PAT must never be passed in MCP tool arguments or shown in logs/transcripts.
+- Downstream MCP and API usage should rely on opaque `connection_id`.
+
+### Incident response
+
+- If exposure is suspected, revoke impacted connections immediately.
+- Reconnect users with new PAT intake only after mitigation.
+- Review security event logs for connect/verify/attach/revoke outcomes and denied access patterns.
+

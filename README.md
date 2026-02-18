@@ -90,3 +90,22 @@ Technical readiness details live under `specs/003-chatgpt-app-technical-readines
 - MCP tools never accept or return PATs; they use opaque `connection_id` references.
 - Tool and API flows always provide text fallbacks for non-UI MCP clients.
 - Revoke and TTL-expiry block all protected Jira operations until reconnect.
+
+## Engage Red Hat Support Workflow (Option A)
+
+- New skill resource: `skill://engage-red-hat-support/SKILL.md`
+- New UI resource: `ui://engage-red-hat-support/app.html`
+- Orchestration model:
+  - UI/skill orchestrates existing tools and endpoints
+  - no new MCP orchestration tool is introduced
+- Required workflow order:
+  1. secure PAT intake: `POST /api/jira/connections`
+  2. connection verification: `jira_connection_status` or `GET /api/jira/connections/{connection_id}`
+  3. `generate_sosreport`
+  4. `fetch_sosreport`
+  5. `jira_attach_artifact` with `connection_id` + `issue_key` + fetched `artifact_ref`
+- Linux-only product scope is enforced in the Engage UI flow.
+- PAT secret boundary:
+  - PAT is only used in secure backend intake
+  - PAT must never appear in MCP tool args/results/prompts/logs
+  - downstream calls use opaque `connection_id` only

@@ -3,29 +3,43 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>MCP Apps Jira Attachments</title>
+    <title>MCP Apps Support Workflows</title>
   </head>
   <body>
     <main>
-      <h1>Jira Attachment Assistant</h1>
+      <h1>Support Workflow Assistant</h1>
       <p><strong>Status:</strong> <span id="status">Ready.</span></p>
+      <section>
+        <h2>Engage Red Hat Support (Linux Only)</h2>
+        <select id="product-select">
+          <option value="linux" selected>linux</option>
+        </select>
+        <button id="engage-run-btn" type="button">Run end-to-end (connect->generate->fetch->attach)</button>
+      </section>
       <section>
         <h2>Connect Jira</h2>
         <input id="jira-url" type="url" placeholder="https://jira.example.com" />
         <input id="jira-pat" type="password" placeholder="PAT (never shown in tool calls)" />
         <button id="connect-btn" type="button">Connect</button>
+        <button id="verify-btn" type="button">Verify connection</button>
       </section>
       <section>
-        <h2>Connection Actions</h2>
+        <h2>Workflow Inputs</h2>
         <input id="connection-id" type="text" placeholder="connection_id" />
         <input id="issue-key" type="text" placeholder="ISSUE-123" />
+        <input id="fetch-reference" type="text" placeholder="fetch_reference (from generate_sosreport)" />
         <input id="artifact-ref" type="text" placeholder="/tmp/sosreport.tar.xz" />
-        <button id="status-btn" type="button">Check status</button>
+        <button id="status-btn" type="button">Check status tool</button>
+        <button id="generate-btn" type="button">Generate sosreport</button>
+        <button id="fetch-btn" type="button">Fetch sosreport</button>
         <button id="list-btn" type="button">List attachments</button>
         <button id="attach-btn" type="button">Attach artifact</button>
         <button id="disconnect-btn" type="button">Disconnect</button>
       </section>
-      <p>If UI is unavailable, all server tools return text fallbacks.</p>
+      <p>
+        If UI is unavailable, all server tools and skill guidance provide text fallbacks.
+        PAT must only be submitted via the secure backend connection endpoint.
+      </p>
     </main>
     <script type="module" src="/src/mcp-app.ts"></script>
   </body>

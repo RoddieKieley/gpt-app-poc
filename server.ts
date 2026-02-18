@@ -47,18 +47,38 @@ const server = new McpServer({
 const resourceUri = "ui://hello-world/app.html";
 const SKILL_RESOURCE_URI = "skill://hello-world/SKILL.md";
 const SKILL_RESOURCE_SOURCE_PATH = path.join(__dirname, "skills", "hello-world", "SKILL.md");
+const ENGAGE_SKILL_RESOURCE_URI = "skill://engage-red-hat-support/SKILL.md";
+const ENGAGE_SKILL_RESOURCE_SOURCE_PATH = path.join(
+  __dirname,
+  "skills",
+  "engage-red-hat-support",
+  "SKILL.md",
+);
 const SKILL_RESOURCE_MIME_TYPE = "text/markdown";
 const SKILL_RESOURCE_FALLBACK = `# Hello World Skill
 
 Skill content is temporarily unavailable from the repository.
 URI: ${SKILL_RESOURCE_URI}`;
+const ENGAGE_SKILL_RESOURCE_FALLBACK = `# Engage Red Hat Support
+
+Skill content is temporarily unavailable from the repository.
+URI: ${ENGAGE_SKILL_RESOURCE_URI}`;
+const engageResourceUri = "ui://engage-red-hat-support/app.html";
+
+const loadSkillMarkdown = async (sourcePath: string, fallback: string): Promise<string> => {
+  try {
+    return await fs.readFile(sourcePath, "utf-8");
+  } catch (_error) {
+    return fallback;
+  }
+};
 
 const loadHelloWorldSkillMarkdown = async (): Promise<string> => {
-  try {
-    return await fs.readFile(SKILL_RESOURCE_SOURCE_PATH, "utf-8");
-  } catch (_error) {
-    return SKILL_RESOURCE_FALLBACK;
-  }
+  return loadSkillMarkdown(SKILL_RESOURCE_SOURCE_PATH, SKILL_RESOURCE_FALLBACK);
+};
+
+const loadEngageSkillMarkdown = async (): Promise<string> => {
+  return loadSkillMarkdown(ENGAGE_SKILL_RESOURCE_SOURCE_PATH, ENGAGE_SKILL_RESOURCE_FALLBACK);
 };
 
 registerAppTool(
@@ -119,7 +139,10 @@ registerAppTool(
     content: [
       {
         type: "text",
-        text: `Available skill: ${SKILL_RESOURCE_URI}\nUse resources/read with the URI to load markdown skill content.`,
+        text: [
+          `Available skills: ${SKILL_RESOURCE_URI}, ${ENGAGE_SKILL_RESOURCE_URI}`,
+          "Use resources/read with a listed URI to load markdown skill content.",
+        ].join("\n"),
       },
     ],
   }),
@@ -351,6 +374,63 @@ server.registerResource(
       },
     ],
   }),
+);
+
+server.registerResource(
+  "engage-red-hat-support-skill",
+  ENGAGE_SKILL_RESOURCE_URI,
+  { mimeType: SKILL_RESOURCE_MIME_TYPE },
+  async () => ({
+    contents: [
+      {
+        uri: ENGAGE_SKILL_RESOURCE_URI,
+        mimeType: SKILL_RESOURCE_MIME_TYPE,
+        text: await loadEngageSkillMarkdown(),
+      },
+    ],
+  }),
+);
+
+registerAppResource(
+  server,
+  engageResourceUri,
+  engageResourceUri,
+  { mimeType: RESOURCE_MIME_TYPE },
+  async () => {
+    let html: string;
+    try {
+      html = await fs.readFile(
+        path.join(__dirname, "dist", "mcp-app.html"),
+        "utf-8",
+      );
+    } catch (_error) {
+      html = `<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <title>Engage Red Hat Support</title>
+  </head>
+  <body>
+    <p>UI bundle unavailable. Use text fallbacks for connect, generate, fetch, and attach steps.</p>
+  </body>
+</html>`;
+    }
+    return {
+      contents: [
+        {
+          uri: engageResourceUri,
+          mimeType: RESOURCE_MIME_TYPE,
+          _meta: {
+            "openai/widgetDomain": "https://gptapppoc.kieley.io",
+            "openai/widgetCSP": {
+              connect_domains: ["https://gptapppoc.kieley.io"],
+            },
+          },
+          text: html,
+        },
+      ],
+    };
+  },
 );
 
 registerAppResource(

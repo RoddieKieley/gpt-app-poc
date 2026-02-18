@@ -18,10 +18,10 @@
 
 **Purpose**: Prepare task scaffolding and feature-specific test/docs placeholders.
 
-- [ ] T001 Create task scaffolding for feature artifacts in `specs/007-engage-red-hat-support/tasks.md`
-- [ ] T002 [P] Create new skill file scaffold in `skills/engage-red-hat-support/SKILL.md`
-- [ ] T003 [P] Create contract test scaffold in `tests/contract/engage-red-hat-support.contract.test.ts`
-- [ ] T004 [P] Create integration test scaffold in `tests/integration/engage-red-hat-support.workflow.test.ts`
+- [X] T001 Create task scaffolding for feature artifacts in `specs/007-engage-red-hat-support/tasks.md`
+- [X] T002 [P] Create new skill file scaffold in `skills/engage-red-hat-support/SKILL.md`
+- [X] T003 [P] Create contract test scaffold in `tests/contract/engage-red-hat-support.contract.test.ts`
+- [X] T004 [P] Create integration test scaffold in `tests/integration/engage-red-hat-support.workflow.test.ts`
 
 ---
 
@@ -31,13 +31,13 @@
 
 **⚠️ CRITICAL**: No US1/US2/US3 implementation starts until this phase is complete.
 
-- [ ] T005 Register `ui://engage-red-hat-support/app.html` and `skill://engage-red-hat-support/SKILL.md` resources in `server.ts`
-- [ ] T006 Preserve required widget metadata (`openai/outputTemplate`, `openai/widgetAccessible`, `openai/widgetDomain`, `openai/widgetCSP`) for new Engage resource in `server.ts`
-- [ ] T007 Add Engage view container and workflow controls to widget markup in `mcp-app.html`
-- [ ] T008 Add Engage workflow state model and URI-aware UI initialization in `src/mcp-app.ts`
-- [ ] T009 [P] Add contract assertions for Engage UI/skill resource discovery in `tests/contract/engage-red-hat-support.contract.test.ts`
-- [ ] T010 [P] Extend skill discovery preservation checks for new skill URI in `tests/regression/skill-resource-preservation.test.ts`
-- [ ] T011 [P] Extend MCP surface preservation assertions for newly registered Engage resources/tools in `tests/regression/mcp-tool-surface-preservation.test.ts`
+- [X] T005 Register `ui://engage-red-hat-support/app.html` and `skill://engage-red-hat-support/SKILL.md` resources in `server.ts`
+- [X] T006 Preserve required widget metadata (`openai/outputTemplate`, `openai/widgetAccessible`, `openai/widgetDomain`, `openai/widgetCSP`) for new Engage resource in `server.ts`
+- [X] T007 Add Engage view container and workflow controls to widget markup in `mcp-app.html`
+- [X] T008 Add Engage workflow state model and URI-aware UI initialization in `src/mcp-app.ts`
+- [X] T009 [P] Add contract assertions for Engage UI/skill resource discovery in `tests/contract/engage-red-hat-support.contract.test.ts`
+- [X] T010 [P] Extend skill discovery preservation checks for new skill URI in `tests/regression/skill-resource-preservation.test.ts`
+- [X] T011 [P] Extend MCP surface preservation assertions for newly registered Engage resources/tools in `tests/regression/mcp-tool-surface-preservation.test.ts`
 
 **Checkpoint**: Resource registration and discovery guarantees are in place; user story implementation can begin.
 
@@ -51,16 +51,16 @@
 
 ### Tests for User Story 1
 
-- [ ] T012 [P] [US1] Add connection lifecycle gating scenarios (`connected`/`expired`/`revoked`) to `tests/integration/engage-red-hat-support.workflow.test.ts`
-- [ ] T013 [P] [US1] Add contract checks that Engage orchestration uses only `connection_id` (no PAT fields in tool payload expectations) in `tests/contract/engage-red-hat-support.contract.test.ts`
-- [ ] T014 [P] [US1] Extend PAT non-leakage regression coverage for Engage flow payloads/results in `tests/regression/no-pat-leakage-mcp.test.ts`
+- [X] T012 [P] [US1] Add connection lifecycle gating scenarios (`connected`/`expired`/`revoked`) to `tests/integration/engage-red-hat-support.workflow.test.ts`
+- [X] T013 [P] [US1] Add contract checks that Engage orchestration uses only `connection_id` (no PAT fields in tool payload expectations) in `tests/contract/engage-red-hat-support.contract.test.ts`
+- [X] T014 [P] [US1] Extend PAT non-leakage regression coverage for Engage flow payloads/results in `tests/regression/no-pat-leakage-mcp.test.ts`
 
 ### Implementation for User Story 1
 
-- [ ] T015 [US1] Implement secure PAT intake call path (`POST /api/jira/connections`) and clear PAT after submission in `src/mcp-app.ts`
-- [ ] T016 [US1] Implement connection verification step using `jira_connection_status` and/or `GET /api/jira/connections/{connection_id}` in `src/mcp-app.ts`
-- [ ] T017 [US1] Implement lifecycle status gating (`connected` pass, `expired`/`revoked` fail-stop) with retry guidance in `src/mcp-app.ts`
-- [ ] T018 [US1] Add UI status rendering for connection step results and sanitized failure messages in `mcp-app.html`
+- [X] T015 [US1] Implement secure PAT intake call path (`POST /api/jira/connections`) and clear PAT after submission in `src/mcp-app.ts`
+- [X] T016 [US1] Implement connection verification step using `jira_connection_status` and/or `GET /api/jira/connections/{connection_id}` in `src/mcp-app.ts`
+- [X] T017 [US1] Implement lifecycle status gating (`connected` pass, `expired`/`revoked` fail-stop) with retry guidance in `src/mcp-app.ts`
+- [X] T018 [US1] Add UI status rendering for connection step results and sanitized failure messages in `mcp-app.html`
 
 **Checkpoint**: US1 is independently functional (secure connect + verify + lifecycle gating).
 
@@ -74,15 +74,15 @@
 
 ### Tests for User Story 2
 
-- [ ] T019 [P] [US2] Add integration scenarios for Linux-only gate and generate->fetch stop-on-failure behavior in `tests/integration/engage-red-hat-support.workflow.test.ts`
-- [ ] T020 [P] [US2] Add contract assertions for required orchestration step order in `tests/contract/engage-red-hat-support.contract.test.ts`
+- [X] T019 [P] [US2] Add integration scenarios for Linux-only gate and generate->fetch stop-on-failure behavior in `tests/integration/engage-red-hat-support.workflow.test.ts`
+- [X] T020 [P] [US2] Add contract assertions for required orchestration step order in `tests/contract/engage-red-hat-support.contract.test.ts`
 
 ### Implementation for User Story 2
 
-- [ ] T021 [US2] Implement Linux-only product gate and rejection messaging before diagnostics in `src/mcp-app.ts`
-- [ ] T022 [US2] Implement `generate_sosreport` orchestration step and persist `fetch_reference` in workflow state in `src/mcp-app.ts`
-- [ ] T023 [US2] Implement `fetch_sosreport` orchestration step and persist `archive_path`/`sha256`/`size_bytes` in workflow state in `src/mcp-app.ts`
-- [ ] T024 [US2] Add UI progress and failure-stop presentation for generating/fetching states in `mcp-app.html`
+- [X] T021 [US2] Implement Linux-only product gate and rejection messaging before diagnostics in `src/mcp-app.ts`
+- [X] T022 [US2] Implement `generate_sosreport` orchestration step and persist `fetch_reference` in workflow state in `src/mcp-app.ts`
+- [X] T023 [US2] Implement `fetch_sosreport` orchestration step and persist `archive_path`/`sha256`/`size_bytes` in workflow state in `src/mcp-app.ts`
+- [X] T024 [US2] Add UI progress and failure-stop presentation for generating/fetching states in `mcp-app.html`
 
 **Checkpoint**: US2 is independently functional (Linux gate + generate/fetch workflow).
 
@@ -96,16 +96,16 @@
 
 ### Tests for User Story 3
 
-- [ ] T025 [P] [US3] Add integration scenarios for attach success/failure and issue-key validation in `tests/integration/engage-red-hat-support.workflow.test.ts`
-- [ ] T026 [P] [US3] Add contract assertions for `jira_attach_artifact(connection_id, issue_key, artifact_ref)` mapping from fetched archive path in `tests/contract/engage-red-hat-support.contract.test.ts`
-- [ ] T027 [P] [US3] Extend PAT non-leakage regression checks for attach-step errors/statuses in `tests/regression/no-pat-leakage-logs.test.ts`
+- [X] T025 [P] [US3] Add integration scenarios for attach success/failure and issue-key validation in `tests/integration/engage-red-hat-support.workflow.test.ts`
+- [X] T026 [P] [US3] Add contract assertions for `jira_attach_artifact(connection_id, issue_key, artifact_ref)` mapping from fetched archive path in `tests/contract/engage-red-hat-support.contract.test.ts`
+- [X] T027 [P] [US3] Extend PAT non-leakage regression checks for attach-step errors/statuses in `tests/regression/no-pat-leakage-logs.test.ts`
 
 ### Implementation for User Story 3
 
-- [ ] T028 [US3] Implement issue key validation and required-field gating for attach step in `src/mcp-app.ts`
-- [ ] T029 [US3] Implement `jira_attach_artifact` step using `connection_id`, `issue_key`, and fetched `archive_path` as `artifact_ref` in `src/mcp-app.ts`
-- [ ] T030 [US3] Add attach-step UI states (attaching/completed/failed) and retry guidance in `mcp-app.html`
-- [ ] T031 [US3] Author final Engage skill workflow instructions (including non-UI fallback and exact step order) in `skills/engage-red-hat-support/SKILL.md`
+- [X] T028 [US3] Implement issue key validation and required-field gating for attach step in `src/mcp-app.ts`
+- [X] T029 [US3] Implement `jira_attach_artifact` step using `connection_id`, `issue_key`, and fetched `archive_path` as `artifact_ref` in `src/mcp-app.ts`
+- [X] T030 [US3] Add attach-step UI states (attaching/completed/failed) and retry guidance in `mcp-app.html`
+- [X] T031 [US3] Author final Engage skill workflow instructions (including non-UI fallback and exact step order) in `skills/engage-red-hat-support/SKILL.md`
 
 **Checkpoint**: US3 is independently functional (attach flow with validated issue key and opaque connection usage).
 
@@ -115,12 +115,12 @@
 
 **Purpose**: Final hardening, docs, and full-suite verification across stories.
 
-- [ ] T032 [P] Update operator runbook for Engage flow prerequisites, lifecycle handling, and incident response in `docs/operator-guide.md`
-- [ ] T033 [P] Align and finalize feature contracts with implemented behavior in `specs/007-engage-red-hat-support/contracts/engage-workflow-contract.json`
-- [ ] T034 [P] Align and finalize UI metadata/security contract in `specs/007-engage-red-hat-support/contracts/engage-ui-resource.json`
-- [ ] T035 [P] Align and finalize skill contract requirements in `specs/007-engage-red-hat-support/contracts/engage-skill-resource.json`
-- [ ] T036 Execute full verification commands and record outcomes in `specs/007-engage-red-hat-support/quickstart.md`
-- [ ] T037 Perform constitution compliance and risk-mitigation verification checklist update in `specs/007-engage-red-hat-support/plan.md`
+- [X] T032 [P] Update operator runbook for Engage flow prerequisites, lifecycle handling, and incident response in `docs/operator-guide.md`
+- [X] T033 [P] Align and finalize feature contracts with implemented behavior in `specs/007-engage-red-hat-support/contracts/engage-workflow-contract.json`
+- [X] T034 [P] Align and finalize UI metadata/security contract in `specs/007-engage-red-hat-support/contracts/engage-ui-resource.json`
+- [X] T035 [P] Align and finalize skill contract requirements in `specs/007-engage-red-hat-support/contracts/engage-skill-resource.json`
+- [X] T036 Execute full verification commands and record outcomes in `specs/007-engage-red-hat-support/quickstart.md`
+- [X] T037 Perform constitution compliance and risk-mitigation verification checklist update in `specs/007-engage-red-hat-support/plan.md`
 
 ---
 

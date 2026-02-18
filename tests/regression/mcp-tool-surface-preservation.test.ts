@@ -15,6 +15,13 @@ const REQUIRED_TOOLS = [
   "jira_attach_artifact",
   "jira_disconnect",
 ] as const;
+const REQUIRED_RESOURCES = [
+  "ui://hello-world/app.html",
+  "ui://jira-attachments/app.html",
+  "ui://engage-red-hat-support/app.html",
+  "skill://hello-world/SKILL.md",
+  "skill://engage-red-hat-support/SKILL.md",
+] as const;
 
 test("MCP tool surface includes existing and new tools", async () => {
   process.env.NODE_ENV = "test";
@@ -66,6 +73,12 @@ test("MCP tool surface includes existing and new tools", async () => {
     const names = new Set((listed.tools ?? []).map((tool) => tool.name));
     for (const required of REQUIRED_TOOLS) {
       assert.ok(names.has(required), `missing tool ${required}`);
+    }
+
+    const resources = (await jsonRpc("resources/list")) as { resources?: Array<{ uri?: string }> };
+    const uris = new Set((resources.resources ?? []).map((entry) => entry.uri));
+    for (const required of REQUIRED_RESOURCES) {
+      assert.ok(uris.has(required), `missing resource ${required}`);
     }
   } finally {
     srv.close();

@@ -106,6 +106,15 @@ npm run test:regression
 npm run test:jira
 ```
 
+## Verification Results
+
+- 2026-02-18: `npm run build` passed.
+- 2026-02-18: `npm run test:jira` passed (`test:unit`, `test:contract`, `test:integration`, `test:regression` all green).
+- 2026-02-18: Targeted milestone tests passed for:
+  - resource registration and discovery regressions,
+  - PAT connect/verify lifecycle gating (`connected`/`expired`/`revoked`),
+  - end-to-end connect -> connection_id -> generate -> fetch -> attach sequence.
+
 ## Suggested Test Targets
 
 - `tests/contract/engage-red-hat-support.contract.test.ts`

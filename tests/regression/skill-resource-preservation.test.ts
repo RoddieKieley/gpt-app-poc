@@ -6,6 +6,7 @@ type JsonRpcResponse =
   | { jsonrpc: "2.0"; id: number; error: { code: number; message: string } };
 
 const SKILL_RESOURCE_URI = "skill://hello-world/SKILL.md";
+const ENGAGE_SKILL_RESOURCE_URI = "skill://engage-red-hat-support/SKILL.md";
 
 test("skill discovery tool and resource behavior remain unchanged", async () => {
   process.env.NODE_ENV = "test";
@@ -55,6 +56,7 @@ test("skill discovery tool and resource behavior remain unchanged", async () => 
     });
     const resources = (await jsonRpc("resources/list")) as { resources?: Array<{ uri?: string }> };
     assert.ok(resources.resources?.some((entry) => entry.uri === SKILL_RESOURCE_URI));
+    assert.ok(resources.resources?.some((entry) => entry.uri === ENGAGE_SKILL_RESOURCE_URI));
 
     const readResult = (await jsonRpc("resources/read", {
       uri: SKILL_RESOURCE_URI,
@@ -68,6 +70,7 @@ test("skill discovery tool and resource behavior remain unchanged", async () => 
     })) as { content?: Array<{ type: string; text?: string }> };
     const text = toolResult.content?.find((item) => item.type === "text")?.text ?? "";
     assert.ok(text.includes(SKILL_RESOURCE_URI), "list_skills response missing canonical URI");
+    assert.ok(text.includes(ENGAGE_SKILL_RESOURCE_URI), "list_skills response missing engage URI");
   } finally {
     srv.close();
   }
