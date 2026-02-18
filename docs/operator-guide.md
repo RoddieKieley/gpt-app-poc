@@ -29,6 +29,7 @@
 - Configure non-interactive sudo for sosreport generation:
   - create `/etc/sudoers.d/mcp-sos`
   - grant required `sos report` command path with `NOPASSWD`
+  - expected command shape: `sos report --batch --tmp-dir /var/tmp --name linux-mcp-sos`
 - Validate operator setup:
   - `sudo -n sos report --help` should not prompt for password
 
@@ -37,6 +38,7 @@
 - `generate_sosreport` fails fast when `sos` is unavailable.
 - `generate_sosreport` requires `sudo -n`; password prompts are not supported.
 - `fetch_sosreport` reads a validated local archive and writes a copied file to `/tmp`.
+- `fetch_sosreport` first attempts direct read, then uses `sudo -n cat` fallback for root-owned archives.
 - Returned `/tmp` archive path is intended for `jira_attach_artifact` `artifact_ref` usage.
 
 ### Cleanup Guidance

@@ -31,5 +31,8 @@ test("fetch output archive path is compatible with jira artifact selection", asy
 test("fetch_sosreport returns actionable error when source archive missing", async () => {
   const missing = await handleFetchSosreport({ fetch_reference: "/tmp/sosreport-missing-source.tar.xz" });
   assert.equal(missing.isError, true);
-  assert.equal(missing.structuredContent?.code, "read_failed");
+  assert.ok(
+    missing.structuredContent?.code === "read_failed" || missing.structuredContent?.code === "privilege_required",
+    "expected read_failed or privilege_required for missing source archive",
+  );
 });

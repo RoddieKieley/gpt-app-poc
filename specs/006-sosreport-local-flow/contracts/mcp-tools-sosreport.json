@@ -103,6 +103,7 @@
       },
       "errorCategories": [
         "validation_error",
+        "privilege_required",
         "path_unsafe",
         "read_failed",
         "copy_failed",

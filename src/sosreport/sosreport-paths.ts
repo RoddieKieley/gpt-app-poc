@@ -5,7 +5,7 @@ import { SosreportError } from "./sosreport-errors.js";
 const REPORT_PATH_PATTERN = /(\/[^\s]*sosreport-[^\s]*\.tar(?:\.[^\s]+)?)/i;
 const REPORT_NAME_PATTERN = /^sosreport-.+\.tar(\..+)?$/i;
 
-const DEFAULT_SEARCH_DIRS = ["/tmp", "/var/tmp"];
+const DEFAULT_SEARCH_DIRS = ["/var/tmp", "/tmp"];
 
 const allowedRoots = [process.cwd(), "/tmp", "/var/tmp"];
 

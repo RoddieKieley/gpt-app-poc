@@ -51,9 +51,9 @@ const buildGenerateArgs = (args: GenerateSosreportInput): string[] => {
     "report",
     "--batch",
     "--tmp-dir",
-    "/tmp",
+    "/var/tmp",
     "--name",
-    "mcp-sosreport",
+    "linux-mcp-sos",
   ];
 
   if (args.only_plugins?.length) {
