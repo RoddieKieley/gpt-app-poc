@@ -68,7 +68,10 @@ test("engage resources are discoverable with required metadata", async () => {
       contents?: Array<{ mimeType?: string; _meta?: Record<string, unknown>; text?: string }>;
     };
     assert.equal(uiRead.contents?.[0]?.mimeType, "text/html;profile=mcp-app");
-    assert.equal(uiRead.contents?.[0]?._meta?.["openai/widgetDomain"], "https://gptapppoc.kieley.io");
+    assert.equal(
+      uiRead.contents?.[0]?._meta?.["openai/widgetDomain"],
+      "https://leisured-carina-unpromotable.ngrok-free.dev",
+    );
     assert.ok(uiRead.contents?.[0]?._meta?.["openai/widgetCSP"]);
 
     const skillRead = (await jsonRpc("resources/read", { uri: ENGAGE_SKILL_URI })) as {

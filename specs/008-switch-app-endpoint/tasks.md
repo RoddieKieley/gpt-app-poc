@@ -18,8 +18,8 @@
 
 **Purpose**: Establish safe migration boundaries and baseline evidence before edits.
 
-- [ ] T001 Capture baseline legacy endpoint matches for in-scope files (`/wip/src/github.com/roddiekieley/gpt-app-poc/server.ts`, `/wip/src/github.com/roddiekieley/gpt-app-poc/scripts/mcp-smoke-tests.ts`, `/wip/src/github.com/roddiekieley/gpt-app-poc/tests/contract/engage-red-hat-support.contract.test.ts`, `/wip/src/github.com/roddiekieley/gpt-app-poc/README.md`) using `rg "gptapppoc\\.kieley\\.io"`.
-- [ ] T002 Confirm out-of-scope historical specs remain untouched by recording current matches in `/wip/src/github.com/roddiekieley/gpt-app-poc/specs/**` as reference-only evidence before implementation.
+- [X] T001 Capture baseline legacy endpoint matches for in-scope files (`/wip/src/github.com/roddiekieley/gpt-app-poc/server.ts`, `/wip/src/github.com/roddiekieley/gpt-app-poc/scripts/mcp-smoke-tests.ts`, `/wip/src/github.com/roddiekieley/gpt-app-poc/tests/contract/engage-red-hat-support.contract.test.ts`, `/wip/src/github.com/roddiekieley/gpt-app-poc/README.md`) using `rg "gptapppoc\\.kieley\\.io"`.
+- [X] T002 Confirm out-of-scope historical specs remain untouched by recording current matches in `/wip/src/github.com/roddiekieley/gpt-app-poc/specs/**` as reference-only evidence before implementation.
 
 ---
 
@@ -29,8 +29,8 @@
 
 **⚠️ CRITICAL**: No user-story validation work begins until this phase is complete.
 
-- [ ] T003 Replace `https://gptapppoc.kieley.io` with `https://leisured-carina-unpromotable.ngrok-free.dev` in `/wip/src/github.com/roddiekieley/gpt-app-poc/server.ts` using minimal-risk literal edits only.
-- [ ] T004 Verify no unintended non-endpoint behavior changes in `/wip/src/github.com/roddiekieley/gpt-app-poc/server.ts` (resource/tool shapes, text fallbacks, and metadata keys unchanged except endpoint value).
+- [X] T003 Replace `https://gptapppoc.kieley.io` with `https://leisured-carina-unpromotable.ngrok-free.dev` in `/wip/src/github.com/roddiekieley/gpt-app-poc/server.ts` using minimal-risk literal edits only.
+- [X] T004 Verify no unintended non-endpoint behavior changes in `/wip/src/github.com/roddiekieley/gpt-app-poc/server.ts` (resource/tool shapes, text fallbacks, and metadata keys unchanged except endpoint value).
 
 **Checkpoint**: Runtime default endpoint is migrated in `server.ts`; scoped test/doc updates can proceed.
 
@@ -44,12 +44,12 @@
 
 ### Tests for User Story 1
 
-- [ ] T005 [US1] Run runtime-focused contract coverage in `/wip/src/github.com/roddiekieley/gpt-app-poc/tests/contract/engage-red-hat-support.contract.test.ts` to confirm runtime endpoint assertions align with `/wip/src/github.com/roddiekieley/gpt-app-poc/server.ts`.
+- [X] T005 [US1] Run runtime-focused contract coverage in `/wip/src/github.com/roddiekieley/gpt-app-poc/tests/contract/engage-red-hat-support.contract.test.ts` to confirm runtime endpoint assertions align with `/wip/src/github.com/roddiekieley/gpt-app-poc/server.ts`.
 
 ### Implementation for User Story 1
 
-- [ ] T006 [US1] Update runtime endpoint assertions/fixtures in `/wip/src/github.com/roddiekieley/gpt-app-poc/tests/contract/engage-red-hat-support.contract.test.ts` to match the migrated endpoint in `/wip/src/github.com/roddiekieley/gpt-app-poc/server.ts`.
-- [ ] T007 [US1] Run `npm run test:contract` with focus on `/wip/src/github.com/roddiekieley/gpt-app-poc/tests/contract/engage-red-hat-support.contract.test.ts` and capture pass/fail evidence.
+- [X] T006 [US1] Update runtime endpoint assertions/fixtures in `/wip/src/github.com/roddiekieley/gpt-app-poc/tests/contract/engage-red-hat-support.contract.test.ts` to match the migrated endpoint in `/wip/src/github.com/roddiekieley/gpt-app-poc/server.ts`.
+- [X] T007 [US1] Run `npm run test:contract` with focus on `/wip/src/github.com/roddiekieley/gpt-app-poc/tests/contract/engage-red-hat-support.contract.test.ts` and capture pass/fail evidence.
 
 **Checkpoint**: US1 is complete when runtime and contract checks agree on the new endpoint.
 
@@ -63,13 +63,13 @@
 
 ### Tests for User Story 2
 
-- [ ] T008 [P] [US2] Update smoke test endpoint assertions in `/wip/src/github.com/roddiekieley/gpt-app-poc/scripts/mcp-smoke-tests.ts` to the new development endpoint.
-- [ ] T009 [US2] Run `npm run build` for `/wip/src/github.com/roddiekieley/gpt-app-poc/mcp-app.html` bundle readiness required by `/wip/src/github.com/roddiekieley/gpt-app-poc/scripts/mcp-smoke-tests.ts`.
+- [X] T008 [P] [US2] Update smoke test endpoint assertions in `/wip/src/github.com/roddiekieley/gpt-app-poc/scripts/mcp-smoke-tests.ts` to the new development endpoint.
+- [X] T009 [US2] Run `npm run build` for `/wip/src/github.com/roddiekieley/gpt-app-poc/mcp-app.html` bundle readiness required by `/wip/src/github.com/roddiekieley/gpt-app-poc/scripts/mcp-smoke-tests.ts`.
 
 ### Implementation for User Story 2
 
-- [ ] T010 [US2] Execute `npm run test:mcp` to validate `/wip/src/github.com/roddiekieley/gpt-app-poc/scripts/mcp-smoke-tests.ts` against migrated runtime endpoint behavior in `/wip/src/github.com/roddiekieley/gpt-app-poc/server.ts`.
-- [ ] T011 [US2] Re-run `npm run test:contract` for `/wip/src/github.com/roddiekieley/gpt-app-poc/tests/contract/engage-red-hat-support.contract.test.ts` after smoke alignment to prove no regression.
+- [X] T010 [US2] Execute `npm run test:mcp` to validate `/wip/src/github.com/roddiekieley/gpt-app-poc/scripts/mcp-smoke-tests.ts` against migrated runtime endpoint behavior in `/wip/src/github.com/roddiekieley/gpt-app-poc/server.ts`.
+- [X] T011 [US2] Re-run `npm run test:contract` for `/wip/src/github.com/roddiekieley/gpt-app-poc/tests/contract/engage-red-hat-support.contract.test.ts` after smoke alignment to prove no regression.
 
 **Checkpoint**: US2 is complete when both validation suites pass with endpoint alignment.
 
@@ -83,13 +83,13 @@
 
 ### Tests for User Story 3
 
-- [ ] T012 [US3] Replace top-level endpoint references in `/wip/src/github.com/roddiekieley/gpt-app-poc/README.md` with `https://leisured-carina-unpromotable.ngrok-free.dev` while preserving existing guidance structure.
-- [ ] T013 [US3] Run `rg "gptapppoc\\.kieley\\.io" --glob '!specs/**' /wip/src/github.com/roddiekieley/gpt-app-poc` and confirm zero non-spec matches.
+- [X] T012 [US3] Replace top-level endpoint references in `/wip/src/github.com/roddiekieley/gpt-app-poc/README.md` with `https://leisured-carina-unpromotable.ngrok-free.dev` while preserving existing guidance structure.
+- [X] T013 [US3] Run `rg "gptapppoc\\.kieley\\.io" --glob '!specs/**' /wip/src/github.com/roddiekieley/gpt-app-poc` and confirm zero non-spec matches.
 
 ### Implementation for User Story 3
 
-- [ ] T014 [US3] Run `rg "leisured-carina-unpromotable\\.ngrok-free\\.dev" /wip/src/github.com/roddiekieley/gpt-app-poc/server.ts /wip/src/github.com/roddiekieley/gpt-app-poc/scripts/mcp-smoke-tests.ts /wip/src/github.com/roddiekieley/gpt-app-poc/tests/contract/engage-red-hat-support.contract.test.ts /wip/src/github.com/roddiekieley/gpt-app-poc/README.md` to confirm expected in-scope coverage.
-- [ ] T015 [US3] Verify unchanged historical specs by confirming legacy references may still exist only in `/wip/src/github.com/roddiekieley/gpt-app-poc/specs/**` and are not part of implementation edits.
+- [X] T014 [US3] Run `rg "leisured-carina-unpromotable\\.ngrok-free\\.dev" /wip/src/github.com/roddiekieley/gpt-app-poc/server.ts /wip/src/github.com/roddiekieley/gpt-app-poc/scripts/mcp-smoke-tests.ts /wip/src/github.com/roddiekieley/gpt-app-poc/tests/contract/engage-red-hat-support.contract.test.ts /wip/src/github.com/roddiekieley/gpt-app-poc/README.md` to confirm expected in-scope coverage.
+- [X] T015 [US3] Verify unchanged historical specs by confirming legacy references may still exist only in `/wip/src/github.com/roddiekieley/gpt-app-poc/specs/**` and are not part of implementation edits.
 
 **Checkpoint**: US3 is complete when docs are updated and scans prove migration completeness in non-spec scope.
 
@@ -99,9 +99,9 @@
 
 **Purpose**: Final verification and release-readiness checks across all stories.
 
-- [ ] T016 Run final scoped diff review for `/wip/src/github.com/roddiekieley/gpt-app-poc/server.ts`, `/wip/src/github.com/roddiekieley/gpt-app-poc/scripts/mcp-smoke-tests.ts`, `/wip/src/github.com/roddiekieley/gpt-app-poc/tests/contract/engage-red-hat-support.contract.test.ts`, and `/wip/src/github.com/roddiekieley/gpt-app-poc/README.md` to confirm minimal-risk literal-only endpoint edits.
-- [ ] T017 [P] Re-run full required validation sequence from `/wip/src/github.com/roddiekieley/gpt-app-poc/package.json` scripts: `npm run build`, `npm run test:contract`, `npm run test:mcp`.
-- [ ] T018 [P] Produce final migration evidence summary referencing `/wip/src/github.com/roddiekieley/gpt-app-poc/specs/008-switch-app-endpoint/quickstart.md` acceptance checks and command outputs.
+- [X] T016 Run final scoped diff review for `/wip/src/github.com/roddiekieley/gpt-app-poc/server.ts`, `/wip/src/github.com/roddiekieley/gpt-app-poc/scripts/mcp-smoke-tests.ts`, `/wip/src/github.com/roddiekieley/gpt-app-poc/tests/contract/engage-red-hat-support.contract.test.ts`, and `/wip/src/github.com/roddiekieley/gpt-app-poc/README.md` to confirm minimal-risk literal-only endpoint edits.
+- [X] T017 [P] Re-run full required validation sequence from `/wip/src/github.com/roddiekieley/gpt-app-poc/package.json` scripts: `npm run build`, `npm run test:contract`, `npm run test:mcp`.
+- [X] T018 [P] Produce final migration evidence summary referencing `/wip/src/github.com/roddiekieley/gpt-app-poc/specs/008-switch-app-endpoint/quickstart.md` acceptance checks and command outputs.
 
 ---
 

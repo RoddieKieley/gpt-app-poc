@@ -256,11 +256,14 @@ const main = async () => {
       assert.ok(text && text.trim().length > 0, "UI resource content missing");
       assert.equal(
         resource?._meta?.["openai/widgetDomain"],
-        "https://gptapppoc.kieley.io",
+        "https://leisured-carina-unpromotable.ngrok-free.dev",
         "widgetDomain mismatch",
       );
       const widgetCsp = resource?._meta?.["openai/widgetCSP"] as { connect_domains?: string[] } | undefined;
-      assert.ok(widgetCsp?.connect_domains?.includes("https://gptapppoc.kieley.io"), "widgetCSP connect_domains missing");
+      assert.ok(
+        widgetCsp?.connect_domains?.includes("https://leisured-carina-unpromotable.ngrok-free.dev"),
+        "widgetCSP connect_domains missing",
+      );
     }, failures);
 
     await check("resources/list includes canonical skill URI", async () => {

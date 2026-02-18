@@ -315,9 +315,9 @@ registerAppResource(
           uri: engageResourceUri,
           mimeType: RESOURCE_MIME_TYPE,
           _meta: {
-            "openai/widgetDomain": "https://gptapppoc.kieley.io",
+            "openai/widgetDomain": "https://leisured-carina-unpromotable.ngrok-free.dev",
             "openai/widgetCSP": {
-              connect_domains: ["https://gptapppoc.kieley.io"],
+              connect_domains: ["https://leisured-carina-unpromotable.ngrok-free.dev"],
             },
           },
           text: html,
@@ -350,7 +350,7 @@ export const createApp = () => {
           "PAT credentials are handled in backend-only encrypted storage.",
           "No secret values are exposed in MCP payloads, prompts, transcripts, or logs.",
           "For details on data categories, purposes, recipients, and user controls,",
-          "provide a full policy at https://gptapppoc.kieley.io/privacy.",
+          "provide a full policy at https://leisured-carina-unpromotable.ngrok-free.dev/privacy.",
         ].join("\n"),
       );
   });
@@ -363,7 +363,7 @@ export const createApp = () => {
         [
           "Support",
           "",
-          "For help, visit https://gptapppoc.kieley.io/support.",
+          "For help, visit https://leisured-carina-unpromotable.ngrok-free.dev/support.",
         ].join("\n"),
       );
   });
