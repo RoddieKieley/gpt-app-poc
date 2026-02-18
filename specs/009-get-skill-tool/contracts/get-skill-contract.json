@@ -1,0 +1,70 @@
+{
+  "tool": "get_skill",
+  "intent": "Return markdown content for a registered skill URI when resources/read is unavailable.",
+  "discovery": {
+    "method": "tools/list",
+    "requiredAnnotations": {
+      "readOnlyHint": true,
+      "openWorldHint": false,
+      "destructiveHint": false
+    }
+  },
+  "input": {
+    "type": "object",
+    "required": ["uri"],
+    "properties": {
+      "uri": {
+        "type": "string",
+        "minLength": 1,
+        "description": "Canonical skill URI in skill:// scheme."
+      }
+    },
+    "validation": [
+      "uri MUST be non-empty",
+      "uri MUST use skill:// scheme",
+      "uri MUST map to a known registered skill identity"
+    ]
+  },
+  "success": {
+    "isError": false,
+    "content": [
+      {
+        "type": "text",
+        "required": true,
+        "description": "Plain text fallback including URI and markdown text."
+      }
+    ],
+    "structuredContent": {
+      "type": "object",
+      "required": ["uri", "mimeType", "text"],
+      "properties": {
+        "uri": { "type": "string" },
+        "mimeType": { "const": "text/markdown" },
+        "text": { "type": "string", "minLength": 1 }
+      }
+    },
+    "parityRule": "For engage skill URI, markdown text MUST equal resources/read text for the same URI."
+  },
+  "error": {
+    "isError": true,
+    "content": [
+      {
+        "type": "text",
+        "required": true,
+        "description": "Actionable remediation text for invalid or unsupported URI."
+      }
+    ],
+    "constraints": [
+      "No secret/token/credential values in output",
+      "No stack traces or internal sensitive details"
+    ]
+  },
+  "supportedSkillUris": [
+    "skill://engage-red-hat-support/SKILL.md"
+  ],
+  "regressionGuards": [
+    "list_skills behavior unchanged",
+    "resources/read behavior unchanged",
+    "jira and sosreport tool/resource surfaces unchanged"
+  ]
+}
