@@ -9,6 +9,8 @@ Auto-generated from all feature plans. Last updated: 2026-02-02
 - Backend token vault persistence with encrypted-at-rest credential records (user-scoped), plus non-secret audit/event records (004-jira-attachment-pat)
 - TypeScript (Node.js 18+) + @modelcontextprotocol/sdk, @modelcontextprotocol/ext-apps, Express, existing server stack (unchanged for Jira) (005-mcp-skill-discovery)
 - Repo-local file only — `SKILL.md` on disk (path TBD under repo root or `specs/`); no new persistence (005-mcp-skill-discovery)
+- TypeScript (Node.js 18+) + `@modelcontextprotocol/sdk`, `@modelcontextprotocol/ext-apps`, `express`, `zod`, Node built-ins (`fs/promises`, `crypto`, `path`, `child_process`) (006-sosreport-local-flow)
+- Local filesystem only (existing archive path + `/tmp` copied archive); no new database/persistent secrets (006-sosreport-local-flow)
 
 - TypeScript (Node.js 18+) + @modelcontextprotocol/sdk, @modelcontextprotocol/ext-apps, Express, cors, Vite, vite-plugin-singlefile, tsx (001-mcp-apps-hello-world)
 
@@ -28,9 +30,9 @@ npm test && npm run lint
 TypeScript (Node.js 18+): Follow standard conventions
 
 ## Recent Changes
+- 006-sosreport-local-flow: Added TypeScript (Node.js 18+) + `@modelcontextprotocol/sdk`, `@modelcontextprotocol/ext-apps`, `express`, `zod`, Node built-ins (`fs/promises`, `crypto`, `path`, `child_process`)
 - 005-mcp-skill-discovery: Added TypeScript (Node.js 18+) + @modelcontextprotocol/sdk, @modelcontextprotocol/ext-apps, Express, existing server stack (unchanged for Jira)
 - 004-jira-attachment-pat: Added TypeScript 5.x on Node.js 18+ (ES modules) + `express`, `@modelcontextprotocol/sdk`, `@modelcontextprotocol/ext-apps`, `zod`, `cors`
-- 003-chatgpt-app-technical-readiness: Added TypeScript (Node.js 18+), ES modules + `@modelcontextprotocol/sdk`, `@modelcontextprotocol/ext-apps`, `express`, `zod`, `cors`, `vite`, `tsx`
 
 
 <!-- MANUAL ADDITIONS START -->

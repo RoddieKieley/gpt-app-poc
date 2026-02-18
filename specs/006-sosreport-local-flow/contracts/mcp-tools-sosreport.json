@@ -1,0 +1,126 @@
+{
+  "tools": [
+    {
+      "name": "generate_sosreport",
+      "title": "Generate Local Sosreport",
+      "description": "Generates a local sosreport archive using non-interactive privileged execution and returns metadata plus fetch reference.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "only_plugins": {
+            "type": "array",
+            "items": { "type": "string", "pattern": "^[A-Za-z0-9_-]+$" }
+          },
+          "enable_plugins": {
+            "type": "array",
+            "items": { "type": "string", "pattern": "^[A-Za-z0-9_-]+$" }
+          },
+          "disable_plugins": {
+            "type": "array",
+            "items": { "type": "string", "pattern": "^[A-Za-z0-9_-]+$" }
+          },
+          "log_size": {
+            "type": "string",
+            "pattern": "^\\d+(k|K|m|M|g|G)?$"
+          },
+          "redaction": { "type": "boolean" }
+        },
+        "additionalProperties": false,
+        "allOf": [
+          {
+            "not": {
+              "allOf": [
+                { "required": ["only_plugins"] },
+                {
+                  "anyOf": [
+                    { "required": ["enable_plugins"] },
+                    { "required": ["disable_plugins"] }
+                  ]
+                }
+              ]
+            }
+          }
+        ]
+      },
+      "annotations": {
+        "readOnlyHint": false,
+        "openWorldHint": false,
+        "destructiveHint": false
+      },
+      "structuredOutput": {
+        "type": "object",
+        "required": ["archive_path", "archive_name", "generated_at", "fetch_reference", "execution_mode", "timeout_ms"],
+        "properties": {
+          "archive_path": { "type": "string" },
+          "archive_name": { "type": "string" },
+          "size_bytes": { "type": "number" },
+          "generated_at": { "type": "string", "format": "date-time" },
+          "fetch_reference": { "type": "string" },
+          "execution_mode": { "type": "string", "enum": ["local"] },
+          "timeout_ms": { "type": "number", "enum": [600000] }
+        }
+      },
+      "errorCategories": [
+        "validation_error",
+        "dependency_missing",
+        "privilege_required",
+        "timeout",
+        "archive_not_found",
+        "unexpected_error"
+      ],
+      "textFallbackRequirement": "Must always include a plain text summary and remediation guidance on failure."
+    },
+    {
+      "name": "fetch_sosreport",
+      "title": "Fetch Local Sosreport Archive",
+      "description": "Fetches a generated sosreport archive by reference, copies it to /tmp, and returns path, size, and checksum.",
+      "inputSchema": {
+        "type": "object",
+        "required": ["fetch_reference"],
+        "properties": {
+          "fetch_reference": {
+            "type": "string",
+            "minLength": 1
+          }
+        },
+        "additionalProperties": false
+      },
+      "annotations": {
+        "readOnlyHint": true,
+        "openWorldHint": false,
+        "destructiveHint": false
+      },
+      "structuredOutput": {
+        "type": "object",
+        "required": ["archive_path", "size_bytes", "sha256"],
+        "properties": {
+          "archive_path": { "type": "string", "pattern": "^/tmp/" },
+          "size_bytes": { "type": "number", "minimum": 1 },
+          "sha256": { "type": "string", "pattern": "^[a-f0-9]{64}$" },
+          "source_archive_path": { "type": "string" },
+          "fetched_at": { "type": "string", "format": "date-time" }
+        }
+      },
+      "errorCategories": [
+        "validation_error",
+        "path_unsafe",
+        "read_failed",
+        "copy_failed",
+        "unexpected_error"
+      ],
+      "textFallbackRequirement": "Must always include a plain text summary and remediation guidance on failure."
+    }
+  ],
+  "interoperability": {
+    "jira_attach_artifact": "archive_path returned from fetch_sosreport must be directly usable as artifact_ref within existing artifact selection boundaries."
+  },
+  "phaseBoundaries": {
+    "phase1": "local execution only; no host parameter or SSH lifecycle",
+    "deferredPhase2": [
+      "ssh execution support",
+      "connection lifecycle",
+      "host trust and secret management",
+      "multi-tenant hardening and rate limits"
+    ]
+  }
+}
