@@ -37,3 +37,15 @@ export const mapJiraHttpError = (status: number): JiraMappedError => {
   return { code: "unexpected_error", status, message: "Unexpected Jira integration error." };
 };
 
+export const mapJiraRedirectError = (location?: string | null): JiraMappedError => {
+  const hasLocation = typeof location === "string" && location.trim().length > 0;
+  const guidance = hasLocation
+    ? `Jira redirected the API request to an interactive login URL (${location}).`
+    : "Jira redirected the API request to an interactive login URL.";
+  return {
+    code: "invalid_credentials",
+    status: 401,
+    message: `${guidance} Use a Jira API base URL and a PAT that supports direct REST API access (non-SAML browser login).`,
+  };
+};
+

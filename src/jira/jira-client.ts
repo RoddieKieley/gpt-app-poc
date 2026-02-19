@@ -1,5 +1,5 @@
 import fs from "node:fs/promises";
-import { mapJiraHttpError, JiraMappedError } from "./jira-error-mapping.js";
+import { mapJiraHttpError, mapJiraRedirectError, JiraMappedError } from "./jira-error-mapping.js";
 
 export type JiraAttachment = {
   issue_key: string;
@@ -18,6 +18,11 @@ const throwMapped = async (res: Response): Promise<never> => {
   throw mapped;
 };
 
+const throwRedirectIfPresent = (res: Response): void => {
+  if (res.status < 300 || res.status >= 400) return;
+  throw mapJiraRedirectError(res.headers.get("location"));
+};
+
 export class JiraClient {
   constructor(private readonly fetchImpl: FetchLike = fetch) {}
 
@@ -31,11 +36,13 @@ export class JiraClient {
     const url = `${baseUrl.replace(/\/$/, "")}/rest/api/2/myself`;
     const res = await this.fetchImpl(url, {
       method: "GET",
+      redirect: "manual",
       headers: {
         Authorization: jiraAuthHeader(pat),
         Accept: "application/json",
       },
     });
+    throwRedirectIfPresent(res);
     if (!res.ok) await throwMapped(res);
   }
 
@@ -60,11 +67,13 @@ export class JiraClient {
     const url = `${baseUrl.replace(/\/$/, "")}/rest/api/2/issue/${encodeURIComponent(issueKey)}?fields=attachment`;
     const res = await this.fetchImpl(url, {
       method: "GET",
+      redirect: "manual",
       headers: {
         Authorization: jiraAuthHeader(pat),
         Accept: "application/json",
       },
     });
+    throwRedirectIfPresent(res);
     if (!res.ok) await throwMapped(res);
     const body = (await res.json()) as {
       fields?: { attachment?: Array<{ id: string; filename: string; size: number; created: string }> };
@@ -106,12 +115,14 @@ export class JiraClient {
     const url = `${baseUrl.replace(/\/$/, "")}/rest/api/2/issue/${encodeURIComponent(issueKey)}/attachments`;
     const res = await this.fetchImpl(url, {
       method: "POST",
+      redirect: "manual",
       headers: {
         Authorization: jiraAuthHeader(pat),
         "X-Atlassian-Token": "no-check",
       },
       body: form,
     });
+    throwRedirectIfPresent(res);
     if (!res.ok) await throwMapped(res);
     const body = (await res.json()) as Array<{
       id: string;

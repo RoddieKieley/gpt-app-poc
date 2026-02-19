@@ -86,10 +86,12 @@ Technical readiness details live under `specs/003-chatgpt-app-technical-readines
 ## Jira Attachment Security Behavior
 
 - PATs are accepted only by backend connection endpoint (`POST /api/jira/connections`).
+- Using `POST /api/jira/connection` (singular) is unsupported and returns guidance to use the plural endpoint.
 - PATs are encrypted at rest in backend token vault storage.
 - MCP tools never accept or return PATs; they use opaque `connection_id` references.
 - Tool and API flows always provide text fallbacks for non-UI MCP clients.
 - Revoke and TTL-expiry block all protected Jira operations until reconnect.
+- Jira API redirects to SSO/login are treated as invalid credentials/configuration for this flow; no additional HTTP header bypasses SAML in this app.
 
 ## Engage Red Hat Support Workflow (Option A)
 

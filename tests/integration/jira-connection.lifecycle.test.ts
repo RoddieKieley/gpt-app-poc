@@ -40,3 +40,33 @@ test("connect and status flow returns opaque connection and non-secret state", a
   }
 });
 
+test("singular connect endpoint returns guidance to plural route", async () => {
+  process.env.NODE_ENV = "test";
+  process.env.JIRA_MOCK_MODE = "1";
+  const { createApp } = await import("../../server.js");
+
+  const app = createApp();
+  const srv = app.listen(0);
+  const port = (srv.address() as { port: number }).port;
+  const base = `http://127.0.0.1:${port}`;
+
+  try {
+    const connect = await fetch(`${base}/api/jira/connection`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "x-user-id": "u1",
+      },
+      body: JSON.stringify({
+        jira_base_url: "https://jira.example.com",
+        pat: "top-secret-pat",
+      }),
+    });
+    assert.equal(connect.status, 404);
+    const body = await connect.json() as { text?: string };
+    assert.match(String(body.text), /\/api\/jira\/connections/);
+  } finally {
+    srv.close();
+  }
+});
+

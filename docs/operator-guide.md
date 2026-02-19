@@ -77,6 +77,12 @@
 - PAT must never be passed in MCP tool arguments or shown in logs/transcripts.
 - Downstream MCP and API usage should rely on opaque `connection_id`.
 
+### Connection troubleshooting
+
+- Use `POST /api/jira/connections` (plural). The singular path is not a valid intake endpoint.
+- No extra request header in this app bypasses Jira SAML/SSO redirects.
+- If Jira redirects API calls to login/IdP, use a Jira API-capable base URL and a PAT that supports direct REST API access.
+
 ### Incident response
 
 - If exposure is suspected, revoke impacted connections immediately.

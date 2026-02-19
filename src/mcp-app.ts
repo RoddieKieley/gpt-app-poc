@@ -92,6 +92,30 @@ const callTool = async (name: string, args: Record<string, unknown>): Promise<To
   }
 };
 
+const verifyConnectionViaTool = async (connectionId: string): Promise<VerifyResponse | null> => {
+  const result = await callTool("jira_connection_status", { connection_id: connectionId });
+  if (result.isError) {
+    return null;
+  }
+  const structured = result.structuredContent ?? {};
+  const status = String(structured.status ?? "");
+  const parsed: VerifyResponse = {
+    connection_id: String(structured.connection_id ?? connectionId),
+    status,
+    text: result.content?.find((item) => item.type === "text")?.text,
+  };
+  if (!status) {
+    setStatus(parsed.text ?? "Connection verification failed.");
+    return null;
+  }
+  if (status === "expired" || status === "revoked") {
+    setStatus(`Connection is ${status}. Reconnect before continuing.`);
+    return parsed;
+  }
+  setStatus(parsed.text ?? `Connection is ${status}.`);
+  return parsed;
+};
+
 const connectJira = async (): Promise<ConnectResponse | null> => {
   if (!ensureLinuxSelection()) return null;
   const jiraBaseUrl = jiraUrlEl.value.trim();
@@ -137,6 +161,8 @@ const verifyConnection = async (): Promise<VerifyResponse | null> => {
     const response = await fetch(`/api/jira/connections/${encodeURIComponent(connectionId)}`);
     const body = await response.json() as VerifyResponse;
     if (!response.ok) {
+      const fallback = await verifyConnectionViaTool(connectionId);
+      if (fallback) return fallback;
       setStatus(body.text ?? "Connection verification failed.");
       return null;
     }
@@ -148,6 +174,8 @@ const verifyConnection = async (): Promise<VerifyResponse | null> => {
     setStatus(body.text ?? `Connection is ${status || "connected"}.`);
     return body;
   } catch {
+    const fallback = await verifyConnectionViaTool(connectionId);
+    if (fallback) return fallback;
     setStatus("Connection verification request failed.");
     return null;
   }
@@ -178,8 +206,10 @@ generateBtn.addEventListener("click", async () => {
     return;
   }
   const verified = await verifyConnection();
-  if (!verified || verified.status !== "connected") {
-    setStatus("Connection must be connected before generate.");
+  if (!verified) {
+    return;
+  }
+  if (verified.status !== "connected") {
     return;
   }
   const generated = await callTool("generate_sosreport", {});
@@ -264,8 +294,11 @@ engageRunBtn.addEventListener("click", async () => {
   }
 
   const verified = await verifyConnection();
-  if (!verified || verified.status !== "connected") {
-    setStatus("End-to-end stopped at verify step. Reconnect and retry.");
+  if (!verified) {
+    return;
+  }
+  if (verified.status !== "connected") {
+    setStatus(`End-to-end stopped at verify step (${verified.status ?? "unknown"}). Reconnect and retry.`);
     return;
   }
 

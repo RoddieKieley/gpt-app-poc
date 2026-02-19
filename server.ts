@@ -38,6 +38,44 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const jiraClient = new JiraClient();
 const lifecycleStore = new ConnectionLifecycleStore();
 const tokenVault = new TokenVault();
+const DEFAULT_USER_ID = "default-user";
+const USER_ID_DEBUG_ENABLED = process.env.DEBUG_USER_ID_RESOLUTION === "1";
+
+const normalizeUserId = (candidate: unknown): string | null => {
+  if (typeof candidate !== "string") return null;
+  const trimmed = candidate.trim();
+  return trimmed.length > 0 ? trimmed : null;
+};
+
+const resolveUserId = (sources: { mcpUserId?: unknown; httpHeaderUserId?: unknown }): string => {
+  return (
+    normalizeUserId(sources.mcpUserId)
+    ?? normalizeUserId(sources.httpHeaderUserId)
+    ?? DEFAULT_USER_ID
+  );
+};
+
+const debugResolvedUserId = (
+  channel: "http" | "mcp",
+  raw: { mcpUserId?: unknown; httpHeaderUserId?: unknown },
+  resolvedUserId: string,
+) => {
+  if (!USER_ID_DEBUG_ENABLED) return;
+  console.log(
+    `[user_id_debug] channel=${channel} resolved=${resolvedUserId} raw=${JSON.stringify({
+      mcpUserId: raw.mcpUserId,
+      httpHeaderUserId: raw.httpHeaderUserId,
+    })}`,
+  );
+};
+
+const resolveMcpUserId = (authInfo: unknown): string => {
+  const auth = authInfo as { userId?: unknown; extra?: { userId?: unknown } } | undefined;
+  const raw = { mcpUserId: auth?.extra?.userId ?? auth?.userId };
+  const resolved = resolveUserId(raw);
+  debugResolvedUserId("mcp", raw, resolved);
+  return resolved;
+};
 
 const server = new McpServer({
   name: "GPT App POC",
@@ -228,7 +266,7 @@ registerAppTool(
     },
   },
   async (args, extra) => {
-    const userId = String(extra?.authInfo?.extra?.userId ?? "default-user");
+    const userId = resolveMcpUserId(extra?.authInfo);
     return handleConnectionStatus(
       { userId, lifecycle: lifecycleStore, vault: tokenVault, client: jiraClient },
       args.connection_id,
@@ -255,7 +293,7 @@ registerAppTool(
     },
   },
   async (args, extra) => {
-    const userId = String(extra?.authInfo?.extra?.userId ?? "default-user");
+    const userId = resolveMcpUserId(extra?.authInfo);
     try {
       return await handleListAttachments(
         { userId, lifecycle: lifecycleStore, vault: tokenVault, client: jiraClient },
@@ -291,7 +329,7 @@ registerAppTool(
     },
   },
   async (args, extra) => {
-    const userId = String(extra?.authInfo?.extra?.userId ?? "default-user");
+    const userId = resolveMcpUserId(extra?.authInfo);
     try {
       return await handleAttachArtifact(
         { userId, lifecycle: lifecycleStore, vault: tokenVault, client: jiraClient },
@@ -328,7 +366,7 @@ registerAppTool(
     },
   },
   async (args, extra) => {
-    const userId = String(extra?.authInfo?.extra?.userId ?? "default-user");
+    const userId = resolveMcpUserId(extra?.authInfo);
     return handleDisconnect(
       { userId, lifecycle: lifecycleStore, vault: tokenVault, client: jiraClient },
       args.connection_id,
@@ -400,9 +438,23 @@ export const createApp = () => {
   app.use(express.json({ limit: "1mb" }));
 
   app.use((req, _res, next) => {
-    req.userId = String(req.header("x-user-id") ?? "default-user");
+    const raw = { httpHeaderUserId: req.header("x-user-id") };
+    req.userId = resolveUserId(raw);
+    debugResolvedUserId("http", raw, req.userId);
     next();
   });
+
+  if (USER_ID_DEBUG_ENABLED) {
+    app.get("/debug/user-id", (req, res) => {
+      const rawHeader = req.header("x-user-id");
+      return res.status(200).json({
+        debug_enabled: true,
+        default_user_id: DEFAULT_USER_ID,
+        header_x_user_id: rawHeader ?? null,
+        resolved_user_id: req.userId,
+      });
+    });
+  }
 
   app.get("/privacy", (_req, res) => {
     res
@@ -432,6 +484,14 @@ export const createApp = () => {
           "For help, visit https://leisured-carina-unpromotable.ngrok-free.dev/support.",
         ].join("\n"),
       );
+  });
+
+  app.post("/api/jira/connection", (_req, res) => {
+    return res.status(404).json({
+      code: "not_found",
+      message: "Endpoint not found.",
+      text: "Use POST /api/jira/connections (plural) with JSON body { jira_base_url, pat }.",
+    });
   });
 
   app.post("/api/jira/connections", async (req, res) => {
