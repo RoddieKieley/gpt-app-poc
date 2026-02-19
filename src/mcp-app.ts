@@ -17,6 +17,10 @@ const connectionIdEl = document.getElementById("connection-id") as HTMLInputElem
 const issueKeyEl = document.getElementById("issue-key") as HTMLInputElement | null;
 const fetchReferenceEl = document.getElementById("fetch-reference") as HTMLInputElement | null;
 const artifactRefEl = document.getElementById("artifact-ref") as HTMLInputElement | null;
+const widgetBuildId = document
+  .querySelector('meta[name="gpt-app-build-id"]')
+  ?.getAttribute("content")
+  ?.trim();
 
 if (
   !statusEl || !connectBtn || !verifyBtn || !statusBtn || !generateBtn || !fetchBtn ||
@@ -47,6 +51,17 @@ type VerifyResponse = {
 
 const app = new App({ name: "MCP Apps Support Workflows", version: "1.0.0" });
 
+type WindowWithApiBase = Window & typeof globalThis & { __GPT_APP_API_BASE_URL__?: string };
+const configuredApiBase = (window as WindowWithApiBase).__GPT_APP_API_BASE_URL__;
+const metaApiBase = document
+  .querySelector('meta[name="gpt-app-api-base"]')
+  ?.getAttribute("content");
+const DEFAULT_API_BASE_URL = "https://leisured-carina-unpromotable.ngrok-free.dev";
+const selectedApiBase = [configuredApiBase, metaApiBase, DEFAULT_API_BASE_URL]
+  .find((value) => typeof value === "string" && value.trim().length > 0);
+const apiBaseUrl = typeof selectedApiBase === "string" ? selectedApiBase.trim().replace(/\/$/, "") : "";
+const apiUrl = (path: string): string => (apiBaseUrl ? `${apiBaseUrl}${path}` : path);
+
 try {
   app.connect();
 } catch (error) {
@@ -62,6 +77,10 @@ app.ontoolresult = (result) => {
 const setStatus = (message: string) => {
   statusEl.textContent = message;
 };
+
+if (widgetBuildId) {
+  setStatus(`Widget loaded (${widgetBuildId}).`);
+}
 
 const ensureLinuxSelection = (): boolean => {
   const selected = productSelectEl.value.trim().toLowerCase();
@@ -124,31 +143,24 @@ const connectJira = async (): Promise<ConnectResponse | null> => {
     setStatus("Jira URL and PAT are required.");
     return null;
   }
-  try {
-    const response = await fetch("/api/jira/connections", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ jira_base_url: jiraBaseUrl, pat }),
-    });
-    const body = await response.json() as ConnectResponse;
-    if (!response.ok) {
-      setStatus(body.text ?? "Connection failed.");
-      return null;
-    }
-    if (body.connection_id) {
-      connectionIdEl.value = body.connection_id;
-    }
-    if (body.status) {
-      setStatus(`Connected. Current lifecycle status: ${body.status}.`);
-    } else {
-      setStatus(body.text ?? "Connected.");
-    }
-    jiraPatEl.value = "";
-    return body;
-  } catch {
-    setStatus("Connection request failed.");
+  const result = await callTool("jira_connect_secure", {
+    jira_base_url: jiraBaseUrl,
+    pat,
+  });
+  if (result.isError) {
     return null;
   }
+  const body = (result.structuredContent ?? {}) as ConnectResponse;
+  if (body.connection_id) {
+    connectionIdEl.value = body.connection_id;
+  }
+  if (body.status) {
+    setStatus(`Connected. Current lifecycle status: ${body.status}.`);
+  } else {
+    setStatus(body.text ?? "Connected.");
+  }
+  jiraPatEl.value = "";
+  return body;
 };
 
 const verifyConnection = async (): Promise<VerifyResponse | null> => {
@@ -158,7 +170,7 @@ const verifyConnection = async (): Promise<VerifyResponse | null> => {
     return null;
   }
   try {
-    const response = await fetch(`/api/jira/connections/${encodeURIComponent(connectionId)}`);
+    const response = await fetch(apiUrl(`/api/jira/connections/${encodeURIComponent(connectionId)}`));
     const body = await response.json() as VerifyResponse;
     if (!response.ok) {
       const fallback = await verifyConnectionViaTool(connectionId);
@@ -173,10 +185,11 @@ const verifyConnection = async (): Promise<VerifyResponse | null> => {
     }
     setStatus(body.text ?? `Connection is ${status || "connected"}.`);
     return body;
-  } catch {
+  } catch (error) {
     const fallback = await verifyConnectionViaTool(connectionId);
     if (fallback) return fallback;
-    setStatus("Connection verification request failed.");
+    const message = error instanceof Error ? error.message : String(error);
+    setStatus(`Connection verification request failed (${message}).`);
     return null;
   }
 };

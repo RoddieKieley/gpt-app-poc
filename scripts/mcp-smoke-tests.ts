@@ -14,6 +14,7 @@ const GET_SKILL_TOOL_NAME = "get_skill";
 const UI_RESOURCE_URI = "ui://engage-red-hat-support/app.html";
 const SKILL_RESOURCE_URI = "skill://engage-red-hat-support/SKILL.md";
 const REQUIRED_JIRA_TOOLS = [
+  "jira_connect_secure",
   "jira_connection_status",
   "jira_list_attachments",
   "jira_attach_artifact",
@@ -23,6 +24,11 @@ const REQUIRED_JIRA_TOOL_METADATA: Record<
   string,
   { readOnlyHint: boolean; destructiveHint: boolean; outputTemplate: string }
 > = {
+  jira_connect_secure: {
+    readOnlyHint: false,
+    destructiveHint: false,
+    outputTemplate: UI_RESOURCE_URI,
+  },
   jira_connection_status: {
     readOnlyHint: true,
     destructiveHint: false,

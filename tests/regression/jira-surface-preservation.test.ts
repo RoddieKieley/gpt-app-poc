@@ -6,6 +6,7 @@ type JsonRpcResponse =
   | { jsonrpc: "2.0"; id: number; error: { code: number; message: string } };
 
 const REQUIRED_JIRA_TOOLS = [
+  "jira_connect_secure",
   "jira_connection_status",
   "jira_list_attachments",
   "jira_attach_artifact",
@@ -16,6 +17,11 @@ const EXPECTED_JIRA_METADATA: Record<
   (typeof REQUIRED_JIRA_TOOLS)[number],
   { readOnlyHint: boolean; destructiveHint: boolean; outputTemplate: string }
 > = {
+  jira_connect_secure: {
+    readOnlyHint: false,
+    destructiveHint: false,
+    outputTemplate: "ui://engage-red-hat-support/app.html",
+  },
   jira_connection_status: {
     readOnlyHint: true,
     destructiveHint: false,

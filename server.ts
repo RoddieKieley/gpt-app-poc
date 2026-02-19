@@ -77,6 +77,45 @@ const resolveMcpUserId = (authInfo: unknown): string => {
   return resolved;
 };
 
+type JiraConnectionResponse = {
+  connection_id: string;
+  jira_base_url: string;
+  status: string;
+  expires_at: string;
+  last_verified_at: string | null;
+  text: string;
+};
+
+const createSecureJiraConnection = async (
+  userId: string,
+  jiraBaseUrl: string,
+  pat: string,
+): Promise<JiraConnectionResponse> => {
+  const conn = await lifecycleStore.create(userId, jiraBaseUrl);
+  await tokenVault.store(conn.connectionId, pat);
+  try {
+    await jiraClient.verifyConnection(jiraBaseUrl, pat);
+    await lifecycleStore.markVerified(userId, conn.connectionId);
+  } catch (error) {
+    const mapped = error as JiraMappedError;
+    await lifecycleStore.markError(userId, conn.connectionId, mapped.code ?? "unexpected_error");
+  }
+  emitSecurityEvent({
+    action: "connect",
+    outcome: "success",
+    userId,
+    connectionId: conn.connectionId,
+  });
+  return {
+    connection_id: conn.connectionId,
+    jira_base_url: conn.jiraBaseUrl,
+    status: conn.status,
+    expires_at: conn.expiresAt,
+    last_verified_at: conn.lastVerifiedAt,
+    text: "Jira connection created successfully.",
+  };
+};
+
 const server = new McpServer({
   name: "GPT App POC",
   version: "1.0.0",
@@ -94,7 +133,12 @@ const ENGAGE_SKILL_RESOURCE_FALLBACK = `# Engage Red Hat Support
 
 Skill content is temporarily unavailable from the repository.
 URI: ${ENGAGE_SKILL_RESOURCE_URI}`;
-const engageResourceUri = "ui://engage-red-hat-support/app.html";
+const widgetResourceVersion = process.env.WIDGET_RESOURCE_VERSION?.trim();
+const engageResourceUri = widgetResourceVersion
+  ? `ui://engage-red-hat-support/app.html?v=${encodeURIComponent(widgetResourceVersion)}`
+  : "ui://engage-red-hat-support/app.html";
+const widgetBuildId = widgetResourceVersion || `build-${Date.now()}`;
+const DEFAULT_WIDGET_DOMAIN = "https://leisured-carina-unpromotable.ngrok-free.dev";
 
 const loadSkillMarkdown = async (sourcePath: string, fallback: string): Promise<string> => {
   try {
@@ -245,6 +289,46 @@ registerAppTool(
     },
   },
   async (args) => handleFetchSosreport(args),
+);
+
+registerAppTool(
+  server,
+  "jira_connect_secure",
+  {
+    title: "Connect Jira Securely",
+    description: "Creates Jira connection and stores PAT in backend vault.",
+    inputSchema: connectSchema,
+    annotations: {
+      readOnlyHint: false,
+      openWorldHint: false,
+      destructiveHint: false,
+    },
+    _meta: {
+      ui: { resourceUri: engageResourceUri },
+      "openai/outputTemplate": engageResourceUri,
+      "openai/widgetAccessible": true,
+    },
+  },
+  async (args, extra) => {
+    const userId = resolveMcpUserId(extra?.authInfo);
+    try {
+      const created = await createSecureJiraConnection(userId, args.jira_base_url, args.pat);
+      return {
+        content: [{ type: "text", text: created.text }],
+        structuredContent: created,
+      };
+    } catch (error) {
+      const message = safeError(error).message;
+      emitSecurityEvent({ action: "connect", outcome: "failed", userId });
+      return {
+        isError: true,
+        content: [{
+          type: "text",
+          text: `Connection failed. Verify URL and credentials. ${message}`,
+        }],
+      };
+    }
+  },
 );
 
 registerAppTool(
@@ -413,15 +497,33 @@ registerAppResource(
   </body>
 </html>`;
     }
+    const widgetDomain = process.env.WIDGET_DOMAIN?.trim() || DEFAULT_WIDGET_DOMAIN;
+    const escapedWidgetDomain = widgetDomain
+      .replace(/&/g, "&amp;")
+      .replace(/"/g, "&quot;")
+      .replace(/</g, "&lt;")
+      .replace(/>/g, "&gt;");
+    const escapedWidgetBuildId = widgetBuildId
+      .replace(/&/g, "&amp;")
+      .replace(/"/g, "&quot;")
+      .replace(/</g, "&lt;")
+      .replace(/>/g, "&gt;");
+    const apiBaseInjection = [
+      `<meta name="gpt-app-api-base" content="${escapedWidgetDomain}" />`,
+      `<meta name="gpt-app-build-id" content="${escapedWidgetBuildId}" />`,
+    ].join("");
+    html = html.includes("</head>")
+      ? html.replace("</head>", `${apiBaseInjection}</head>`)
+      : `${apiBaseInjection}${html}`;
     return {
       contents: [
         {
           uri: engageResourceUri,
           mimeType: RESOURCE_MIME_TYPE,
           _meta: {
-            "openai/widgetDomain": "https://leisured-carina-unpromotable.ngrok-free.dev",
+            "openai/widgetDomain": widgetDomain,
             "openai/widgetCSP": {
-              connect_domains: ["https://leisured-carina-unpromotable.ngrok-free.dev"],
+              connect_domains: [widgetDomain],
             },
           },
           text: html,
@@ -497,29 +599,8 @@ export const createApp = () => {
   app.post("/api/jira/connections", async (req, res) => {
     try {
       const parsed = connectSchema.parse(req.body);
-      const conn = await lifecycleStore.create(req.userId, parsed.jira_base_url);
-      await tokenVault.store(conn.connectionId, parsed.pat);
-      try {
-        await jiraClient.verifyConnection(parsed.jira_base_url, parsed.pat);
-        await lifecycleStore.markVerified(req.userId, conn.connectionId);
-      } catch (error) {
-        const mapped = error as JiraMappedError;
-        await lifecycleStore.markError(req.userId, conn.connectionId, mapped.code ?? "unexpected_error");
-      }
-      emitSecurityEvent({
-        action: "connect",
-        outcome: "success",
-        userId: req.userId,
-        connectionId: conn.connectionId,
-      });
-      return res.status(201).json({
-        connection_id: conn.connectionId,
-        jira_base_url: conn.jiraBaseUrl,
-        status: conn.status,
-        expires_at: conn.expiresAt,
-        last_verified_at: conn.lastVerifiedAt,
-        text: "Jira connection created successfully.",
-      });
+      const created = await createSecureJiraConnection(req.userId, parsed.jira_base_url, parsed.pat);
+      return res.status(201).json(created);
     } catch (error) {
       const message = safeError(error).message;
       emitSecurityEvent({ action: "connect", outcome: "failed", userId: req.userId });

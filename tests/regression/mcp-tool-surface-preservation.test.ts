@@ -10,6 +10,7 @@ const REQUIRED_TOOLS = [
   "get_skill",
   "generate_sosreport",
   "fetch_sosreport",
+  "jira_connect_secure",
   "jira_connection_status",
   "jira_list_attachments",
   "jira_attach_artifact",
