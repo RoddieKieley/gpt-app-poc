@@ -106,12 +106,14 @@ const createSecureJiraConnection = async (
     userId,
     connectionId: conn.connectionId,
   });
+  const current = await lifecycleStore.getOwned(userId, conn.connectionId);
+  const effective = current ?? conn;
   return {
-    connection_id: conn.connectionId,
-    jira_base_url: conn.jiraBaseUrl,
-    status: conn.status,
-    expires_at: conn.expiresAt,
-    last_verified_at: conn.lastVerifiedAt,
+    connection_id: effective.connectionId,
+    jira_base_url: effective.jiraBaseUrl,
+    status: effective.status,
+    expires_at: effective.expiresAt,
+    last_verified_at: effective.lastVerifiedAt,
     text: "Jira connection created successfully.",
   };
 };
@@ -317,14 +319,13 @@ registerAppTool(
         content: [{ type: "text", text: created.text }],
         structuredContent: created,
       };
-    } catch (error) {
-      const message = safeError(error).message;
+    } catch (_error) {
       emitSecurityEvent({ action: "connect", outcome: "failed", userId });
       return {
         isError: true,
         content: [{
           type: "text",
-          text: `Connection failed. Verify URL and credentials. ${message}`,
+          text: "Connection failed. Verify URL and credentials.",
         }],
       };
     }

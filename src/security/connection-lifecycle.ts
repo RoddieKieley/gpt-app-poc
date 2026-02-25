@@ -106,9 +106,14 @@ export class ConnectionLifecycleStore {
     const store = await this.readStore();
     const raw = store.records[connectionId];
     if (!raw || raw.userId !== userId) return;
+    const derived = this.withDerivedState(raw);
+    const nextStatus: ConnectionStatus =
+      derived.status === "revoked" || derived.status === "expired"
+        ? derived.status
+        : "error";
     store.records[connectionId] = {
-      ...raw,
-      status: this.withDerivedState(raw).status,
+      ...derived,
+      status: nextStatus,
       updatedAt: nowIso(),
       lastErrorCode: errorCode,
     };

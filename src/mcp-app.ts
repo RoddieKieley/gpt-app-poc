@@ -37,6 +37,10 @@ type ToolResult = {
   structuredContent?: Record<string, unknown>;
 };
 
+type CallToolOptions = {
+  redactErrorDetails?: boolean;
+};
+
 type ConnectResponse = {
   connection_id?: string;
   status?: string;
@@ -95,7 +99,11 @@ const getConnectionId = (): string => connectionIdEl.value.trim();
 const getIssueKey = (): string => issueKeyEl.value.trim();
 const getFetchReference = (): string => fetchReferenceEl.value.trim();
 
-const callTool = async (name: string, args: Record<string, unknown>): Promise<ToolResult> => {
+const callTool = async (
+  name: string,
+  args: Record<string, unknown>,
+  options: CallToolOptions = {},
+): Promise<ToolResult> => {
   try {
     const result = (await app.callServerTool({
       name,
@@ -106,6 +114,11 @@ const callTool = async (name: string, args: Record<string, unknown>): Promise<To
     return result;
   } catch (error) {
     const message = error instanceof Error ? error.message : String(error);
+    if (options.redactErrorDetails) {
+      const generic = "Connection failed. Verify URL and credentials.";
+      setStatus(generic);
+      return { isError: true, content: [{ type: "text", text: generic }] };
+    }
     setStatus(`Operation failed: ${message}`);
     return { isError: true, content: [{ type: "text", text: message }] };
   }
@@ -146,7 +159,7 @@ const connectJira = async (): Promise<ConnectResponse | null> => {
   const result = await callTool("jira_connect_secure", {
     jira_base_url: jiraBaseUrl,
     pat,
-  });
+  }, { redactErrorDetails: true });
   if (result.isError) {
     return null;
   }

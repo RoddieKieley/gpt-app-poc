@@ -48,4 +48,3 @@ export const mapJiraRedirectError = (location?: string | null): JiraMappedError 
     message: `${guidance} Use a Jira API base URL and a PAT that supports direct REST API access (non-SAML browser login).`,
   };
 };
-
