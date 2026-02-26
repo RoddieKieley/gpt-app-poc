@@ -135,7 +135,7 @@ const ensureLinuxSelection = (): boolean => {
   const selected = productSelectEl.value.trim().toLowerCase();
   if (selected !== "linux") {
     workflowState.last_error_code = "unsupported_product";
-    setStatus("Only linux is supported for Engage Red Hat Support.");
+    setStatus("Only Red Hat Enterprise Linux is currently supported for Engage Red Hat Support.");
     return false;
   }
   workflowState.selected_product = selected;
