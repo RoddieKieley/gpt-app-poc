@@ -1,10 +1,10 @@
 <!--
 Sync Impact Report
-- Version change: 0.1.1 -> 0.2.0
-- Modified principles: 3. Privacy-First Diagnostics
-- Added principles: 8. Secret Boundary for Tokens and Credentials
-- Added sections: Amendment Record
-- Removed sections: placeholder template tokens
+- Version change: 0.2.0 -> 0.3.0
+- Modified principles: none
+- Added principles: 9. Non-Retroactive Specification Integrity
+- Added sections: none
+- Removed sections: none
 - Templates requiring updates:
   - none
 - Follow-up TODOs:
@@ -53,6 +53,14 @@ Personal access tokens (PATs), API keys, and credentials MUST be handled only by
 trusted backend services. Secrets MUST NOT appear in MCP tool arguments, tool
 results, prompts, model-visible transcripts, or application logs.
 
+### 9. Non-Retroactive Specification Integrity
+Completed or historical specification packages (for example older numbered
+directories under `specs/`) and their corresponding branches MUST be treated as
+immutable records. New requirements, contract changes, and workflow behavior
+updates MUST be introduced only in the current feature specification package and
+its branch. If historical context is needed, reference earlier specs without
+rewriting them.
+
 ## Security & Data Handling
 
 - Diagnostics collection MUST use approved MCP servers with explicit human
@@ -94,6 +102,9 @@ results, prompts, model-visible transcripts, or application logs.
 - Security review is REQUIRED for any new diagnostic data access or permissions.
 - Features that introduce credential handling MUST include tests proving secrets
   are never emitted in MCP tool payloads, responses, or logs.
+- Implementations MUST NOT retroactively modify prior specification packages or
+  prior feature branches to introduce new behavior. Any required new contracts
+  or rules MUST be captured in the active feature specification package.
 - PRs MUST cite which constitution principles are addressed.
 
 ## Amendment Record
@@ -109,6 +120,17 @@ results, prompts, model-visible transcripts, or application logs.
   - Add regression tests for token redaction and transcript-safe tool payloads.
   - Update feature specs and PR checklists to cite Principle 8.
 
+### 2026-02-26: Non-Retroactive Specification Integrity
+- **Rationale**: Updating older spec packages/branches during new feature work
+  obscures historical decisions and weakens traceability between a feature and
+  its design artifacts.
+- **Migration Plan**:
+  - Keep previously completed spec packages and their contracts unchanged.
+  - Place all new contract and workflow behavior requirements in the current
+    feature spec package only.
+  - Update review checklists to flag retroactive edits to prior specs/branches.
+  - Require tests for new behavior to point to the active feature contracts.
+
 ## Governance
 
 - This constitution supersedes all other project documentation.
@@ -117,4 +139,4 @@ results, prompts, model-visible transcripts, or application logs.
 - Reviews MUST verify compliance with this constitution; non-compliant changes
   must be revised before merge.
 
-**Version**: 0.2.0 | **Ratified**: 2026-02-02 | **Last Amended**: 2026-02-11
+**Version**: 0.3.0 | **Ratified**: 2026-02-02 | **Last Amended**: 2026-02-26
