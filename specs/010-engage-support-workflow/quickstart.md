@@ -57,3 +57,9 @@ tsx --test tests/regression/no-pat-leakage-mcp.test.ts
 tsx --test tests/regression/skill-resource-preservation.test.ts
 tsx --test tests/regression/jira-surface-preservation.test.ts
 ```
+
+## Validation Run Notes
+
+- 2026-02-26: `npm run test:contract -- tests/contract/engage-red-hat-support.contract.test.ts` passed.
+- 2026-02-26: `npm run test:integration -- tests/integration/engage-red-hat-support.workflow.test.ts` passed.
+- 2026-02-26: `npm run test:regression -- tests/regression/mcp-tool-surface-preservation.test.ts tests/regression/no-pat-leakage-mcp.test.ts tests/regression/skill-resource-preservation.test.ts tests/regression/jira-surface-preservation.test.ts` passed.

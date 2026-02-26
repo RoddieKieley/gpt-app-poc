@@ -33,6 +33,7 @@
       "target": "tests/integration/engage-red-hat-support.workflow.test.ts",
       "assertions": [
         "successful and failed workflow messages do not echo PAT",
+        "jira_list_attachments read verification occurs before jira_attach_artifact",
         "issue-access verification gates attach"
       ]
     },

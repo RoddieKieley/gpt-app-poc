@@ -9,33 +9,52 @@
     <main>
       <h1>Support Workflow Assistant</h1>
       <p><strong>Status:</strong> <span id="status">Ready.</span></p>
+
       <section>
-        <h2>Engage Red Hat Support (Linux Only)</h2>
+        <h2>Workflow Steps</h2>
+        <p>
+          Compatibility entrypoint: <code>ui://engage-red-hat-support/app.html</code>
+        </p>
+        <nav>
+          <button id="nav-step-1" type="button">Step 1: Select Product</button>
+          <button id="nav-step-2" type="button">Step 2: Generate + Fetch sos</button>
+          <button id="nav-step-3" type="button">Step 3: Connect + Verify + Attach</button>
+        </nav>
+      </section>
+
+      <section id="step-select-product" data-step="select_product">
+        <h2>Step 1: Select Supported Product</h2>
         <select id="product-select">
           <option value="linux" selected>linux</option>
+          <option value="windows">windows (unsupported)</option>
         </select>
-        <button id="engage-run-btn" type="button">Run end-to-end (connect->generate->fetch->attach)</button>
+        <button id="step-1-continue-btn" type="button">Continue to Step 2</button>
       </section>
-      <section>
-        <h2>Connect Jira</h2>
-        <input id="jira-url" type="url" placeholder="https://jira.example.com" />
-        <input id="jira-pat" type="password" placeholder="PAT (never shown in tool calls)" />
-        <button id="connect-btn" type="button">Connect</button>
-        <button id="verify-btn" type="button">Verify connection</button>
-      </section>
-      <section>
-        <h2>Workflow Inputs</h2>
-        <input id="connection-id" type="text" placeholder="connection_id" />
-        <input id="issue-key" type="text" placeholder="ISSUE-123" />
-        <input id="fetch-reference" type="text" placeholder="fetch_reference (from generate_sosreport)" />
-        <input id="artifact-ref" type="text" placeholder="/tmp/sosreport.tar.xz" />
-        <button id="status-btn" type="button">Check status tool</button>
+
+      <section id="step-sos-report" data-step="sos_report" hidden>
+        <h2>Step 2: Generate + Fetch sos Report</h2>
         <button id="generate-btn" type="button">Generate sosreport</button>
         <button id="fetch-btn" type="button">Fetch sosreport</button>
+        <input id="fetch-reference" type="text" placeholder="fetch_reference (from generate_sosreport)" />
+        <input id="artifact-ref" type="text" placeholder="/tmp/sosreport.tar.xz" />
+        <button id="step-2-continue-btn" type="button">Continue to Step 3</button>
+      </section>
+
+      <section id="step-jira-attach" data-step="jira_attach" hidden>
+        <h2>Step 3: Connect Jira, Verify Issue Access, Attach Artifact</h2>
+        <input id="jira-url" type="url" placeholder="https://jira.example.com" />
+        <input id="jira-pat" type="password" placeholder="PAT (submitted only to secure intake)" />
+        <button id="connect-btn" type="button">Connect</button>
+        <button id="verify-btn" type="button">Verify connection</button>
+        <input id="connection-id" type="text" placeholder="connection_id" />
+        <input id="issue-key" type="text" placeholder="ISSUE-123" />
+        <button id="status-btn" type="button">Check status tool</button>
         <button id="list-btn" type="button">List attachments</button>
         <button id="attach-btn" type="button">Attach artifact</button>
         <button id="disconnect-btn" type="button">Disconnect</button>
+        <button id="engage-run-btn" type="button">Run full workflow from current inputs</button>
       </section>
+
       <p>
         If UI is unavailable, all server tools and skill guidance provide text fallbacks.
         PAT must only be submitted via the secure backend connection endpoint.

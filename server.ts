@@ -139,6 +139,9 @@ const widgetResourceVersion = process.env.WIDGET_RESOURCE_VERSION?.trim();
 const engageResourceUri = widgetResourceVersion
   ? `ui://engage-red-hat-support/app.html?v=${encodeURIComponent(widgetResourceVersion)}`
   : "ui://engage-red-hat-support/app.html";
+const engageStepSelectUri = "ui://engage-red-hat-support/steps/select-product.html";
+const engageStepSosUri = "ui://engage-red-hat-support/steps/sos-report.html";
+const engageStepJiraUri = "ui://engage-red-hat-support/steps/jira-attach.html";
 const widgetBuildId = widgetResourceVersion || `build-${Date.now()}`;
 const DEFAULT_WIDGET_DOMAIN = "https://leisured-carina-unpromotable.ngrok-free.dev";
 
@@ -152,6 +155,53 @@ const loadSkillMarkdown = async (sourcePath: string, fallback: string): Promise<
 
 const loadEngageSkillMarkdown = async (): Promise<string> => {
   return loadSkillMarkdown(ENGAGE_SKILL_RESOURCE_SOURCE_PATH, ENGAGE_SKILL_RESOURCE_FALLBACK);
+};
+
+const loadEngageWidgetHtml = async (): Promise<string> => {
+  let html: string;
+  try {
+    html = await fs.readFile(
+      path.join(__dirname, "dist", "mcp-app.html"),
+      "utf-8",
+    );
+  } catch (_error) {
+    html = `<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <title>Engage Red Hat Support</title>
+  </head>
+  <body>
+    <p>UI bundle unavailable. Follow text fallback steps:</p>
+    <ol>
+      <li>Select supported product (linux only).</li>
+      <li>Run generate_sosreport then fetch_sosreport to produce artifact_ref.</li>
+      <li>Use secure Jira intake to obtain connection_id, verify issue access, then attach artifact.</li>
+    </ol>
+  </body>
+</html>`;
+  }
+
+  const widgetDomain = process.env.WIDGET_DOMAIN?.trim() || DEFAULT_WIDGET_DOMAIN;
+  const escapedWidgetDomain = widgetDomain
+    .replace(/&/g, "&amp;")
+    .replace(/"/g, "&quot;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;");
+  const escapedWidgetBuildId = widgetBuildId
+    .replace(/&/g, "&amp;")
+    .replace(/"/g, "&quot;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;");
+  const apiBaseInjection = [
+    `<meta name="gpt-app-api-base" content="${escapedWidgetDomain}" />`,
+    `<meta name="gpt-app-build-id" content="${escapedWidgetBuildId}" />`,
+  ].join("");
+  html = html.includes("</head>")
+    ? html.replace("</head>", `${apiBaseInjection}</head>`)
+    : `${apiBaseInjection}${html}`;
+
+  return html;
 };
 
 const GET_SKILL_INPUT_SCHEMA = z.object({ uri: z.string().min(1, "skill URI is required") });
@@ -474,52 +524,18 @@ server.registerResource(
   }),
 );
 
-registerAppResource(
+const registerEngageUiResource = (uri: string) => registerAppResource(
   server,
-  engageResourceUri,
-  engageResourceUri,
+  uri,
+  uri,
   { mimeType: RESOURCE_MIME_TYPE },
   async () => {
-    let html: string;
-    try {
-      html = await fs.readFile(
-        path.join(__dirname, "dist", "mcp-app.html"),
-        "utf-8",
-      );
-    } catch (_error) {
-      html = `<!doctype html>
-<html lang="en">
-  <head>
-    <meta charset="utf-8" />
-    <title>Engage Red Hat Support</title>
-  </head>
-  <body>
-    <p>UI bundle unavailable. Use text fallbacks for connect, generate, fetch, and attach steps.</p>
-  </body>
-</html>`;
-    }
+    const html = await loadEngageWidgetHtml();
     const widgetDomain = process.env.WIDGET_DOMAIN?.trim() || DEFAULT_WIDGET_DOMAIN;
-    const escapedWidgetDomain = widgetDomain
-      .replace(/&/g, "&amp;")
-      .replace(/"/g, "&quot;")
-      .replace(/</g, "&lt;")
-      .replace(/>/g, "&gt;");
-    const escapedWidgetBuildId = widgetBuildId
-      .replace(/&/g, "&amp;")
-      .replace(/"/g, "&quot;")
-      .replace(/</g, "&lt;")
-      .replace(/>/g, "&gt;");
-    const apiBaseInjection = [
-      `<meta name="gpt-app-api-base" content="${escapedWidgetDomain}" />`,
-      `<meta name="gpt-app-build-id" content="${escapedWidgetBuildId}" />`,
-    ].join("");
-    html = html.includes("</head>")
-      ? html.replace("</head>", `${apiBaseInjection}</head>`)
-      : `${apiBaseInjection}${html}`;
     return {
       contents: [
         {
-          uri: engageResourceUri,
+          uri,
           mimeType: RESOURCE_MIME_TYPE,
           _meta: {
             "openai/widgetDomain": widgetDomain,
@@ -533,6 +549,11 @@ registerAppResource(
     };
   },
 );
+
+registerEngageUiResource(engageResourceUri);
+registerEngageUiResource(engageStepSelectUri);
+registerEngageUiResource(engageStepSosUri);
+registerEngageUiResource(engageStepJiraUri);
 
 export const createApp = () => {
   const app = express();

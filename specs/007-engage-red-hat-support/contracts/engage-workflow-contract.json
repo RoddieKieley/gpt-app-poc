@@ -1,6 +1,6 @@
 {
   "workflow": "engage_red_hat_support",
-  "mode": "option_a_ui_skill_orchestration",
+  "mode": "three_step_multi_resource_ui_orchestration",
   "description": "Linux-only support engagement workflow orchestrated by UI/skill using existing tools and secure PAT intake endpoint.",
   "preconditions": {
     "product": {
@@ -13,48 +13,52 @@
       "mustBeVerifiedBeforeDiagnostics": true
     }
   },
+  "compatibilityEntryPoint": "ui://engage-red-hat-support/app.html",
   "sequence": [
     {
       "step": 1,
-      "name": "verify_connection",
-      "type": "tool_or_http",
-      "allowedCalls": [
-        "jira_connection_status(connection_id)",
-        "GET /api/jira/connections/{connection_id}"
-      ],
-      "requiredInputs": ["connection_id"],
+      "name": "select_product",
+      "type": "ui_gate",
+      "allowedValues": ["linux"],
+      "requiredInputs": ["product"],
+      "produces": ["selected_product"],
       "stopOnFailure": true
     },
     {
       "step": 2,
-      "name": "generate_diagnostics",
-      "type": "tool",
-      "tool": "generate_sosreport",
+      "name": "generate_and_fetch_diagnostics",
+      "type": "tool_sequence",
+      "requiredCalls": ["generate_sosreport", "fetch_sosreport"],
       "requiredInputs": [],
-      "produces": ["fetch_reference"],
+      "produces": ["fetch_reference", "artifact_ref"],
       "stopOnFailure": true
     },
     {
       "step": 3,
-      "name": "fetch_diagnostics",
-      "type": "tool",
-      "tool": "fetch_sosreport",
-      "requiredInputs": ["fetch_reference"],
-      "produces": ["archive_path", "size_bytes", "sha256"],
-      "stopOnFailure": true
-    },
-    {
-      "step": 4,
-      "name": "attach_to_jira_issue",
-      "type": "tool",
-      "tool": "jira_attach_artifact",
-      "requiredInputs": ["connection_id", "issue_key", "artifact_ref"],
-      "inputMapping": {
-        "artifact_ref": "step3.archive_path"
-      },
+      "name": "connect_verify_and_attach",
+      "type": "tool_or_http_sequence",
+      "requiredOperations": [
+        "POST /api/jira/connections",
+        "jira_connection_status(connection_id) or GET /api/jira/connections/{connection_id}",
+        "jira_list_attachments(connection_id, issue_key)",
+        "jira_attach_artifact(connection_id, issue_key, artifact_ref)"
+      ],
+      "requiredInputs": ["artifact_ref", "issue_key", "connection_id"],
+      "requiredPreconditions": ["issue_access_verified=true"],
       "stopOnFailure": true
     }
   ],
+  "stateHandoff": {
+    "requiredFields": [
+      "selected_product",
+      "fetch_reference",
+      "artifact_ref",
+      "connection_id",
+      "issue_key",
+      "issue_access_verified"
+    ],
+    "failClosed": true
+  },
   "securityBoundary": {
     "secretInputsAllowedInMcpTools": false,
     "secretOutputsAllowedInMcpTools": false,

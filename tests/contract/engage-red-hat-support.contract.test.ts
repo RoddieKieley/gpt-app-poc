@@ -8,6 +8,9 @@ type JsonRpcResponse =
   | { jsonrpc: "2.0"; id: number; error: { code: number; message: string } };
 
 const ENGAGE_UI_URI = "ui://engage-red-hat-support/app.html";
+const ENGAGE_STEP_SELECT_URI = "ui://engage-red-hat-support/steps/select-product.html";
+const ENGAGE_STEP_SOS_URI = "ui://engage-red-hat-support/steps/sos-report.html";
+const ENGAGE_STEP_JIRA_URI = "ui://engage-red-hat-support/steps/jira-attach.html";
 const ENGAGE_SKILL_URI = "skill://engage-red-hat-support/SKILL.md";
 
 test("engage resources are discoverable with required metadata", async () => {
@@ -62,6 +65,9 @@ test("engage resources are discoverable with required metadata", async () => {
     };
     const uris = new Set((resources.resources ?? []).map((entry) => entry.uri));
     assert.ok(uris.has(ENGAGE_UI_URI), "missing engage ui resource");
+    assert.ok(uris.has(ENGAGE_STEP_SELECT_URI), "missing engage step 1 resource");
+    assert.ok(uris.has(ENGAGE_STEP_SOS_URI), "missing engage step 2 resource");
+    assert.ok(uris.has(ENGAGE_STEP_JIRA_URI), "missing engage step 3 resource");
     assert.ok(uris.has(ENGAGE_SKILL_URI), "missing engage skill resource");
 
     const uiRead = (await jsonRpc("resources/read", { uri: ENGAGE_UI_URI })) as {
@@ -158,16 +164,38 @@ test("engage workflow contract enforces opaque connection_id and no PAT fields",
   );
   const raw = await fs.readFile(file, "utf8");
   const contract = JSON.parse(raw) as {
-    sequence: Array<{ step: number; name: string; requiredInputs?: string[] }>;
+    compatibilityEntryPoint?: string;
+    sequence: Array<{
+      step: number;
+      name: string;
+      requiredInputs?: string[];
+      requiredOperations?: string[];
+      requiredPreconditions?: string[];
+    }>;
+    stateHandoff?: { requiredFields?: string[] };
     securityBoundary: { forbiddenFields: string[]; opaqueReference: string };
   };
 
   assert.deepEqual(
     contract.sequence.map((step) => step.name),
-    ["verify_connection", "generate_diagnostics", "fetch_diagnostics", "attach_to_jira_issue"],
+    ["select_product", "generate_and_fetch_diagnostics", "connect_verify_and_attach"],
   );
+  assert.equal(contract.compatibilityEntryPoint, ENGAGE_UI_URI);
   assert.equal(contract.securityBoundary.opaqueReference, "connection_id");
   assert.ok(contract.securityBoundary.forbiddenFields.includes("pat"));
+  assert.ok(contract.stateHandoff?.requiredFields?.includes("artifact_ref"));
+  assert.ok(contract.stateHandoff?.requiredFields?.includes("issue_access_verified"));
+
+  const step3 = contract.sequence.find((step) => step.name === "connect_verify_and_attach");
+  assert.ok(step3, "missing connect_verify_and_attach step");
+  assert.ok(
+    step3?.requiredOperations?.some((op) => op.includes("jira_list_attachments")),
+    "step 3 must require issue-read verification before attach",
+  );
+  assert.ok(
+    step3?.requiredPreconditions?.includes("issue_access_verified=true"),
+    "step 3 must require verified issue access",
+  );
 
   for (const step of contract.sequence) {
     const keys = step.requiredInputs ?? [];

@@ -58,12 +58,11 @@
 ### Scope and sequencing
 
 - Product scope is Linux-only for this workflow.
-- End-to-end sequence:
-  1. Connect with PAT through `POST /api/jira/connections`.
-  2. Verify active `connection_id` with `jira_connection_status` or `GET /api/jira/connections/{connection_id}`.
-  3. Run `generate_sosreport`.
-  4. Run `fetch_sosreport`.
-  5. Run `jira_attach_artifact` with `connection_id`, `issue_key`, and fetched `artifact_ref`.
+- Compatibility entry URI remains `ui://engage-red-hat-support/app.html`.
+- End-to-end 3-step sequence:
+  1. Select product (`linux` only).
+  2. Run `generate_sosreport`, then `fetch_sosreport` to obtain `artifact_ref`.
+  3. Connect with PAT through `POST /api/jira/connections`, verify active `connection_id`, verify issue read access with `jira_list_attachments`, then run `jira_attach_artifact`.
 
 ### Lifecycle gating
 
@@ -82,6 +81,7 @@
 - Use `POST /api/jira/connections` (plural). The singular path is not a valid intake endpoint.
 - No extra request header in this app bypasses Jira SAML/SSO redirects.
 - If Jira redirects API calls to login/IdP, use a Jira API-capable base URL and a PAT that supports direct REST API access.
+- If `jira_list_attachments` fails, treat issue-read verification as failed and do not proceed to attach.
 
 ### Incident response
 

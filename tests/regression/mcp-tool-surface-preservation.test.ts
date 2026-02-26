@@ -18,6 +18,9 @@ const REQUIRED_TOOLS = [
 ] as const;
 const REQUIRED_RESOURCES = [
   "ui://engage-red-hat-support/app.html",
+  "ui://engage-red-hat-support/steps/select-product.html",
+  "ui://engage-red-hat-support/steps/sos-report.html",
+  "ui://engage-red-hat-support/steps/jira-attach.html",
   "skill://engage-red-hat-support/SKILL.md",
 ] as const;
 

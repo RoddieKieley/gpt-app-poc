@@ -127,6 +127,11 @@ test("jira MCP tool surface remains unchanged", async () => {
         expected.outputTemplate,
         `${name} outputTemplate mismatch`,
       );
+      assert.equal(
+        String(tool._meta?.["openai/outputTemplate"] ?? "").includes("/steps/"),
+        false,
+        `${name} outputTemplate must stay on compatibility entrypoint`,
+      );
     }
   } finally {
     srv.close();

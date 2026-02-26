@@ -6,6 +6,12 @@ type JsonRpcResponse =
   | { jsonrpc: "2.0"; id: number; error: { code: number; message: string } };
 
 const ENGAGE_SKILL_RESOURCE_URI = "skill://engage-red-hat-support/SKILL.md";
+const ENGAGE_UI_RESOURCE_URI = "ui://engage-red-hat-support/app.html";
+const ENGAGE_STEP_URIS = [
+  "ui://engage-red-hat-support/steps/select-product.html",
+  "ui://engage-red-hat-support/steps/sos-report.html",
+  "ui://engage-red-hat-support/steps/jira-attach.html",
+] as const;
 
 test("skill discovery exposes engage resource and list_skills output", async () => {
   process.env.NODE_ENV = "test";
@@ -55,6 +61,10 @@ test("skill discovery exposes engage resource and list_skills output", async () 
     });
     const resources = (await jsonRpc("resources/list")) as { resources?: Array<{ uri?: string }> };
     assert.ok(resources.resources?.some((entry) => entry.uri === ENGAGE_SKILL_RESOURCE_URI));
+    assert.ok(resources.resources?.some((entry) => entry.uri === ENGAGE_UI_RESOURCE_URI));
+    for (const stepUri of ENGAGE_STEP_URIS) {
+      assert.ok(resources.resources?.some((entry) => entry.uri === stepUri), `missing ${stepUri}`);
+    }
 
     const readResult = (await jsonRpc("resources/read", {
       uri: ENGAGE_SKILL_RESOURCE_URI,

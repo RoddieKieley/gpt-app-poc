@@ -34,7 +34,7 @@ test("engage workflow contract forbids PAT fields beyond secure intake", async (
   );
   const raw = await fs.readFile(file, "utf8");
   const data = JSON.parse(raw) as {
-    sequence: Array<{ requiredInputs?: string[] }>;
+    sequence: Array<{ requiredInputs?: string[]; requiredOperations?: string[] }>;
     securityBoundary: { forbiddenFields: string[]; secretInputsAllowedInMcpTools: boolean };
   };
 
@@ -46,6 +46,32 @@ test("engage workflow contract forbids PAT fields beyond secure intake", async (
     const keys = step.requiredInputs ?? [];
     assert.equal(keys.includes("pat"), false);
     assert.equal(keys.includes("token"), false);
+    const operations = step.requiredOperations ?? [];
+    assert.equal(operations.some((value) => value.toLowerCase().includes("pat")), false);
+    assert.equal(operations.some((value) => value.toLowerCase().includes("token")), false);
   }
+});
+
+test("pat secrecy validation contract enforces no secret leakage surfaces", async () => {
+  const file = path.join(
+    process.cwd(),
+    "specs",
+    "010-engage-support-workflow",
+    "contracts",
+    "pat-secrecy-validation.v2.json",
+  );
+  const raw = await fs.readFile(file, "utf8");
+  const data = JSON.parse(raw) as {
+    boundary: { secretInputsAllowedOnlyAt: string[]; forbiddenSecretFields: string[] };
+    mustNotAppearIn: string[];
+    validationMatrix: Array<{ assertions?: string[] }>;
+  };
+  assert.deepEqual(data.boundary.secretInputsAllowedOnlyAt, ["POST /api/jira/connections"]);
+  assert.ok(data.boundary.forbiddenSecretFields.includes("pat"));
+  assert.ok(data.mustNotAppearIn.includes("mcp_tool_arguments"));
+  assert.ok(data.mustNotAppearIn.includes("mcp_tool_results"));
+  const assertions = data.validationMatrix.flatMap((entry) => entry.assertions ?? []);
+  assert.ok(assertions.some((entry) => entry.includes("jira_list_attachments")));
+  assert.ok(assertions.some((entry) => entry.includes("do not echo PAT")));
 });
 

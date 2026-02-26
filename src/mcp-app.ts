@@ -1,6 +1,14 @@
 import { App } from "@modelcontextprotocol/ext-apps";
 
 const statusEl = document.getElementById("status");
+const step1Section = document.getElementById("step-select-product");
+const step2Section = document.getElementById("step-sos-report");
+const step3Section = document.getElementById("step-jira-attach");
+const navStep1Btn = document.getElementById("nav-step-1");
+const navStep2Btn = document.getElementById("nav-step-2");
+const navStep3Btn = document.getElementById("nav-step-3");
+const step1ContinueBtn = document.getElementById("step-1-continue-btn");
+const step2ContinueBtn = document.getElementById("step-2-continue-btn");
 const connectBtn = document.getElementById("connect-btn");
 const verifyBtn = document.getElementById("verify-btn");
 const statusBtn = document.getElementById("status-btn");
@@ -23,7 +31,9 @@ const widgetBuildId = document
   ?.trim();
 
 if (
-  !statusEl || !connectBtn || !verifyBtn || !statusBtn || !generateBtn || !fetchBtn ||
+  !statusEl || !step1Section || !step2Section || !step3Section ||
+  !navStep1Btn || !navStep2Btn || !navStep3Btn || !step1ContinueBtn || !step2ContinueBtn ||
+  !connectBtn || !verifyBtn || !statusBtn || !generateBtn || !fetchBtn ||
   !listBtn || !attachBtn || !disconnectBtn || !engageRunBtn || !productSelectEl ||
   !jiraUrlEl || !jiraPatEl || !connectionIdEl || !issueKeyEl || !fetchReferenceEl || !artifactRefEl
 ) {
@@ -51,6 +61,23 @@ type VerifyResponse = {
   connection_id?: string;
   status?: string;
   text?: string;
+};
+
+type WorkflowStep = "select_product" | "sos_report" | "jira_attach" | "completed" | "failed";
+type WorkflowState = {
+  current_step: WorkflowStep;
+  selected_product?: string;
+  fetch_reference?: string;
+  artifact_ref?: string;
+  connection_id?: string;
+  issue_key?: string;
+  issue_access_verified: boolean;
+  last_error_code?: string;
+};
+
+const workflowState: WorkflowState = {
+  current_step: "select_product",
+  issue_access_verified: false,
 };
 
 const app = new App({ name: "MCP Apps Support Workflows", version: "1.0.0" });
@@ -82,6 +109,24 @@ const setStatus = (message: string) => {
   statusEl.textContent = message;
 };
 
+const setStepVisible = (step: WorkflowStep) => {
+  step1Section.hidden = step !== "select_product";
+  step2Section.hidden = step !== "sos_report";
+  step3Section.hidden = step !== "jira_attach";
+};
+
+const setCurrentStep = (step: WorkflowStep) => {
+  workflowState.current_step = step;
+  if (step === "select_product") {
+    window.location.hash = "step-1";
+  } else if (step === "sos_report") {
+    window.location.hash = "step-2";
+  } else if (step === "jira_attach") {
+    window.location.hash = "step-3";
+  }
+  setStepVisible(step);
+};
+
 if (widgetBuildId) {
   setStatus(`Widget loaded (${widgetBuildId}).`);
 }
@@ -89,9 +134,30 @@ if (widgetBuildId) {
 const ensureLinuxSelection = (): boolean => {
   const selected = productSelectEl.value.trim().toLowerCase();
   if (selected !== "linux") {
+    workflowState.last_error_code = "unsupported_product";
     setStatus("Only linux is supported for Engage Red Hat Support.");
     return false;
   }
+  workflowState.selected_product = selected;
+  return true;
+};
+
+const canEnterSosStep = (): boolean => workflowState.selected_product === "linux";
+const canEnterJiraStep = (): boolean =>
+  Boolean(workflowState.artifact_ref && workflowState.artifact_ref.trim().length > 0);
+
+const navigateToStep = (step: WorkflowStep): boolean => {
+  if (step === "sos_report" && !canEnterSosStep()) {
+    setStatus("Complete step 1 with linux selection before step 2.");
+    workflowState.last_error_code = "step_gate_select_product";
+    return false;
+  }
+  if (step === "jira_attach" && !canEnterJiraStep()) {
+    setStatus("Complete step 2 (generate + fetch) before step 3.");
+    workflowState.last_error_code = "step_gate_sos_report";
+    return false;
+  }
+  setCurrentStep(step);
   return true;
 };
 
@@ -153,6 +219,7 @@ const connectJira = async (): Promise<ConnectResponse | null> => {
   const jiraBaseUrl = jiraUrlEl.value.trim();
   const pat = jiraPatEl.value;
   if (!jiraBaseUrl || !pat) {
+    workflowState.last_error_code = "missing_jira_connect_inputs";
     setStatus("Jira URL and PAT are required.");
     return null;
   }
@@ -161,17 +228,20 @@ const connectJira = async (): Promise<ConnectResponse | null> => {
     pat,
   }, { redactErrorDetails: true });
   if (result.isError) {
+    workflowState.last_error_code = "jira_connect_failed";
     return null;
   }
   const body = (result.structuredContent ?? {}) as ConnectResponse;
   if (body.connection_id) {
     connectionIdEl.value = body.connection_id;
+    workflowState.connection_id = body.connection_id;
   }
   if (body.status) {
     setStatus(`Connected. Current lifecycle status: ${body.status}.`);
   } else {
     setStatus(body.text ?? "Connected.");
   }
+  // Preserve PAT security boundary: never keep PAT in local UI state after intake.
   jiraPatEl.value = "";
   return body;
 };
@@ -179,6 +249,7 @@ const connectJira = async (): Promise<ConnectResponse | null> => {
 const verifyConnection = async (): Promise<VerifyResponse | null> => {
   const connectionId = getConnectionId();
   if (!connectionId) {
+    workflowState.last_error_code = "missing_connection_id";
     setStatus("connection_id is required.");
     return null;
   }
@@ -189,13 +260,16 @@ const verifyConnection = async (): Promise<VerifyResponse | null> => {
       const fallback = await verifyConnectionViaTool(connectionId);
       if (fallback) return fallback;
       setStatus(body.text ?? "Connection verification failed.");
+      workflowState.last_error_code = "connection_verification_failed";
       return null;
     }
     const status = String(body.status ?? "");
     if (status === "expired" || status === "revoked") {
       setStatus(`Connection is ${status}. Reconnect before continuing.`);
+      workflowState.last_error_code = `connection_${status}`;
       return body;
     }
+    workflowState.connection_id = connectionId;
     setStatus(body.text ?? `Connection is ${status || "connected"}.`);
     return body;
   } catch (error) {
@@ -203,8 +277,34 @@ const verifyConnection = async (): Promise<VerifyResponse | null> => {
     if (fallback) return fallback;
     const message = error instanceof Error ? error.message : String(error);
     setStatus(`Connection verification request failed (${message}).`);
+    workflowState.last_error_code = "connection_verify_request_failed";
     return null;
   }
+};
+
+const verifyIssueReadAccess = async (): Promise<boolean> => {
+  const connectionId = getConnectionId();
+  const issueKey = getIssueKey();
+  if (!connectionId || !issueKey) {
+    workflowState.issue_access_verified = false;
+    workflowState.last_error_code = "missing_issue_verification_inputs";
+    setStatus("connection_id and issue key are required before issue access verification.");
+    return false;
+  }
+  const listed = await callTool("jira_list_attachments", {
+    connection_id: connectionId,
+    issue_key: issueKey,
+  });
+  if (listed.isError) {
+    workflowState.issue_access_verified = false;
+    workflowState.last_error_code = "issue_access_denied";
+    setStatus("Issue read verification failed. Resolve access before attach.");
+    return false;
+  }
+  workflowState.issue_access_verified = true;
+  workflowState.issue_key = issueKey;
+  setStatus("Issue access verified. You can attach artifact.");
+  return true;
 };
 
 connectBtn.addEventListener("click", async () => {
@@ -225,9 +325,11 @@ statusBtn.addEventListener("click", async () => {
 });
 
 generateBtn.addEventListener("click", async () => {
+  if (!navigateToStep("sos_report")) return;
   if (!ensureLinuxSelection()) return;
   const connectionId = getConnectionId();
   if (!connectionId) {
+    workflowState.last_error_code = "missing_connection_before_generate";
     setStatus("connection_id is required before generate.");
     return;
   }
@@ -241,49 +343,64 @@ generateBtn.addEventListener("click", async () => {
   const generated = await callTool("generate_sosreport", {});
   const fetchReference = String(generated.structuredContent?.fetch_reference ?? "");
   if (generated.isError || !fetchReference) {
+    workflowState.last_error_code = "generate_failed";
+    workflowState.current_step = "failed";
     setStatus("Generate step failed. Fix the error and retry generate.");
     return;
   }
   fetchReferenceEl.value = fetchReference;
+  workflowState.fetch_reference = fetchReference;
+  workflowState.current_step = "sos_report";
   setStatus("Generate succeeded. Proceed to fetch_sosreport.");
 });
 
 fetchBtn.addEventListener("click", async () => {
+  if (!navigateToStep("sos_report")) return;
   if (!ensureLinuxSelection()) return;
   const fetchReference = getFetchReference();
   if (!fetchReference) {
+    workflowState.last_error_code = "missing_fetch_reference";
     setStatus("fetch_reference is required before fetch.");
     return;
   }
   const fetched = await callTool("fetch_sosreport", { fetch_reference: fetchReference });
   const archivePath = String(fetched.structuredContent?.archive_path ?? "");
   if (fetched.isError || !archivePath) {
+    workflowState.last_error_code = "fetch_failed";
+    workflowState.current_step = "failed";
     setStatus("Fetch step failed. Fix the error and retry fetch.");
     return;
   }
   artifactRefEl.value = archivePath;
+  workflowState.artifact_ref = archivePath;
+  workflowState.current_step = "sos_report";
   setStatus("Fetch succeeded. Use the returned archive_path for attach.");
 });
 
 listBtn.addEventListener("click", async () => {
-  const connectionId = getConnectionId();
-  const issueKey = getIssueKey();
-  if (!connectionId || !issueKey) {
-    setStatus("connection_id and issue key are required.");
-    return;
-  }
-  await callTool("jira_list_attachments", {
-    connection_id: connectionId,
-    issue_key: issueKey,
-  });
+  await verifyIssueReadAccess();
 });
 
 attachBtn.addEventListener("click", async () => {
+  if (!navigateToStep("jira_attach")) return;
   const connectionId = getConnectionId();
   const issueKey = getIssueKey();
   const artifactRef = artifactRefEl.value.trim();
   if (!connectionId || !issueKey || !artifactRef) {
+    workflowState.last_error_code = "missing_attach_inputs";
     setStatus("connection_id, issue key, and artifact path are required.");
+    return;
+  }
+  const verified = await verifyConnection();
+  if (!verified || verified.status !== "connected") {
+    workflowState.last_error_code = "connection_not_verified_for_attach";
+    setStatus("Attach blocked: verify an active connection before attaching.");
+    return;
+  }
+  const issueAccessOk = await verifyIssueReadAccess();
+  if (!issueAccessOk) {
+    workflowState.last_error_code = "issue_access_not_verified";
+    setStatus("Attach blocked: verify issue read access before attaching.");
     return;
   }
   const result = await callTool("jira_attach_artifact", {
@@ -292,8 +409,13 @@ attachBtn.addEventListener("click", async () => {
     artifact_ref: artifactRef,
   });
   if (result.isError) {
+    workflowState.last_error_code = "attach_failed";
+    workflowState.current_step = "failed";
     setStatus("Attach step failed. Verify issue key, connection status, and artifact path.");
+    return;
   }
+  workflowState.current_step = "completed";
+  setStatus("Attach succeeded. Workflow completed.");
 });
 
 disconnectBtn.addEventListener("click", async () => {
@@ -306,24 +428,30 @@ disconnectBtn.addEventListener("click", async () => {
 });
 
 engageRunBtn.addEventListener("click", async () => {
+  if (!navigateToStep("select_product")) return;
   if (!ensureLinuxSelection()) return;
   const issueKey = getIssueKey();
   if (!issueKey) {
+    workflowState.last_error_code = "missing_issue_key";
     setStatus("issue key is required before running end-to-end flow.");
     return;
   }
 
+  navigateToStep("sos_report");
   const connected = await connectJira();
   if (!connected?.connection_id) {
+    workflowState.current_step = "failed";
     setStatus("End-to-end stopped at connect step.");
     return;
   }
 
   const verified = await verifyConnection();
   if (!verified) {
+    workflowState.current_step = "failed";
     return;
   }
   if (verified.status !== "connected") {
+    workflowState.current_step = "failed";
     setStatus(`End-to-end stopped at verify step (${verified.status ?? "unknown"}). Reconnect and retry.`);
     return;
   }
@@ -331,18 +459,30 @@ engageRunBtn.addEventListener("click", async () => {
   const generated = await callTool("generate_sosreport", {});
   const fetchReference = String(generated.structuredContent?.fetch_reference ?? "");
   if (generated.isError || !fetchReference) {
+    workflowState.current_step = "failed";
     setStatus("End-to-end stopped at generate step.");
     return;
   }
   fetchReferenceEl.value = fetchReference;
+  workflowState.fetch_reference = fetchReference;
 
   const fetched = await callTool("fetch_sosreport", { fetch_reference: fetchReference });
   const archivePath = String(fetched.structuredContent?.archive_path ?? "");
   if (fetched.isError || !archivePath) {
+    workflowState.current_step = "failed";
     setStatus("End-to-end stopped at fetch step.");
     return;
   }
   artifactRefEl.value = archivePath;
+  workflowState.artifact_ref = archivePath;
+  navigateToStep("jira_attach");
+
+  const issueAccessOk = await verifyIssueReadAccess();
+  if (!issueAccessOk) {
+    workflowState.current_step = "failed";
+    setStatus("End-to-end stopped at issue-read verification step.");
+    return;
+  }
 
   const attached = await callTool("jira_attach_artifact", {
     connection_id: connected.connection_id,
@@ -350,8 +490,51 @@ engageRunBtn.addEventListener("click", async () => {
     artifact_ref: archivePath,
   });
   if (attached.isError) {
+    workflowState.current_step = "failed";
     setStatus("End-to-end stopped at attach step.");
     return;
   }
+  workflowState.current_step = "completed";
   setStatus("End-to-end workflow completed: connect -> verify -> generate -> fetch -> attach.");
 });
+
+navStep1Btn.addEventListener("click", () => {
+  navigateToStep("select_product");
+});
+
+navStep2Btn.addEventListener("click", () => {
+  navigateToStep("sos_report");
+});
+
+navStep3Btn.addEventListener("click", () => {
+  navigateToStep("jira_attach");
+});
+
+step1ContinueBtn.addEventListener("click", () => {
+  if (!ensureLinuxSelection()) return;
+  navigateToStep("sos_report");
+  setStatus("Step 1 complete. Continue with generate + fetch.");
+});
+
+step2ContinueBtn.addEventListener("click", () => {
+  if (!workflowState.artifact_ref) {
+    setStatus("Complete generate + fetch to continue to step 3.");
+    workflowState.last_error_code = "missing_artifact_ref_for_step3";
+    return;
+  }
+  navigateToStep("jira_attach");
+  setStatus("Step 2 complete. Continue with connect, verify, and attach.");
+});
+
+const bootstrapRoute = () => {
+  const hash = window.location.hash.replace("#", "");
+  if (hash === "step-2") {
+    navigateToStep("sos_report");
+  } else if (hash === "step-3") {
+    navigateToStep("jira_attach");
+  } else {
+    navigateToStep("select_product");
+  }
+};
+
+bootstrapRoute();

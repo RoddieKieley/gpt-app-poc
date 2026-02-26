@@ -1,6 +1,12 @@
 {
   "resourceNamespace": "ui://engage-red-hat-support",
   "entryResource": "ui://engage-red-hat-support/app.html",
+  "registeredResourceUris": [
+    "ui://engage-red-hat-support/app.html",
+    "ui://engage-red-hat-support/steps/select-product.html",
+    "ui://engage-red-hat-support/steps/sos-report.html",
+    "ui://engage-red-hat-support/steps/jira-attach.html"
+  ],
   "stepResources": [
     {
       "uri": "ui://engage-red-hat-support/steps/select-product.html",

@@ -46,7 +46,7 @@
       "requiredOperations": [
         "POST /api/jira/connections",
         "jira_connection_status or GET /api/jira/connections/{connection_id}",
-        "jira issue access verification",
+        "jira_list_attachments(connection_id, issue_key)",
         "jira_attach_artifact"
       ],
       "requiredInputs": [
