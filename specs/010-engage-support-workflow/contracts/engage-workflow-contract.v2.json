@@ -1,0 +1,71 @@
+{
+  "workflow": "engage_red_hat_support",
+  "version": "2.0",
+  "mode": "three_step_multi_resource_ui",
+  "compatibility": {
+    "entryUri": "ui://engage-red-hat-support/app.html",
+    "entryUriMustRemainStable": true,
+    "existingToolNamesAndSchemasUnchanged": true
+  },
+  "resources": {
+    "stepUris": [
+      "ui://engage-red-hat-support/steps/select-product.html",
+      "ui://engage-red-hat-support/steps/sos-report.html",
+      "ui://engage-red-hat-support/steps/jira-attach.html"
+    ],
+    "nonUiFallbackRequired": true
+  },
+  "sequence": [
+    {
+      "step": 1,
+      "name": "select_product",
+      "allowedValues": [
+        "linux"
+      ],
+      "requiredOutputs": [
+        "selected_product"
+      ],
+      "stopOnFailure": true
+    },
+    {
+      "step": 2,
+      "name": "generate_and_fetch_sos",
+      "requiredCalls": [
+        "generate_sosreport",
+        "fetch_sosreport"
+      ],
+      "requiredOutputs": [
+        "fetch_reference",
+        "artifact_ref"
+      ],
+      "stopOnFailure": true
+    },
+    {
+      "step": 3,
+      "name": "connect_verify_and_attach",
+      "requiredOperations": [
+        "POST /api/jira/connections",
+        "jira_connection_status or GET /api/jira/connections/{connection_id}",
+        "jira issue access verification",
+        "jira_attach_artifact"
+      ],
+      "requiredInputs": [
+        "connection_id",
+        "issue_key",
+        "artifact_ref"
+      ],
+      "stopOnFailure": true
+    }
+  ],
+  "stateHandoff": {
+    "requiredFields": [
+      "selected_product",
+      "fetch_reference",
+      "artifact_ref",
+      "connection_id",
+      "issue_key",
+      "issue_access_verified"
+    ],
+    "failClosed": true
+  }
+}

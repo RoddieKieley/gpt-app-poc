@@ -1,0 +1,47 @@
+{
+  "boundary": {
+    "secretInputsAllowedOnlyAt": [
+      "POST /api/jira/connections"
+    ],
+    "opaqueCredentialReference": "connection_id",
+    "forbiddenSecretFields": [
+      "pat",
+      "token",
+      "access_token",
+      "authorization",
+      "auth_header",
+      "secret"
+    ]
+  },
+  "mustNotAppearIn": [
+    "mcp_tool_arguments",
+    "mcp_tool_results",
+    "workflow_prompts",
+    "ui_status_text",
+    "log_safe_text",
+    "security_event_payloads"
+  ],
+  "validationMatrix": [
+    {
+      "target": "tests/contract/engage-red-hat-support.contract.test.ts",
+      "assertions": [
+        "no forbidden fields in workflow contract sequence",
+        "connection_id remains opaque reference"
+      ]
+    },
+    {
+      "target": "tests/integration/engage-red-hat-support.workflow.test.ts",
+      "assertions": [
+        "successful and failed workflow messages do not echo PAT",
+        "issue-access verification gates attach"
+      ]
+    },
+    {
+      "target": "tests/regression/no-pat-leakage-mcp.test.ts",
+      "assertions": [
+        "forbidden secret fields absent in MCP-visible contract surfaces",
+        "forbidden secret fields absent in step-oriented workflow paths"
+      ]
+    }
+  ]
+}

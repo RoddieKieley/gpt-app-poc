@@ -16,6 +16,7 @@ Auto-generated from all feature plans. Last updated: 2026-02-02
 - TypeScript on Node.js (current repo baseline) + `@modelcontextprotocol/sdk`, `@modelcontextprotocol/ext-apps`, `express`, `tsx`, `vite` (008-switch-app-endpoint)
 - N/A for this change (no data model persistence changes) (008-switch-app-endpoint)
 - Existing filesystem-based skill markdown loading; no new persistence (009-get-skill-tool)
+- Existing token vault and lifecycle store for opaque `connection_id`; filesystem-based sos artifacts (010-engage-support-workflow)
 
 - TypeScript (Node.js 18+) + @modelcontextprotocol/sdk, @modelcontextprotocol/ext-apps, Express, cors, Vite, vite-plugin-singlefile, tsx (001-mcp-apps-hello-world)
 
@@ -35,9 +36,9 @@ npm test && npm run lint
 TypeScript (Node.js 18+): Follow standard conventions
 
 ## Recent Changes
+- 010-engage-support-workflow: Added TypeScript (Node.js 18+) + `@modelcontextprotocol/sdk`, `@modelcontextprotocol/ext-apps`, `express`, `zod`, `vite`
 - 009-get-skill-tool: Added TypeScript (Node.js 18+) + `@modelcontextprotocol/sdk`, `@modelcontextprotocol/ext-apps`, `express`, `zod`, Node built-ins
 - 008-switch-app-endpoint: Added TypeScript on Node.js (current repo baseline) + `@modelcontextprotocol/sdk`, `@modelcontextprotocol/ext-apps`, `express`, `tsx`, `vite`
-- 007-engage-red-hat-support: Added TypeScript (Node.js 18+) + `@modelcontextprotocol/sdk`, `@modelcontextprotocol/ext-apps`, `express`, `zod`, `vite`, Node built-ins
 
 
 <!-- MANUAL ADDITIONS START -->
