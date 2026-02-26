@@ -17,7 +17,6 @@ const fetchBtn = document.getElementById("fetch-btn");
 const listBtn = document.getElementById("list-btn");
 const attachBtn = document.getElementById("attach-btn");
 const disconnectBtn = document.getElementById("disconnect-btn");
-const engageRunBtn = document.getElementById("engage-run-btn");
 const productSelectEl = document.getElementById("product-select") as HTMLSelectElement | null;
 const jiraUrlEl = document.getElementById("jira-url") as HTMLInputElement | null;
 const jiraPatEl = document.getElementById("jira-pat") as HTMLInputElement | null;
@@ -34,7 +33,7 @@ if (
   !statusEl || !step1Section || !step2Section || !step3Section ||
   !navStep1Btn || !navStep2Btn || !navStep3Btn || !step1ContinueBtn || !step2ContinueBtn ||
   !connectBtn || !verifyBtn || !statusBtn || !generateBtn || !fetchBtn ||
-  !listBtn || !attachBtn || !disconnectBtn || !engageRunBtn || !productSelectEl ||
+  !listBtn || !attachBtn || !disconnectBtn || !productSelectEl ||
   !jiraUrlEl || !jiraPatEl || !connectionIdEl || !issueKeyEl || !fetchReferenceEl || !artifactRefEl
 ) {
   throw new Error("Missing required UI elements.");
@@ -327,19 +326,7 @@ statusBtn.addEventListener("click", async () => {
 generateBtn.addEventListener("click", async () => {
   if (!navigateToStep("sos_report")) return;
   if (!ensureLinuxSelection()) return;
-  const connectionId = getConnectionId();
-  if (!connectionId) {
-    workflowState.last_error_code = "missing_connection_before_generate";
-    setStatus("connection_id is required before generate.");
-    return;
-  }
-  const verified = await verifyConnection();
-  if (!verified) {
-    return;
-  }
-  if (verified.status !== "connected") {
-    return;
-  }
+  // Diagnostic collection must only occur on explicit user action in Step 2.
   const generated = await callTool("generate_sosreport", {});
   const fetchReference = String(generated.structuredContent?.fetch_reference ?? "");
   if (generated.isError || !fetchReference) {
@@ -425,77 +412,6 @@ disconnectBtn.addEventListener("click", async () => {
     return;
   }
   await callTool("jira_disconnect", { connection_id: connectionId });
-});
-
-engageRunBtn.addEventListener("click", async () => {
-  if (!navigateToStep("select_product")) return;
-  if (!ensureLinuxSelection()) return;
-  const issueKey = getIssueKey();
-  if (!issueKey) {
-    workflowState.last_error_code = "missing_issue_key";
-    setStatus("issue key is required before running end-to-end flow.");
-    return;
-  }
-
-  navigateToStep("sos_report");
-  const connected = await connectJira();
-  if (!connected?.connection_id) {
-    workflowState.current_step = "failed";
-    setStatus("End-to-end stopped at connect step.");
-    return;
-  }
-
-  const verified = await verifyConnection();
-  if (!verified) {
-    workflowState.current_step = "failed";
-    return;
-  }
-  if (verified.status !== "connected") {
-    workflowState.current_step = "failed";
-    setStatus(`End-to-end stopped at verify step (${verified.status ?? "unknown"}). Reconnect and retry.`);
-    return;
-  }
-
-  const generated = await callTool("generate_sosreport", {});
-  const fetchReference = String(generated.structuredContent?.fetch_reference ?? "");
-  if (generated.isError || !fetchReference) {
-    workflowState.current_step = "failed";
-    setStatus("End-to-end stopped at generate step.");
-    return;
-  }
-  fetchReferenceEl.value = fetchReference;
-  workflowState.fetch_reference = fetchReference;
-
-  const fetched = await callTool("fetch_sosreport", { fetch_reference: fetchReference });
-  const archivePath = String(fetched.structuredContent?.archive_path ?? "");
-  if (fetched.isError || !archivePath) {
-    workflowState.current_step = "failed";
-    setStatus("End-to-end stopped at fetch step.");
-    return;
-  }
-  artifactRefEl.value = archivePath;
-  workflowState.artifact_ref = archivePath;
-  navigateToStep("jira_attach");
-
-  const issueAccessOk = await verifyIssueReadAccess();
-  if (!issueAccessOk) {
-    workflowState.current_step = "failed";
-    setStatus("End-to-end stopped at issue-read verification step.");
-    return;
-  }
-
-  const attached = await callTool("jira_attach_artifact", {
-    connection_id: connected.connection_id,
-    issue_key: issueKey,
-    artifact_ref: archivePath,
-  });
-  if (attached.isError) {
-    workflowState.current_step = "failed";
-    setStatus("End-to-end stopped at attach step.");
-    return;
-  }
-  workflowState.current_step = "completed";
-  setStatus("End-to-end workflow completed: connect -> verify -> generate -> fetch -> attach.");
 });
 
 navStep1Btn.addEventListener("click", () => {
