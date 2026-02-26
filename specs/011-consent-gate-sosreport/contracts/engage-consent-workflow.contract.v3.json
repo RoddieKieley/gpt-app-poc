@@ -1,0 +1,112 @@
+{
+  "workflow": "engage_red_hat_support",
+  "version": "3.0",
+  "mode": "three_step_multi_resource_ui_with_backend_consent_gate",
+  "compatibility": {
+    "entryUri": "ui://engage-red-hat-support/app.html",
+    "entryUriMustRemainStable": true,
+    "existingToolNamesStable": true,
+    "allowedSchemaChange": [
+      "generate_sosreport.consent_token"
+    ]
+  },
+  "sequence": [
+    {
+      "step": 1,
+      "name": "select_product",
+      "allowedValues": [
+        "linux"
+      ],
+      "requiredOutputs": [
+        "selected_product"
+      ],
+      "stopOnFailure": true
+    },
+    {
+      "step": 2,
+      "name": "mint_consent_then_generate_and_fetch",
+      "requiredOperations": [
+        "POST /api/engage/consent-tokens",
+        "generate_sosreport(consent_token)",
+        "fetch_sosreport(fetch_reference)"
+      ],
+      "requiredOutputs": [
+        "consent_token",
+        "fetch_reference",
+        "artifact_ref"
+      ],
+      "prohibitedAutomaticBehaviors": [
+        "mint_consent_on_page_load",
+        "mint_consent_on_step_navigation",
+        "generate_on_page_load",
+        "generate_on_step_navigation"
+      ],
+      "stopOnFailure": true
+    },
+    {
+      "step": 3,
+      "name": "connect_verify_and_attach",
+      "requiredOperations": [
+        "POST /api/jira/connections",
+        "jira_connection_status or GET /api/jira/connections/{connection_id}",
+        "jira_list_attachments(connection_id, issue_key)",
+        "jira_attach_artifact(connection_id, issue_key, artifact_ref)"
+      ],
+      "requiredInputs": [
+        "connection_id",
+        "issue_key",
+        "artifact_ref"
+      ],
+      "stopOnFailure": true
+    }
+  ],
+  "consentGate": {
+    "tool": "generate_sosreport",
+    "requiredTokenClaims": [
+      "sub",
+      "session_id",
+      "scope",
+      "step",
+      "exp",
+      "jti"
+    ],
+    "requiredScope": "generate_sosreport",
+    "requiredStep": 2,
+    "tokenMustBeSigned": true,
+    "tokenSingleUse": true,
+    "consumeOnSuccess": true,
+    "replayMustFail": true
+  },
+  "nonUiFallback": {
+    "required": true,
+    "requiredSequence": [
+      "Call POST /api/engage/consent-tokens with explicit step=2 and scope=generate_sosreport",
+      "Call generate_sosreport with returned consent_token",
+      "Call fetch_sosreport with fetch_reference"
+    ]
+  },
+  "securityBoundary": {
+    "patBoundaryUnchanged": true,
+    "patAllowedOnlyAt": [
+      "POST /api/jira/connections"
+    ],
+    "forbiddenSecretLeakSurfaces": [
+      "mcp_tool_args",
+      "mcp_tool_results",
+      "prompts_or_transcripts",
+      "application_logs"
+    ]
+  },
+  "regressionRequirements": {
+    "unrelatedToolsResourcesUnchanged": true,
+    "requiredTestCases": [
+      "missing_token_denied",
+      "invalid_token_denied",
+      "expired_token_denied",
+      "replay_token_denied",
+      "wrong_user_token_denied",
+      "wrong_scope_token_denied",
+      "explicit_step2_click_happy_path"
+    ]
+  }
+}

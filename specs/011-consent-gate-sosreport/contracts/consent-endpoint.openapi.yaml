@@ -1,0 +1,116 @@
+openapi: 3.1.0
+info:
+  title: Engage Consent Token API
+  version: 1.0.0
+  description: API contract for explicit Step 2 consent minting before generate_sosreport.
+servers:
+  - url: https://example.invalid
+paths:
+  /api/engage/consent-tokens:
+    post:
+      summary: Mint one-time consent token for Step 2 generate
+      description: >
+        Mints a short-lived, signed consent token only for explicit human Step 2 action.
+        Token is later supplied to generate_sosreport and consumed on first successful use.
+      operationId: mintEngageConsentToken
+      security:
+        - UserContextHeader: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ConsentMintRequest"
+      responses:
+        "201":
+          description: Token minted successfully
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ConsentMintResponse"
+        "400":
+          description: Invalid mint request
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "401":
+          description: Missing user/session context
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "422":
+          description: Step or scope not allowed
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+components:
+  securitySchemes:
+    UserContextHeader:
+      type: apiKey
+      in: header
+      name: x-user-id
+  schemas:
+    ConsentMintRequest:
+      type: object
+      additionalProperties: false
+      required:
+        - workflow
+        - step
+        - requested_scope
+      properties:
+        workflow:
+          type: string
+          enum: [engage_red_hat_support]
+        step:
+          type: integer
+          enum: [2]
+        requested_scope:
+          type: string
+          enum: [generate_sosreport]
+        session_id:
+          type: string
+          minLength: 1
+        client_action_id:
+          type: string
+          minLength: 1
+    ConsentMintResponse:
+      type: object
+      additionalProperties: false
+      required:
+        - consent_token
+        - expires_at
+        - scope
+        - step
+        - text
+      properties:
+        consent_token:
+          type: string
+          description: Signed, short-lived, single-use consent evidence.
+        expires_at:
+          type: string
+          format: date-time
+        scope:
+          type: string
+          enum: [generate_sosreport]
+        step:
+          type: integer
+          enum: [2]
+        text:
+          type: string
+    ErrorResponse:
+      type: object
+      additionalProperties: false
+      required:
+        - code
+        - message
+        - text
+      properties:
+        code:
+          type: string
+        message:
+          type: string
+        text:
+          type: string

@@ -1,0 +1,71 @@
+{
+  "contract": "sensitive_tool_policy",
+  "version": "1.0",
+  "description": "Centralized policy contract for sensitive tool authorization using one-time consent evidence.",
+  "sensitiveTools": [
+    {
+      "name": "generate_sosreport",
+      "requiredInput": "consent_token",
+      "requiredScope": "generate_sosreport",
+      "requiredStep": 2,
+      "enforcementMode": "fail_closed"
+    }
+  ],
+  "validationRules": {
+    "signatureRequired": true,
+    "claimsRequired": [
+      "sub",
+      "session_id",
+      "scope",
+      "step",
+      "exp",
+      "jti"
+    ],
+    "expiryRequired": true,
+    "singleUseRequired": true,
+    "userBindingRequired": true,
+    "sessionBindingRequired": true
+  },
+  "denyOutcomes": [
+    {
+      "reasonCode": "consent_missing",
+      "mustRunTool": false,
+      "safeText": "Consent required: complete Step 2 Generate action to mint a token, then retry generate_sosreport."
+    },
+    {
+      "reasonCode": "consent_invalid",
+      "mustRunTool": false,
+      "safeText": "Consent token is invalid. Re-run Step 2 Generate to obtain a fresh token."
+    },
+    {
+      "reasonCode": "consent_expired",
+      "mustRunTool": false,
+      "safeText": "Consent token expired. Re-run Step 2 Generate to mint a new token."
+    },
+    {
+      "reasonCode": "consent_replayed",
+      "mustRunTool": false,
+      "safeText": "Consent token was already used. Re-run Step 2 Generate for a one-time token."
+    },
+    {
+      "reasonCode": "consent_wrong_user_or_session",
+      "mustRunTool": false,
+      "safeText": "Consent token does not match current user/session. Mint a new token from this session."
+    },
+    {
+      "reasonCode": "consent_wrong_scope_or_step",
+      "mustRunTool": false,
+      "safeText": "Consent token is not valid for this operation. Mint a Step 2 generate_sosreport token."
+    }
+  ],
+  "allowOutcome": {
+    "reasonCode": "authorized",
+    "mustRunTool": true,
+    "consumeJtiOnSuccess": true
+  },
+  "securityNotes": {
+    "patBoundaryUnchanged": true,
+    "noSecretLogging": true,
+    "noTokenEchoInErrorDetails": true
+  }
+}
