@@ -203,3 +203,29 @@ test("engage workflow contract enforces opaque connection_id and no PAT fields",
     assert.equal(keys.includes("token"), false, `token is forbidden in ${step.name}`);
   }
 });
+
+test("011 consent contract captures consent-gated step-2 requirements", async () => {
+  const file = path.join(
+    process.cwd(),
+    "specs",
+    "011-consent-gate-sosreport",
+    "contracts",
+    "engage-consent-workflow.contract.v3.json",
+  );
+  const raw = await fs.readFile(file, "utf8");
+  const contract = JSON.parse(raw) as {
+    compatibility: { entryUri: string };
+    sequence: Array<{ name: string; requiredOperations?: string[]; prohibitedAutomaticBehaviors?: string[] }>;
+    consentGate: { requiredScope: string; requiredStep: number; tokenSingleUse: boolean; replayMustFail: boolean };
+  };
+  assert.equal(contract.compatibility.entryUri, ENGAGE_UI_URI);
+  const step2 = contract.sequence.find((step) => step.name === "mint_consent_then_generate_and_fetch");
+  assert.ok(step2, "missing 011 consent-gated step 2");
+  assert.ok(step2?.requiredOperations?.includes("POST /api/engage/consent-tokens"));
+  assert.ok(step2?.requiredOperations?.includes("generate_sosreport(consent_token)"));
+  assert.ok(step2?.prohibitedAutomaticBehaviors?.includes("generate_on_page_load"));
+  assert.equal(contract.consentGate.requiredScope, "generate_sosreport");
+  assert.equal(contract.consentGate.requiredStep, 2);
+  assert.equal(contract.consentGate.tokenSingleUse, true);
+  assert.equal(contract.consentGate.replayMustFail, true);
+});

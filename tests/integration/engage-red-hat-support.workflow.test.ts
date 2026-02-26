@@ -70,7 +70,7 @@ test("step-2 handoff requires fetch_reference before fetch and produces artifact
   await fs.writeFile(sourceArchive, "step2-handoff-content", "utf8");
 
   const generated = await handleGenerateSosreport(
-    {},
+    { consent_token: "test-consent-token" },
     {
       runGenerate: async () => ({
         exitCode: 0,
@@ -129,6 +129,34 @@ test("engage flow blocks expired connections", async () => {
   assert.equal(derived?.status, "expired");
 });
 
+test("step-2 UI flow explicitly mints consent before generate and avoids auto collection", async () => {
+  const uiFile = path.join(process.cwd(), "src", "mcp-app.ts");
+  const uiSource = await fs.readFile(uiFile, "utf8");
+
+  assert.ok(
+    uiSource.includes('fetch(apiUrl("/api/engage/consent-tokens")'),
+    "Step 2 UI must mint consent token from backend endpoint",
+  );
+  assert.ok(
+    uiSource.includes('callTool("generate_sosreport", { consent_token: consentToken })'),
+    "generate_sosreport call must pass consent_token",
+  );
+  const bootstrapStart = uiSource.indexOf("const bootstrapRoute = () => {");
+  const bootstrapEnd = uiSource.indexOf("bootstrapRoute();");
+  assert.ok(bootstrapStart >= 0 && bootstrapEnd > bootstrapStart, "bootstrapRoute block must exist");
+  const bootstrapBlock = uiSource.slice(bootstrapStart, bootstrapEnd);
+  assert.equal(
+    bootstrapBlock.includes("generate_sosreport"),
+    false,
+    "bootstrapRoute must not auto-generate diagnostics",
+  );
+  assert.equal(
+    bootstrapBlock.includes("/api/engage/consent-tokens"),
+    false,
+    "bootstrapRoute must not auto-mint consent",
+  );
+});
+
 test("end-to-end connect -> connection_id -> generate -> fetch -> attach succeeds", async () => {
   const { srv, base } = await startServer("e2e");
 
@@ -152,7 +180,7 @@ test("end-to-end connect -> connection_id -> generate -> fetch -> attach succeed
     const sourceArchive = path.join("/tmp", `sosreport-engage-${randomUUID()}.tar.xz`);
     await fs.writeFile(sourceArchive, "engage-sosreport-content", "utf8");
     const generated = await handleGenerateSosreport(
-      {},
+      { consent_token: "test-consent-token" },
       {
         runGenerate: async () => ({
           exitCode: 0,

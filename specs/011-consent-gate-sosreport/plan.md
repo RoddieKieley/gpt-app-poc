@@ -210,6 +210,13 @@ tests/unit/
 - **Risk**: Overly verbose errors may leak validation internals.
   - **Handling**: standardized safe denial text with operator guidance only.
 
+## Verification Status
+
+- `npm run test:unit` passed after consent token and policy module implementation.
+- `npm run test:contract` passed with updated consent-aware workflow/tool contract assertions.
+- `npm run test:integration` passed with consent denial matrix and Step 2 explicit flow assertions.
+- `npm run test:regression` passed with unchanged unrelated tool/resource surfaces and no-secret leakage checks.
+
 ## Complexity Tracking
 
 No constitution violations to justify.

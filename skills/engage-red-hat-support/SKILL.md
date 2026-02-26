@@ -17,7 +17,9 @@ generates and fetches a local sosreport artifact, and attaches it to a Jira issu
    - Select `linux` to proceed.
    - Stop if product is non-Linux; this workflow is Linux-only.
 2. Step 2 - Generate and fetch sos report:
-   - Run `generate_sosreport`.
+   - Explicitly mint consent token via `POST /api/engage/consent-tokens` with
+     `workflow=engage_red_hat_support`, `step=2`, `requested_scope=generate_sosreport`.
+   - Run `generate_sosreport` with `consent_token` from mint response.
    - Run `fetch_sosreport` with the returned `fetch_reference`.
    - Keep `artifact_ref` for step 3.
 3. Step 3 - Connect Jira and attach:
@@ -32,7 +34,9 @@ generates and fetches a local sosreport artifact, and attaches it to a Jira issu
 ## Security Boundary
 
 - PAT is accepted only via the secure backend connection endpoint.
-- MCP tool calls must use opaque `connection_id`; never pass PAT or tokens in MCP args.
+- MCP tool calls must use opaque `connection_id`; never pass PAT or long-lived credentials in MCP args.
+- The only token accepted in MCP args is step-scoped `consent_token` for
+  `generate_sosreport`; it is short-lived, single-use, and user/session bound.
 - Status/error messages should remain secret-safe and avoid credential echoes.
 
 ## Expected Outcome

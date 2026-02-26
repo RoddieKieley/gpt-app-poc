@@ -2,6 +2,7 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import fs from "node:fs/promises";
 import path from "node:path";
+import { createMcpJsonRpcClient, startConsentTestServer } from "../integration/consent-test-helpers.js";
 
 test("MCP tool contracts contain no secret-bearing fields", async () => {
   const file = path.join(
@@ -73,5 +74,29 @@ test("pat secrecy validation contract enforces no secret leakage surfaces", asyn
   const assertions = data.validationMatrix.flatMap((entry) => entry.assertions ?? []);
   assert.ok(assertions.some((entry) => entry.includes("jira_list_attachments")));
   assert.ok(assertions.some((entry) => entry.includes("do not echo PAT")));
+});
+
+test("consent deny paths do not echo raw token material", async () => {
+  const rawToken = "raw-secret-consent-token-value";
+  const { srv, base } = await startConsentTestServer("no-token-echo");
+  try {
+    const client = createMcpJsonRpcClient(base, "no-token-user");
+    await client.initialize();
+    const result = (await client.call("tools/call", {
+      name: "generate_sosreport",
+      arguments: { consent_token: `${rawToken}-tampered` },
+    })) as {
+      isError?: boolean;
+      content?: Array<{ type?: string; text?: string }>;
+      structuredContent?: Record<string, unknown>;
+    };
+    assert.equal(result.isError, true);
+    const text = result.content?.find((entry) => entry.type === "text")?.text ?? "";
+    assert.equal(text.includes(rawToken), false);
+    const serialized = JSON.stringify(result.structuredContent ?? {});
+    assert.equal(serialized.includes(rawToken), false);
+  } finally {
+    srv.close();
+  }
 });
 

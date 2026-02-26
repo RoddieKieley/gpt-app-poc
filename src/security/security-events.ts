@@ -6,7 +6,9 @@ export type SecurityEventAction =
   | "list_attachments"
   | "attach"
   | "revoke"
-  | "expire";
+  | "expire"
+  | "consent_mint"
+  | "consent_authorize";
 
 export type SecurityEvent = {
   action: SecurityEventAction;

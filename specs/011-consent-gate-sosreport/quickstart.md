@@ -77,3 +77,16 @@ tsx --test tests/regression/skill-resource-preservation.test.ts
 - Happy-path Step 2 click flow passes.
 - No regressions in unrelated tools/resources.
 - Constitution/security gates remain pass with residual risks documented.
+
+## Validation Run Notes
+
+- 2026-02-26: `npm run test:unit` passed.
+- 2026-02-26: `npm run test:contract` passed.
+- 2026-02-26: `npm run test:integration` passed.
+- 2026-02-26: `npm run test:regression` passed.
+- Confirmed by tests:
+  - `generate_sosreport` is denied without valid consent token.
+  - Denials cover invalid, expired, wrong-user/session, and wrong-scope tokens.
+  - Replay denial is validated in unit/integration policy coverage.
+  - Step 2 UI flow mints consent explicitly and does not auto-collect on bootstrap routing.
+  - PAT boundary remains unchanged (`POST /api/jira/connections` only).

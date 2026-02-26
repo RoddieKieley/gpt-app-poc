@@ -2,6 +2,7 @@ const SECRET_PATTERNS: RegExp[] = [
   /(authorization\s*:\s*)(bearer\s+)?[a-z0-9._~+/=-]+/gi,
   /("authorization"\s*:\s*")(bearer\s+)?([^"]+)(")/gi,
   /("pat"\s*:\s*")([^"]+)(")/gi,
+  /("consent_token"\s*:\s*")([^"]+)(")/gi,
   /("token"\s*:\s*")([^"]+)(")/gi,
   /(pat\s*[:=]\s*)[^\s,]+/gi,
   /(token\s*[:=]\s*)[^\s,]+/gi,
@@ -17,6 +18,7 @@ export const redactSecrets = (value: string): string =>
           const match = String(args[0]);
           if (match.startsWith("\"authorization\"")) return "\"authorization\":\"[REDACTED]\"";
           if (match.startsWith("\"pat\"")) return "\"pat\":\"[REDACTED]\"";
+          if (match.startsWith("\"consent_token\"")) return "\"consent_token\":\"[REDACTED]\"";
           if (match.startsWith("\"token\"")) return "\"token\":\"[REDACTED]\"";
           const p1 = typeof args[1] === "string" ? args[1] : "";
           return `${p1}[REDACTED]`;

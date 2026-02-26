@@ -31,6 +31,8 @@ import { ConnectionLifecycleStore } from "./src/security/connection-lifecycle.js
 import { sanitizeForLog, safeError } from "./src/security/redaction.js";
 import { TokenVault } from "./src/security/token-vault.js";
 import { emitSecurityEvent } from "./src/security/security-events.js";
+import { ConsentTokenService } from "./src/security/consent-token-service.js";
+import { authorizeSensitiveToolCall } from "./src/security/sensitive-tool-policy.js";
 import { fetchSosreportSchema, generateSosreportSchema } from "./src/sosreport/sosreport-tool-schemas.js";
 import { handleFetchSosreport, handleGenerateSosreport } from "./src/sosreport/sosreport-tool-handlers.js";
 
@@ -39,9 +41,35 @@ const jiraClient = new JiraClient();
 const lifecycleStore = new ConnectionLifecycleStore();
 const tokenVault = new TokenVault();
 const DEFAULT_USER_ID = "default-user";
+const DEFAULT_TEST_CONSENT_SIGNING_KEY = "test-consent-signing-key";
+const DEFAULT_CONSENT_TTL_SECONDS = 120;
 const USER_ID_DEBUG_ENABLED = process.env.DEBUG_USER_ID_RESOLUTION === "1";
 
+const parsePositiveInteger = (value: string | undefined, fallback: number): number => {
+  const parsed = Number.parseInt(value ?? "", 10);
+  if (!Number.isFinite(parsed) || parsed <= 0) return fallback;
+  return parsed;
+};
+
+const resolveConsentSigningKey = (): string => {
+  const configured = process.env.CONSENT_TOKEN_SIGNING_KEY?.trim();
+  if (configured && configured.length > 0) return configured;
+  if (process.env.NODE_ENV === "test") return DEFAULT_TEST_CONSENT_SIGNING_KEY;
+  throw new Error("CONSENT_TOKEN_SIGNING_KEY is required in non-test environments.");
+};
+
+const consentTokenService = new ConsentTokenService({
+  signingKey: resolveConsentSigningKey(),
+  ttlSeconds: parsePositiveInteger(process.env.CONSENT_TOKEN_TTL_SECONDS, DEFAULT_CONSENT_TTL_SECONDS),
+});
+
 const normalizeUserId = (candidate: unknown): string | null => {
+  if (typeof candidate !== "string") return null;
+  const trimmed = candidate.trim();
+  return trimmed.length > 0 ? trimmed : null;
+};
+
+const normalizeSessionId = (candidate: unknown): string | null => {
   if (typeof candidate !== "string") return null;
   const trimmed = candidate.trim();
   return trimmed.length > 0 ? trimmed : null;
@@ -75,6 +103,23 @@ const resolveMcpUserId = (authInfo: unknown): string => {
   const resolved = resolveUserId(raw);
   debugResolvedUserId("mcp", raw, resolved);
   return resolved;
+};
+
+const resolveMcpSessionId = (extra: unknown, userId: string): string => {
+  const details = extra as
+    | {
+        sessionId?: unknown;
+        session_id?: unknown;
+        requestInfo?: { sessionId?: unknown; session_id?: unknown };
+      }
+    | undefined;
+  return (
+    normalizeSessionId(details?.sessionId)
+    ?? normalizeSessionId(details?.session_id)
+    ?? normalizeSessionId(details?.requestInfo?.sessionId)
+    ?? normalizeSessionId(details?.requestInfo?.session_id)
+    ?? `mcp-session:${userId}`
+  );
 };
 
 type JiraConnectionResponse = {
@@ -205,6 +250,13 @@ const loadEngageWidgetHtml = async (): Promise<string> => {
 };
 
 const GET_SKILL_INPUT_SCHEMA = z.object({ uri: z.string().min(1, "skill URI is required") });
+const CONSENT_MINT_SCHEMA = z.object({
+  workflow: z.literal("engage_red_hat_support"),
+  step: z.literal(2),
+  requested_scope: z.literal("generate_sosreport"),
+  session_id: z.string().min(1).optional(),
+  client_action_id: z.string().min(1).optional(),
+});
 
 registerAppTool(
   server,
@@ -319,7 +371,42 @@ registerAppTool(
       "openai/widgetAccessible": true,
     },
   },
-  async (args) => handleGenerateSosreport(args),
+  async (args, extra) => {
+    const userId = resolveMcpUserId(extra?.authInfo);
+    const sessionId = resolveMcpSessionId(extra, userId);
+    const decision = authorizeSensitiveToolCall({
+      toolName: "generate_sosreport",
+      consentToken: args.consent_token,
+      userId,
+      sessionId,
+      consentService: consentTokenService,
+    });
+    if (!decision.allowed) {
+      emitSecurityEvent({
+        action: "consent_authorize",
+        outcome: "denied",
+        userId,
+        errorCode: decision.reasonCode,
+      });
+      return {
+        isError: true,
+        content: [{ type: "text", text: decision.safeText }],
+        structuredContent: {
+          code: decision.reasonCode,
+        },
+      };
+    }
+    const result = await handleGenerateSosreport(args);
+    consentTokenService.finalizeSingleUse(decision.claims.jti, !result.isError);
+    emitSecurityEvent({
+      action: "consent_authorize",
+      outcome: result.isError ? "failed" : "success",
+      userId,
+      errorCode: result.isError ? "generate_failed" : undefined,
+      details: { scope: decision.claims.scope, step: decision.claims.step },
+    });
+    return result;
+  },
 );
 
 registerAppTool(
@@ -564,6 +651,7 @@ export const createApp = () => {
   app.use((req, _res, next) => {
     const raw = { httpHeaderUserId: req.header("x-user-id") };
     req.userId = resolveUserId(raw);
+    req.sessionId = normalizeSessionId(req.header("x-session-id")) ?? `http-session:${req.userId}`;
     debugResolvedUserId("http", raw, req.userId);
     next();
   });
@@ -608,6 +696,48 @@ export const createApp = () => {
           "For help, visit https://leisured-carina-unpromotable.ngrok-free.dev/support.",
         ].join("\n"),
       );
+  });
+
+  app.post("/api/engage/consent-tokens", (req, res) => {
+    const parsed = CONSENT_MINT_SCHEMA.safeParse(req.body);
+    if (!parsed.success) {
+      emitSecurityEvent({
+        action: "consent_mint",
+        outcome: "failed",
+        userId: req.userId,
+        errorCode: "validation_error",
+      });
+      return res.status(400).json({
+        code: "validation_error",
+        message: "Invalid consent mint request.",
+        text: "Consent mint request is invalid. Retry Step 2 Generate.",
+      });
+    }
+    const sessionId = normalizeSessionId(parsed.data.session_id) ?? req.sessionId;
+    const minted = consentTokenService.mint({
+      userId: req.userId,
+      sessionId,
+      scope: "generate_sosreport",
+      step: 2,
+    });
+    emitSecurityEvent({
+      action: "consent_mint",
+      outcome: "success",
+      userId: req.userId,
+      details: {
+        scope: minted.claims.scope,
+        step: minted.claims.step,
+        sessionId,
+        clientActionId: parsed.data.client_action_id,
+      },
+    });
+    return res.status(201).json({
+      consent_token: minted.token,
+      expires_at: minted.expiresAt,
+      scope: minted.claims.scope,
+      step: minted.claims.step,
+      text: "Consent token minted for Step 2 generate_sosreport.",
+    });
   });
 
   app.post("/api/jira/connection", (_req, res) => {
@@ -849,6 +979,7 @@ declare global {
   namespace Express {
     interface Request {
       userId: string;
+      sessionId: string;
     }
   }
 }

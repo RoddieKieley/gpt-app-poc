@@ -35,6 +35,7 @@
 
 ### Runtime Notes
 
+- `generate_sosreport` requires explicit consent token minted via `POST /api/engage/consent-tokens`.
 - `generate_sosreport` fails fast when `sos` is unavailable.
 - `generate_sosreport` requires `sudo -n`; password prompts are not supported.
 - `fetch_sosreport` reads a validated local archive and writes a copied file to `/tmp`.
@@ -61,8 +62,9 @@
 - Compatibility entry URI remains `ui://engage-red-hat-support/app.html`.
 - End-to-end 3-step sequence:
   1. Select product (`linux` only).
-  2. Run `generate_sosreport`, then `fetch_sosreport` to obtain `artifact_ref`.
+  2. Mint one-time consent token with `POST /api/engage/consent-tokens`, run `generate_sosreport` with `consent_token`, then `fetch_sosreport` to obtain `artifact_ref`.
   3. Connect with PAT through `POST /api/jira/connections`, verify active `connection_id`, verify issue read access with `jira_list_attachments`, then run `jira_attach_artifact`.
+- Step 2 consent validation denies requests when token is missing, invalid, expired, replayed, wrong-user/session, or wrong-scope/step.
 
 ### Lifecycle gating
 

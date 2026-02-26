@@ -78,6 +78,7 @@ const workflowState: WorkflowState = {
   current_step: "select_product",
   issue_access_verified: false,
 };
+const consentSessionId = `ui-${crypto.randomUUID()}`;
 
 const app = new App({ name: "MCP Apps Support Workflows", version: "1.0.0" });
 
@@ -306,6 +307,35 @@ const verifyIssueReadAccess = async (): Promise<boolean> => {
   return true;
 };
 
+const mintGenerateConsentToken = async (): Promise<string | null> => {
+  try {
+    const response = await fetch(apiUrl("/api/engage/consent-tokens"), {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "x-session-id": consentSessionId,
+      },
+      body: JSON.stringify({
+        workflow: "engage_red_hat_support",
+        step: 2,
+        requested_scope: "generate_sosreport",
+        session_id: consentSessionId,
+        client_action_id: `step2-generate-${Date.now()}`,
+      }),
+    });
+    const body = await response.json() as { consent_token?: string; text?: string };
+    if (!response.ok || !body.consent_token) {
+      setStatus(body.text ?? "Consent mint failed. Retry Step 2 Generate.");
+      return null;
+    }
+    return body.consent_token;
+  } catch (error) {
+    const message = error instanceof Error ? error.message : String(error);
+    setStatus(`Consent mint request failed (${message}).`);
+    return null;
+  }
+};
+
 connectBtn.addEventListener("click", async () => {
   await connectJira();
 });
@@ -327,7 +357,13 @@ generateBtn.addEventListener("click", async () => {
   if (!navigateToStep("sos_report")) return;
   if (!ensureLinuxSelection()) return;
   // Diagnostic collection must only occur on explicit user action in Step 2.
-  const generated = await callTool("generate_sosreport", {});
+  const consentToken = await mintGenerateConsentToken();
+  if (!consentToken) {
+    workflowState.last_error_code = "consent_mint_failed";
+    workflowState.current_step = "failed";
+    return;
+  }
+  const generated = await callTool("generate_sosreport", { consent_token: consentToken });
   const fetchReference = String(generated.structuredContent?.fetch_reference ?? "");
   if (generated.isError || !fetchReference) {
     workflowState.last_error_code = "generate_failed";

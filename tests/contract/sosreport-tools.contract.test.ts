@@ -55,6 +55,7 @@ test("sosreport tools are registered with expected metadata", async () => {
     const listed = (await jsonRpc("tools/list")) as {
       tools?: Array<{
         name: string;
+        inputSchema?: { properties?: Record<string, unknown>; required?: string[] };
         annotations?: { readOnlyHint?: boolean; destructiveHint?: boolean; openWorldHint?: boolean };
         _meta?: Record<string, unknown>;
       }>;
@@ -66,6 +67,8 @@ test("sosreport tools are registered with expected metadata", async () => {
     assert.equal(generateTool?.annotations?.destructiveHint, false);
     assert.equal(generateTool?.annotations?.openWorldHint, false);
     assert.equal(generateTool?._meta?.["openai/outputTemplate"], "ui://engage-red-hat-support/app.html");
+    const generateSchemaProps = Object.keys(generateTool?.inputSchema?.properties ?? {});
+    assert.ok(generateSchemaProps.includes("consent_token"), "generate_sosreport must expose consent_token input");
 
     const fetchTool = listed.tools?.find((tool) => tool.name === "fetch_sosreport");
     assert.ok(fetchTool, "fetch_sosreport tool missing");

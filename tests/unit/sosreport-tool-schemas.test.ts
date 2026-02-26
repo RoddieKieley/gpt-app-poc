@@ -4,6 +4,7 @@ import { fetchSosreportSchema, generateSosreportSchema } from "../../src/sosrepo
 
 test("generate schema accepts valid options", () => {
   const parsed = generateSosreportSchema.parse({
+    consent_token: "consent-token",
     only_plugins: ["networking", "kernel-1"],
     log_size: "25m",
     redaction: true,
@@ -15,6 +16,7 @@ test("generate schema accepts valid options", () => {
 
 test("generate schema rejects only_plugins conflicts", () => {
   const result = generateSosreportSchema.safeParse({
+    consent_token: "consent-token",
     only_plugins: ["networking"],
     enable_plugins: ["logs"],
   });
@@ -23,6 +25,7 @@ test("generate schema rejects only_plugins conflicts", () => {
 
 test("generate schema rejects invalid plugin name", () => {
   const result = generateSosreportSchema.safeParse({
+    consent_token: "consent-token",
     enable_plugins: ["net*work"],
   });
   assert.equal(result.success, false);
@@ -30,9 +33,17 @@ test("generate schema rejects invalid plugin name", () => {
 
 test("generate schema rejects invalid log_size", () => {
   const result = generateSosreportSchema.safeParse({
+    consent_token: "consent-token",
     log_size: "20mb",
   });
   assert.equal(result.success, false);
+});
+
+test("generate schema accepts request without consent_token for middleware enforcement", () => {
+  const result = generateSosreportSchema.safeParse({
+    enable_plugins: ["networking"],
+  });
+  assert.equal(result.success, true);
 });
 
 test("fetch schema requires fetch_reference", () => {
