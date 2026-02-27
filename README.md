@@ -105,7 +105,7 @@ Technical readiness details live under `specs/003-chatgpt-app-technical-readines
   - UI/skill orchestrates existing tools and endpoints
   - no new MCP orchestration tool is introduced
 - Required 3-step conversational workflow:
-  1. select product (linux only)
+  1. start workflow + select product (linux only) (`start_engage_red_hat_support` -> `select_engage_product`)
   2. explicit consent mint + generate + fetch sos report (`POST /api/engage/consent-tokens` -> `generate_sosreport(consent_token)` -> `fetch_sosreport`)
   3. connect Jira via secure intake, verify connection, verify issue read access (`jira_list_attachments`), then attach (`jira_attach_artifact`)
 - Step 2 safeguards:

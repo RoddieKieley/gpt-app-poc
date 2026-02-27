@@ -61,7 +61,7 @@
 - Product scope is Linux-only for this workflow.
 - Compatibility entry URI remains `ui://engage-red-hat-support/app.html`.
 - End-to-end 3-step sequence:
-  1. Select product (`linux` only).
+  1. Start workflow and select product (`linux` only) via `start_engage_red_hat_support` + `select_engage_product` (or HTTP workflow start/select endpoints for UI flow).
   2. Mint one-time consent token with `POST /api/engage/consent-tokens`, run `generate_sosreport` with `consent_token`, then `fetch_sosreport` to obtain `artifact_ref`.
   3. Connect with PAT through `POST /api/jira/connections`, verify active `connection_id`, verify issue read access with `jira_list_attachments`, then run `jira_attach_artifact`.
 - Step 2 consent validation denies requests when token is missing, invalid, expired, replayed, wrong-user/session, or wrong-scope/step.

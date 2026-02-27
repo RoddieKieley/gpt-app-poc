@@ -34,7 +34,10 @@ export type PolicyDecision =
 const denyTextFor = (reasonCode: Exclude<PolicyReasonCode, "authorized">): string => {
   switch (reasonCode) {
     case "consent_missing":
-      return "Consent required: complete Step 2 Generate action to mint a token, then retry generate_sosreport.";
+      return [
+        "Consent required before diagnostics.",
+        "Complete Step 1 product selection first, then request Step 2 consent and retry generate_sosreport.",
+      ].join(" ");
     case "consent_invalid":
       return "Consent token is invalid. Re-run Step 2 Generate to obtain a fresh token.";
     case "consent_expired":

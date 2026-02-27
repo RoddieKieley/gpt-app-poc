@@ -72,6 +72,25 @@ export const mintConsentToken = async (input: {
   scope?: string;
   step?: number;
 }) => {
+  await fetch(`${input.base}/api/engage/workflow/start`, {
+    method: "POST",
+    headers: {
+      "content-type": "application/json",
+      "x-user-id": input.userId,
+      "x-session-id": input.sessionId,
+    },
+    body: JSON.stringify({ session_id: input.sessionId }),
+  });
+  await fetch(`${input.base}/api/engage/workflow/select-product`, {
+    method: "POST",
+    headers: {
+      "content-type": "application/json",
+      "x-user-id": input.userId,
+      "x-session-id": input.sessionId,
+    },
+    body: JSON.stringify({ session_id: input.sessionId, product: "linux" }),
+  });
+
   const response = await fetch(`${input.base}/api/engage/consent-tokens`, {
     method: "POST",
     headers: {

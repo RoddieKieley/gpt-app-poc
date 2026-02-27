@@ -29,7 +29,7 @@ test("denies missing token with safe text", () => {
   assert.equal(decision.allowed, false);
   if (!decision.allowed) {
     assert.equal(decision.reasonCode, "consent_missing");
-    assert.ok(decision.safeText.includes("Step 2 Generate"));
+    assert.ok(decision.safeText.includes("Step 1"));
   }
 });
 

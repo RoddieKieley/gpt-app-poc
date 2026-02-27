@@ -11,6 +11,7 @@ const pluginListSchema = z
 export const generateSosreportSchema = z
   .object({
     consent_token: z.string().min(1, "consent_token is required").optional(),
+    workflow_session_id: z.string().min(1, "workflow_session_id is required").optional(),
     only_plugins: pluginListSchema,
     enable_plugins: pluginListSchema,
     disable_plugins: pluginListSchema,

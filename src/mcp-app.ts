@@ -13,7 +13,7 @@ const connectBtn = document.getElementById("connect-btn");
 const verifyBtn = document.getElementById("verify-btn");
 const statusBtn = document.getElementById("status-btn");
 const generateBtn = document.getElementById("generate-btn");
-const fetchBtn = document.getElementById("fetch-btn");
+const fetchBtn = document.getElementById("fetch-btn") as HTMLButtonElement | null;
 const listBtn = document.getElementById("list-btn");
 const attachBtn = document.getElementById("attach-btn");
 const disconnectBtn = document.getElementById("disconnect-btn");
@@ -48,6 +48,7 @@ type ToolResult = {
 
 type CallToolOptions = {
   redactErrorDetails?: boolean;
+  suppressStatusUpdate?: boolean;
 };
 
 type ConnectResponse = {
@@ -79,6 +80,7 @@ const workflowState: WorkflowState = {
   issue_access_verified: false,
 };
 const consentSessionId = `ui-${crypto.randomUUID()}`;
+let workflowSessionId: string | null = null;
 
 const app = new App({ name: "MCP Apps Support Workflows", version: "1.0.0" });
 
@@ -100,7 +102,27 @@ try {
   statusEl.textContent = `Widget connection failed: ${message}`;
 }
 
+const hydrateWorkflowFromToolResult = (result: ToolResult): void => {
+  const structured = result.structuredContent ?? {};
+  const fetchReference = String(structured.fetch_reference ?? "").trim();
+  if (fetchReference) {
+    fetchReferenceEl.value = fetchReference;
+    workflowState.fetch_reference = fetchReference;
+    workflowState.current_step = "sos_report";
+  }
+
+  const archivePath = String(structured.archive_path ?? "").trim();
+  if (archivePath) {
+    artifactRefEl.value = archivePath;
+    workflowState.artifact_ref = archivePath;
+    workflowState.current_step = "sos_report";
+  }
+
+  syncFetchButtonState();
+};
+
 app.ontoolresult = (result) => {
+  hydrateWorkflowFromToolResult(result as ToolResult);
   const text = result.content?.find((item) => item.type === "text")?.text;
   statusEl.textContent = text ?? "Tool executed.";
 };
@@ -108,6 +130,10 @@ app.ontoolresult = (result) => {
 const setStatus = (message: string) => {
   statusEl.textContent = message;
 };
+
+function syncFetchButtonState(): void {
+  fetchBtn.disabled = fetchReferenceEl.value.trim().length === 0;
+}
 
 const setStepVisible = (step: WorkflowStep) => {
   step1Section.hidden = step !== "select_product";
@@ -165,6 +191,12 @@ const getConnectionId = (): string => connectionIdEl.value.trim();
 const getIssueKey = (): string => issueKeyEl.value.trim();
 const getFetchReference = (): string => fetchReferenceEl.value.trim();
 
+fetchReferenceEl.addEventListener("input", () => {
+  const value = fetchReferenceEl.value.trim();
+  workflowState.fetch_reference = value || undefined;
+  syncFetchButtonState();
+});
+
 const callTool = async (
   name: string,
   args: Record<string, unknown>,
@@ -175,8 +207,11 @@ const callTool = async (
       name,
       arguments: args,
     })) as ToolResult;
+    hydrateWorkflowFromToolResult(result);
     const text = result.content?.find((item) => item.type === "text")?.text;
-    setStatus(text ?? "Operation completed.");
+    if (!options.suppressStatusUpdate) {
+      setStatus(text ?? "Operation completed.");
+    }
     return result;
   } catch (error) {
     const message = error instanceof Error ? error.message : String(error);
@@ -320,6 +355,7 @@ const mintGenerateConsentToken = async (): Promise<string | null> => {
         step: 2,
         requested_scope: "generate_sosreport",
         session_id: consentSessionId,
+        workflow_session_id: workflowSessionId ?? undefined,
         client_action_id: `step2-generate-${Date.now()}`,
       }),
     });
@@ -334,6 +370,83 @@ const mintGenerateConsentToken = async (): Promise<string | null> => {
     setStatus(`Consent mint request failed (${message}).`);
     return null;
   }
+};
+
+const startWorkflowSession = async (): Promise<boolean> => {
+  try {
+    const response = await fetch(apiUrl("/api/engage/workflow/start"), {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "x-session-id": consentSessionId,
+      },
+      body: JSON.stringify({ session_id: consentSessionId }),
+    });
+    const body = await response.json() as { workflow_session_id?: string; text?: string };
+    if (!response.ok || !body.workflow_session_id) {
+      setStatus(body.text ?? "Unable to start workflow session.");
+      return false;
+    }
+    workflowSessionId = body.workflow_session_id;
+    return true;
+  } catch (error) {
+    const message = error instanceof Error ? error.message : String(error);
+    setStatus(`Workflow start failed (${message}).`);
+    return false;
+  }
+};
+
+const submitProductSelection = async (): Promise<boolean> => {
+  try {
+    const response = await fetch(apiUrl("/api/engage/workflow/select-product"), {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "x-session-id": consentSessionId,
+      },
+      body: JSON.stringify({
+        session_id: consentSessionId,
+        workflow_session_id: workflowSessionId ?? undefined,
+        product: "linux",
+      }),
+    });
+    const body = await response.json() as { text?: string };
+    if (!response.ok) {
+      setStatus(body.text ?? "Step 1 product selection failed.");
+      return false;
+    }
+    return true;
+  } catch (error) {
+    const message = error instanceof Error ? error.message : String(error);
+    setStatus(`Step 1 product submission failed (${message}).`);
+    return false;
+  }
+};
+
+type GenerateJobResponse = {
+  status?: string;
+  fetch_reference?: string;
+  text?: string;
+  error_code?: string;
+};
+
+const pollGenerateJobUntilTerminal = async (jobId: string): Promise<GenerateJobResponse | null> => {
+  for (let attempt = 0; attempt < 120; attempt += 1) {
+    const result = await callTool(
+      "get_generate_sosreport_status",
+      { job_id: jobId },
+      { suppressStatusUpdate: true },
+    );
+    if (!result.isError) {
+      const body = (result.structuredContent ?? {}) as GenerateJobResponse;
+      const status = String(body.status ?? "").trim();
+      if (status === "succeeded" || status === "failed") {
+        return body;
+      }
+    }
+    await new Promise((resolve) => setTimeout(resolve, 2000));
+  }
+  return null;
 };
 
 connectBtn.addEventListener("click", async () => {
@@ -356,6 +469,10 @@ statusBtn.addEventListener("click", async () => {
 generateBtn.addEventListener("click", async () => {
   if (!navigateToStep("sos_report")) return;
   if (!ensureLinuxSelection()) return;
+  // Prevent stale fetch actions while a new generate is in-flight.
+  fetchReferenceEl.value = "";
+  workflowState.fetch_reference = undefined;
+  syncFetchButtonState();
   // Diagnostic collection must only occur on explicit user action in Step 2.
   const consentToken = await mintGenerateConsentToken();
   if (!consentToken) {
@@ -363,18 +480,56 @@ generateBtn.addEventListener("click", async () => {
     workflowState.current_step = "failed";
     return;
   }
-  const generated = await callTool("generate_sosreport", { consent_token: consentToken });
-  const fetchReference = String(generated.structuredContent?.fetch_reference ?? "");
-  if (generated.isError || !fetchReference) {
+  const generated = await callTool("generate_sosreport", {
+    consent_token: consentToken,
+    workflow_session_id: workflowSessionId ?? undefined,
+  });
+  const fetchReference = String(generated.structuredContent?.fetch_reference ?? "").trim();
+  const generateJobId = String(generated.structuredContent?.job_id ?? "").trim();
+  if (generated.isError) {
+    const reason =
+      generated.content?.find((item) => item.type === "text")?.text
+      ?? "Fix the error and retry generate.";
     workflowState.last_error_code = "generate_failed";
     workflowState.current_step = "failed";
-    setStatus("Generate step failed. Fix the error and retry generate.");
+    setStatus(`Generate step failed. ${reason}`);
     return;
   }
-  fetchReferenceEl.value = fetchReference;
-  workflowState.fetch_reference = fetchReference;
-  workflowState.current_step = "sos_report";
-  setStatus("Generate succeeded. Proceed to fetch_sosreport.");
+  if (fetchReference) {
+    fetchReferenceEl.value = fetchReference;
+    workflowState.fetch_reference = fetchReference;
+    syncFetchButtonState();
+    workflowState.current_step = "sos_report";
+    setStatus("Generate succeeded. Proceed to fetch_sosreport.");
+    return;
+  }
+  if (!generateJobId) {
+    setStatus("Generate accepted. Waiting for completion status...");
+    return;
+  }
+
+  setStatus("Generate started. Waiting for completion status...");
+  const finalState = await pollGenerateJobUntilTerminal(generateJobId);
+  if (!finalState) {
+    setStatus("Generate is still running. Keep this page open and retry in a few seconds.");
+    return;
+  }
+  if (String(finalState.status ?? "") === "failed") {
+    workflowState.last_error_code = String(finalState.error_code ?? "generate_failed");
+    workflowState.current_step = "failed";
+    setStatus(finalState.text ?? "Generate failed. Retry Step 2 Generate.");
+    return;
+  }
+  const polledFetchReference = String(finalState.fetch_reference ?? "").trim();
+  if (!polledFetchReference) {
+    workflowState.last_error_code = "missing_fetch_reference_after_generate";
+    setStatus("Generate completed but no fetch reference was returned. Retry generate.");
+    return;
+  }
+  fetchReferenceEl.value = polledFetchReference;
+  workflowState.fetch_reference = polledFetchReference;
+  syncFetchButtonState();
+  setStatus("Generate completed. Fetch is now enabled.");
 });
 
 fetchBtn.addEventListener("click", async () => {
@@ -462,8 +617,20 @@ navStep3Btn.addEventListener("click", () => {
   navigateToStep("jira_attach");
 });
 
-step1ContinueBtn.addEventListener("click", () => {
+step1ContinueBtn.addEventListener("click", async () => {
   if (!ensureLinuxSelection()) return;
+  if (!workflowSessionId) {
+    const started = await startWorkflowSession();
+    if (!started) {
+      workflowState.last_error_code = "workflow_start_failed";
+      return;
+    }
+  }
+  const submitted = await submitProductSelection();
+  if (!submitted) {
+    workflowState.last_error_code = "product_selection_submit_failed";
+    return;
+  }
   navigateToStep("sos_report");
   setStatus("Step 1 complete. Continue with generate + fetch.");
 });
@@ -490,3 +657,4 @@ const bootstrapRoute = () => {
 };
 
 bootstrapRoute();
+syncFetchButtonState();

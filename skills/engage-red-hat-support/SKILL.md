@@ -14,6 +14,8 @@ generates and fetches a local sosreport artifact, and attaches it to a Jira issu
 ## Instructions
 
 1. Step 1 - Select product:
+   - Start workflow explicitly with `start_engage_red_hat_support`.
+   - Run `select_engage_product` with `product=linux`.
    - Select `linux` to proceed.
    - Stop if product is non-Linux; this workflow is Linux-only.
 2. Step 2 - Generate and fetch sos report:

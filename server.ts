@@ -1,4 +1,4 @@
-import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
+import { McpServer, ResourceTemplate } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { StreamableHTTPServerTransport } from "@modelcontextprotocol/sdk/server/streamableHttp.js";
 import {
   RESOURCE_MIME_TYPE,
@@ -12,6 +12,7 @@ import fs from "node:fs/promises";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { z } from "zod";
+import { SubscribeRequestSchema, UnsubscribeRequestSchema } from "@modelcontextprotocol/sdk/types.js";
 import { JiraClient } from "./src/jira/jira-client.js";
 import {
   attachArtifactSchema,
@@ -33,7 +34,11 @@ import { TokenVault } from "./src/security/token-vault.js";
 import { emitSecurityEvent } from "./src/security/security-events.js";
 import { ConsentTokenService } from "./src/security/consent-token-service.js";
 import { authorizeSensitiveToolCall } from "./src/security/sensitive-tool-policy.js";
-import { fetchSosreportSchema, generateSosreportSchema } from "./src/sosreport/sosreport-tool-schemas.js";
+import {
+  fetchSosreportSchema,
+  generateSosreportSchema,
+  type GenerateSosreportInput,
+} from "./src/sosreport/sosreport-tool-schemas.js";
 import { handleFetchSosreport, handleGenerateSosreport } from "./src/sosreport/sosreport-tool-handlers.js";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
@@ -62,6 +67,226 @@ const consentTokenService = new ConsentTokenService({
   signingKey: resolveConsentSigningKey(),
   ttlSeconds: parsePositiveInteger(process.env.CONSENT_TOKEN_TTL_SECONDS, DEFAULT_CONSENT_TTL_SECONDS),
 });
+
+type EngageWorkflowState = {
+  workflowSessionId: string;
+  userId: string;
+  sessionId: string;
+  selectedProduct: "linux" | null;
+  step1CompletedAt: string | null;
+  updatedAt: string;
+};
+
+const engageWorkflowStates = new Map<string, EngageWorkflowState>();
+
+type GenerateJobStatus = "queued" | "running" | "succeeded" | "failed";
+type GenerateSosreportJob = {
+  jobId: string;
+  userId: string;
+  sessionId: string;
+  status: GenerateJobStatus;
+  createdAt: string;
+  updatedAt: string;
+  fetchReference?: string;
+  errorCode?: string;
+  errorText?: string;
+};
+
+const generateSosreportJobs = new Map<string, GenerateSosreportJob>();
+const GENERATE_JOB_TTL_MS = 30 * 60 * 1000;
+const resourceSubscriptions = new Set<string>();
+const toGenerateJobResourceUri = (jobId: string): string => `resource://engage/sosreport/jobs/${jobId}`;
+
+const buildWorkflowKey = (userId: string, sessionId: string): string => `${userId}:${sessionId}`;
+
+const getOrCreateWorkflowState = (userId: string, sessionId: string): EngageWorkflowState => {
+  const key = buildWorkflowKey(userId, sessionId);
+  const existing = engageWorkflowStates.get(key);
+  if (existing) return existing;
+  const created: EngageWorkflowState = {
+    workflowSessionId: randomUUID(),
+    userId,
+    sessionId,
+    selectedProduct: null,
+    step1CompletedAt: null,
+    updatedAt: new Date().toISOString(),
+  };
+  engageWorkflowStates.set(key, created);
+  return created;
+};
+
+const markWorkflowProductSelection = (userId: string, sessionId: string, product: "linux"): EngageWorkflowState => {
+  const current = getOrCreateWorkflowState(userId, sessionId);
+  const updated: EngageWorkflowState = {
+    ...current,
+    selectedProduct: product,
+    step1CompletedAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString(),
+  };
+  engageWorkflowStates.set(buildWorkflowKey(userId, sessionId), updated);
+  return updated;
+};
+
+const hasCompletedStep1LinuxSelection = (userId: string, sessionId: string): boolean => {
+  const current = engageWorkflowStates.get(buildWorkflowKey(userId, sessionId));
+  return current?.selectedProduct === "linux" && Boolean(current.step1CompletedAt);
+};
+
+const pruneExpiredGenerateJobs = () => {
+  const now = Date.now();
+  for (const [jobId, job] of generateSosreportJobs.entries()) {
+    const updatedAtMs = Date.parse(job.updatedAt);
+    if (Number.isNaN(updatedAtMs)) continue;
+    if (now - updatedAtMs > GENERATE_JOB_TTL_MS) {
+      generateSosreportJobs.delete(jobId);
+    }
+  }
+};
+
+const createGenerateJob = (input: { userId: string; sessionId: string }): GenerateSosreportJob => {
+  const now = new Date().toISOString();
+  const job: GenerateSosreportJob = {
+    jobId: randomUUID(),
+    userId: input.userId,
+    sessionId: input.sessionId,
+    status: "queued",
+    createdAt: now,
+    updatedAt: now,
+  };
+  generateSosreportJobs.set(job.jobId, job);
+  void notifyGenerateJobResourceUpdated(job.jobId).catch(() => {});
+  return job;
+};
+
+const updateGenerateJob = (jobId: string, patch: Partial<GenerateSosreportJob>) => {
+  const existing = generateSosreportJobs.get(jobId);
+  if (!existing) return;
+  const updated: GenerateSosreportJob = {
+    ...existing,
+    ...patch,
+    updatedAt: new Date().toISOString(),
+  };
+  generateSosreportJobs.set(jobId, updated);
+  void notifyGenerateJobResourceUpdated(jobId).catch(() => {});
+};
+
+const getOwnedGenerateJob = (input: {
+  jobId: string;
+  userId: string;
+  sessionId: string;
+}): GenerateSosreportJob | null => {
+  const job = generateSosreportJobs.get(input.jobId);
+  if (!job) return null;
+  if (job.userId === input.userId || job.sessionId === input.sessionId) {
+    return job;
+  }
+  return null;
+};
+
+const mapGenerateJobState = (job: GenerateSosreportJob) => {
+  if (job.status === "succeeded") {
+    return {
+      job_id: job.jobId,
+      status: job.status,
+      fetch_reference: job.fetchReference,
+      text: "Generate completed successfully.",
+    };
+  }
+  if (job.status === "failed") {
+    return {
+      job_id: job.jobId,
+      status: job.status,
+      error_code: job.errorCode ?? "generate_failed",
+      text: job.errorText ?? "Generate failed.",
+    };
+  }
+  return {
+    job_id: job.jobId,
+    status: job.status,
+    text: "Generate in progress.",
+  };
+};
+
+const notifyGenerateJobResourceUpdated = async (jobId: string): Promise<void> => {
+  const uri = toGenerateJobResourceUri(jobId);
+  if (!resourceSubscriptions.has(uri)) return;
+  await server.server.sendResourceUpdated({ uri });
+};
+
+const runGenerateJob = (input: {
+  jobId: string;
+  userId: string;
+  args: GenerateSosreportInput;
+  consentJti: string;
+  consentScope: string;
+  consentStep: number;
+}) => {
+  queueMicrotask(async () => {
+    updateGenerateJob(input.jobId, { status: "running", errorCode: undefined, errorText: undefined });
+    try {
+      const result = await handleGenerateSosreport(input.args);
+      const fetchReference = String(result.structuredContent?.fetch_reference ?? "").trim();
+      if (result.isError || fetchReference.length === 0) {
+        const errorCode = String(result.structuredContent?.code ?? "generate_failed");
+        const errorText = result.content?.find((item) => item.type === "text")?.text ?? "Generate failed.";
+        updateGenerateJob(input.jobId, {
+          status: "failed",
+          errorCode,
+          errorText,
+          fetchReference: undefined,
+        });
+        consentTokenService.finalizeSingleUse(input.consentJti, false);
+        emitSecurityEvent({
+          action: "consent_authorize",
+          outcome: "failed",
+          userId: input.userId,
+          errorCode: "generate_failed",
+          details: { scope: input.consentScope, step: input.consentStep },
+        });
+        return;
+      }
+      updateGenerateJob(input.jobId, {
+        status: "succeeded",
+        fetchReference,
+        errorCode: undefined,
+        errorText: undefined,
+      });
+      consentTokenService.finalizeSingleUse(input.consentJti, true);
+      emitSecurityEvent({
+        action: "consent_authorize",
+        outcome: "success",
+        userId: input.userId,
+        details: { scope: input.consentScope, step: input.consentStep },
+      });
+    } catch (_error) {
+      updateGenerateJob(input.jobId, {
+        status: "failed",
+        errorCode: "generate_failed",
+        errorText: "Generate failed unexpectedly.",
+      });
+      consentTokenService.finalizeSingleUse(input.consentJti, false);
+      emitSecurityEvent({
+        action: "consent_authorize",
+        outcome: "failed",
+        userId: input.userId,
+        errorCode: "generate_failed",
+        details: { scope: input.consentScope, step: input.consentStep },
+      });
+    }
+  });
+};
+
+const getWorkflowStateByWorkflowSessionId = (
+  userId: string,
+  workflowSessionId: string,
+): EngageWorkflowState | null => {
+  for (const state of engageWorkflowStates.values()) {
+    if (state.userId === userId && state.workflowSessionId === workflowSessionId) {
+      return state;
+    }
+  }
+  return null;
+};
 
 const normalizeUserId = (candidate: unknown): string | null => {
   if (typeof candidate !== "string") return null;
@@ -219,8 +444,8 @@ const loadEngageWidgetHtml = async (): Promise<string> => {
   <body>
     <p>UI bundle unavailable. Follow text fallback steps:</p>
     <ol>
-      <li>Select supported product (linux only).</li>
-      <li>Run generate_sosreport then fetch_sosreport to produce artifact_ref.</li>
+      <li>Start workflow and select supported product (linux only).</li>
+      <li>Request explicit consent token, then run generate_sosreport and fetch_sosreport to produce artifact_ref.</li>
       <li>Use secure Jira intake to obtain connection_id, verify issue access, then attach artifact.</li>
     </ol>
   </body>
@@ -250,13 +475,100 @@ const loadEngageWidgetHtml = async (): Promise<string> => {
 };
 
 const GET_SKILL_INPUT_SCHEMA = z.object({ uri: z.string().min(1, "skill URI is required") });
+const SELECT_ENGAGE_PRODUCT_SCHEMA = z.object({
+  product: z.literal("linux"),
+});
 const CONSENT_MINT_SCHEMA = z.object({
   workflow: z.literal("engage_red_hat_support"),
   step: z.literal(2),
   requested_scope: z.literal("generate_sosreport"),
   session_id: z.string().min(1).optional(),
+  workflow_session_id: z.string().min(1).optional(),
   client_action_id: z.string().min(1).optional(),
 });
+const GENERATE_JOB_STATUS_SCHEMA = z.object({
+  job_id: z.string().min(1),
+});
+
+registerAppTool(
+  server,
+  "start_engage_red_hat_support",
+  {
+    title: "Start Engage Red Hat Support Workflow",
+    description: "Starts workflow and returns explicit step 1 product-selection guidance.",
+    inputSchema: z.object({}),
+    annotations: {
+      readOnlyHint: true,
+      openWorldHint: false,
+      destructiveHint: false,
+    },
+    _meta: {
+      ui: { resourceUri: engageResourceUri },
+      "openai/outputTemplate": engageResourceUri,
+      "openai/widgetAccessible": true,
+    },
+  },
+  async (_args, extra) => {
+    const userId = resolveMcpUserId(extra?.authInfo);
+    const sessionId = resolveMcpSessionId(extra, userId);
+    const state = getOrCreateWorkflowState(userId, sessionId);
+    return {
+      content: [
+        {
+          type: "text",
+          text: [
+            "Engage workflow started.",
+            "Step 1: select product linux before requesting consent or generating diagnostics.",
+            `UI entrypoint: ${engageResourceUri}`,
+          ].join("\n"),
+        },
+      ],
+      structuredContent: {
+        workflow: "engage_red_hat_support",
+        workflow_session_id: state.workflowSessionId,
+        current_step: "select_product",
+        compatibility_entry_uri: engageResourceUri,
+      },
+    };
+  },
+);
+
+registerAppTool(
+  server,
+  "select_engage_product",
+  {
+    title: "Select Engage Workflow Product",
+    description: "Completes step 1 product selection for Engage workflow (linux only).",
+    inputSchema: SELECT_ENGAGE_PRODUCT_SCHEMA,
+    annotations: {
+      readOnlyHint: false,
+      openWorldHint: false,
+      destructiveHint: false,
+    },
+    _meta: {
+      ui: { resourceUri: engageResourceUri },
+      "openai/outputTemplate": engageResourceUri,
+      "openai/widgetAccessible": true,
+    },
+  },
+  async (args, extra) => {
+    const userId = resolveMcpUserId(extra?.authInfo);
+    const sessionId = resolveMcpSessionId(extra, userId);
+    const state = markWorkflowProductSelection(userId, sessionId, args.product);
+    return {
+      content: [{
+        type: "text",
+        text: "Step 1 complete: linux selected. You can now request consent and run generate_sosreport.",
+      }],
+      structuredContent: {
+        workflow: "engage_red_hat_support",
+        workflow_session_id: state.workflowSessionId,
+        selected_product: "linux",
+        current_step: "sos_report",
+      },
+    };
+  },
+);
 
 registerAppTool(
   server,
@@ -373,7 +685,25 @@ registerAppTool(
   },
   async (args, extra) => {
     const userId = resolveMcpUserId(extra?.authInfo);
-    const sessionId = resolveMcpSessionId(extra, userId);
+    const requestedWorkflowSessionId = normalizeSessionId(args.workflow_session_id);
+    const workflowState = requestedWorkflowSessionId
+      ? getWorkflowStateByWorkflowSessionId(userId, requestedWorkflowSessionId)
+      : null;
+    const sessionId = workflowState?.sessionId ?? resolveMcpSessionId(extra, userId);
+    if (!hasCompletedStep1LinuxSelection(userId, sessionId)) {
+      return {
+        isError: true,
+        content: [{
+          type: "text",
+          text: [
+            "Step 1 required before diagnostics.",
+            "Select product linux first, then request consent token and run generate_sosreport.",
+            "If using tools directly: call start_engage_red_hat_support, then select_engage_product with product=linux.",
+          ].join("\n"),
+        }],
+        structuredContent: { code: "product_selection_required", next_step: "select_product" },
+      };
+    }
     const decision = authorizeSensitiveToolCall({
       toolName: "generate_sosreport",
       consentToken: args.consent_token,
@@ -393,19 +723,33 @@ registerAppTool(
         content: [{ type: "text", text: decision.safeText }],
         structuredContent: {
           code: decision.reasonCode,
+          next_step: "mint_consent_then_generate",
         },
       };
     }
-    const result = await handleGenerateSosreport(args);
-    consentTokenService.finalizeSingleUse(decision.claims.jti, !result.isError);
-    emitSecurityEvent({
-      action: "consent_authorize",
-      outcome: result.isError ? "failed" : "success",
+    pruneExpiredGenerateJobs();
+    const job = createGenerateJob({ userId, sessionId });
+    runGenerateJob({
+      jobId: job.jobId,
       userId,
-      errorCode: result.isError ? "generate_failed" : undefined,
-      details: { scope: decision.claims.scope, step: decision.claims.step },
+      args,
+      consentJti: decision.claims.jti,
+      consentScope: decision.claims.scope,
+      consentStep: decision.claims.step,
     });
-    return result;
+    return {
+      content: [
+        {
+          type: "text",
+          text: "Generate started. Poll status until completed, then fetch using returned fetch_reference.",
+        },
+      ],
+      structuredContent: {
+        job_id: job.jobId,
+        status: "queued",
+        next_step: "poll_generate_status",
+      },
+    };
   },
 );
 
@@ -428,6 +772,46 @@ registerAppTool(
     },
   },
   async (args) => handleFetchSosreport(args),
+);
+
+registerAppTool(
+  server,
+  "get_generate_sosreport_status",
+  {
+    title: "Get Generate Sosreport Status",
+    description: "Returns async generate_sosreport job status and fetch_reference when completed.",
+    inputSchema: GENERATE_JOB_STATUS_SCHEMA,
+    annotations: {
+      readOnlyHint: true,
+      openWorldHint: false,
+      destructiveHint: false,
+    },
+    _meta: {
+      ui: { resourceUri: engageResourceUri },
+      "openai/outputTemplate": engageResourceUri,
+      "openai/widgetAccessible": true,
+    },
+  },
+  async (args, extra) => {
+    pruneExpiredGenerateJobs();
+    const userId = resolveMcpUserId(extra?.authInfo);
+    const sessionId = resolveMcpSessionId(extra, userId);
+    const job = getOwnedGenerateJob({ jobId: args.job_id, userId, sessionId });
+    if (!job) {
+      return {
+        isError: true,
+        content: [{ type: "text", text: "Generate job not found. Start generate again." }],
+        structuredContent: {
+          code: "job_not_found",
+          job_id: args.job_id,
+        },
+      };
+    }
+    return {
+      content: [{ type: "text", text: mapGenerateJobState(job).text }],
+      structuredContent: mapGenerateJobState(job),
+    };
+  },
 );
 
 registerAppTool(
@@ -611,6 +995,73 @@ server.registerResource(
   }),
 );
 
+server.registerResource(
+  "engage-sosreport-generate-job",
+  new ResourceTemplate("resource://engage/sosreport/jobs/{jobId}", { list: undefined }),
+  {
+    title: "Engage sosreport generate job state",
+    description: "Reports async generate_sosreport job status and fetch_reference when completed.",
+    mimeType: "application/json",
+  },
+  async (_uri, params) => {
+    pruneExpiredGenerateJobs();
+    const jobId = String(params.jobId ?? "").trim();
+    const job = generateSosreportJobs.get(jobId);
+    if (!job) {
+      return {
+        contents: [
+          {
+            uri: toGenerateJobResourceUri(jobId),
+            mimeType: "application/json",
+            text: JSON.stringify({
+              job_id: jobId,
+              status: "missing",
+              error_code: "job_not_found",
+              text: "Generate job not found.",
+            }),
+          },
+        ],
+      };
+    }
+    return {
+      contents: [
+        {
+          uri: toGenerateJobResourceUri(job.jobId),
+          mimeType: "application/json",
+          text: JSON.stringify({
+            job_id: job.jobId,
+            status: job.status,
+            fetch_reference: job.fetchReference,
+            error_code: job.errorCode,
+            text:
+              job.status === "succeeded"
+                ? "Generate completed successfully."
+                : job.status === "failed"
+                  ? (job.errorText ?? "Generate failed.")
+                  : "Generate in progress.",
+          }),
+        },
+      ],
+    };
+  },
+);
+
+server.server.setRequestHandler(SubscribeRequestSchema, async (request) => {
+  const uri = String(request.params.uri ?? "").trim();
+  if (uri.startsWith("resource://engage/sosreport/jobs/")) {
+    resourceSubscriptions.add(uri);
+  }
+  return {};
+});
+
+server.server.setRequestHandler(UnsubscribeRequestSchema, async (request) => {
+  const uri = String(request.params.uri ?? "").trim();
+  if (uri.startsWith("resource://engage/sosreport/jobs/")) {
+    resourceSubscriptions.delete(uri);
+  }
+  return {};
+});
+
 const registerEngageUiResource = (uri: string) => registerAppResource(
   server,
   uri,
@@ -713,7 +1164,25 @@ export const createApp = () => {
         text: "Consent mint request is invalid. Retry Step 2 Generate.",
       });
     }
-    const sessionId = normalizeSessionId(parsed.data.session_id) ?? req.sessionId;
+    const requestedWorkflowSessionId = normalizeSessionId(parsed.data.workflow_session_id);
+    const workflowState = requestedWorkflowSessionId
+      ? getWorkflowStateByWorkflowSessionId(req.userId, requestedWorkflowSessionId)
+      : null;
+    if (requestedWorkflowSessionId && !workflowState) {
+      return res.status(409).json({
+        code: "workflow_session_invalid",
+        message: "Workflow session is invalid or no longer active.",
+        text: "Restart Step 1 and retry Step 2 generate.",
+      });
+    }
+    const sessionId = workflowState?.sessionId ?? normalizeSessionId(parsed.data.session_id) ?? req.sessionId;
+    if (!hasCompletedStep1LinuxSelection(req.userId, sessionId)) {
+      return res.status(409).json({
+        code: "product_selection_required",
+        message: "Step 1 product selection is required before consent mint.",
+        text: "Select product linux first, then request permission to generate diagnostics.",
+      });
+    }
     const minted = consentTokenService.mint({
       userId: req.userId,
       sessionId,
@@ -738,6 +1207,69 @@ export const createApp = () => {
       step: minted.claims.step,
       text: "Consent token minted for Step 2 generate_sosreport.",
     });
+  });
+
+  app.post("/api/engage/workflow/start", (req, res) => {
+    const sessionId = normalizeSessionId(req.body?.session_id) ?? req.sessionId;
+    const state = getOrCreateWorkflowState(req.userId, sessionId);
+    return res.status(200).json({
+      workflow: "engage_red_hat_support",
+      workflow_session_id: state.workflowSessionId,
+      current_step: "select_product",
+      text: "Step 1: select product linux to continue.",
+    });
+  });
+
+  app.post("/api/engage/workflow/select-product", (req, res) => {
+    const product = String(req.body?.product ?? "").trim().toLowerCase();
+    if (product !== "linux") {
+      return res.status(422).json({
+        code: "unsupported_product",
+        message: "Only linux is supported in this workflow.",
+        text: "Select linux to continue.",
+      });
+    }
+    const requestedWorkflowSessionId = normalizeSessionId(req.body?.workflow_session_id);
+    const workflowState = requestedWorkflowSessionId
+      ? getWorkflowStateByWorkflowSessionId(req.userId, requestedWorkflowSessionId)
+      : null;
+    if (requestedWorkflowSessionId && !workflowState) {
+      return res.status(409).json({
+        code: "workflow_session_invalid",
+        message: "Workflow session is invalid or no longer active.",
+        text: "Restart Step 1 and retry product selection.",
+      });
+    }
+    const sessionId = workflowState?.sessionId ?? normalizeSessionId(req.body?.session_id) ?? req.sessionId;
+    const state = markWorkflowProductSelection(req.userId, sessionId, "linux");
+    return res.status(200).json({
+      workflow: "engage_red_hat_support",
+      workflow_session_id: state.workflowSessionId,
+      selected_product: "linux",
+      current_step: "sos_report",
+      text: "Step 1 complete. You can now request consent and run generate_sosreport.",
+    });
+  });
+
+  app.get("/api/sosreport/jobs/:job_id", (req, res) => {
+    pruneExpiredGenerateJobs();
+    const jobId = String(req.params.job_id ?? "").trim();
+    if (!jobId) {
+      return res.status(400).json({
+        code: "validation_error",
+        message: "Missing job id.",
+        text: "Provide a valid sosreport generate job id.",
+      });
+    }
+    const job = getOwnedGenerateJob({ jobId, userId: req.userId, sessionId: req.sessionId });
+    if (!job) {
+      return res.status(404).json({
+        code: "job_not_found",
+        message: "Generate job not found.",
+        text: "Start generate again to obtain a valid job id.",
+      });
+    }
+    return res.status(200).json(mapGenerateJobState(job));
   });
 
   app.post("/api/jira/connection", (_req, res) => {

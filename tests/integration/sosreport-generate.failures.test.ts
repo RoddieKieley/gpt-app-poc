@@ -76,6 +76,17 @@ const createGenerateClient = async (base: string, userId: string) => {
   return client;
 };
 
+const completeStep1ViaTools = async (client: ReturnType<typeof createMcpJsonRpcClient>) => {
+  await client.call("tools/call", {
+    name: "start_engage_red_hat_support",
+    arguments: {},
+  });
+  await client.call("tools/call", {
+    name: "select_engage_product",
+    arguments: { product: "linux" },
+  });
+};
+
 const callGenerateViaMcp = async (client: ReturnType<typeof createMcpJsonRpcClient>, consentToken?: string) => {
   const result = (await client.call("tools/call", {
     name: "generate_sosreport",
@@ -92,9 +103,22 @@ test("generate_sosreport is denied without consent token via MCP path", async ()
   const { srv, base } = await startConsentTestServer("missing-token");
   try {
     const client = await createGenerateClient(base, "default-user");
+    await completeStep1ViaTools(client);
     const result = await callGenerateViaMcp(client);
     assert.equal(result.isError, true);
     assert.equal(result.structuredContent?.code, "consent_missing");
+  } finally {
+    srv.close();
+  }
+});
+
+test("generate_sosreport is denied until step 1 product selection completes", async () => {
+  const { srv, base } = await startConsentTestServer("step1-required");
+  try {
+    const client = await createGenerateClient(base, "default-user");
+    const result = await callGenerateViaMcp(client);
+    assert.equal(result.isError, true);
+    assert.equal(result.structuredContent?.code, "product_selection_required");
   } finally {
     srv.close();
   }
@@ -156,6 +180,7 @@ test("generate_sosreport denies wrong-user and wrong-session token use", async (
   try {
     const client = await createGenerateClient(base, "default-user");
     const sessionId = client.getSessionId();
+    await completeStep1ViaTools(client);
     const userMismatchService = new ConsentTokenService({
       signingKey: "test-consent-signing-key",
       ttlSeconds: 120,
@@ -194,6 +219,7 @@ test("generate_sosreport denies expired, wrong-scope, and wrong-step signed toke
   try {
     const client = await createGenerateClient(base, "default-user");
     const sessionId = client.getSessionId();
+    await completeStep1ViaTools(client);
     const expiredService = new ConsentTokenService({
       signingKey: "test-consent-signing-key",
       ttlSeconds: 30,

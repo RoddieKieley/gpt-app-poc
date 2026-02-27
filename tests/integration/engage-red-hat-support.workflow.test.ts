@@ -138,8 +138,12 @@ test("step-2 UI flow explicitly mints consent before generate and avoids auto co
     "Step 2 UI must mint consent token from backend endpoint",
   );
   assert.ok(
-    uiSource.includes('callTool("generate_sosreport", { consent_token: consentToken })'),
-    "generate_sosreport call must pass consent_token",
+    /callTool\("generate_sosreport",\s*\{[\s\S]*consent_token:\s*consentToken/.test(uiSource),
+    "generate_sosreport call must pass consent_token from Step 2",
+  );
+  assert.ok(
+    /callTool\(\s*"get_generate_sosreport_status"/.test(uiSource),
+    "Step 2 UI must poll generate job status via MCP tool bridge",
   );
   const bootstrapStart = uiSource.indexOf("const bootstrapRoute = () => {");
   const bootstrapEnd = uiSource.indexOf("bootstrapRoute();");
