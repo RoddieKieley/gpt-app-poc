@@ -1,0 +1,59 @@
+{
+  "workflow": "engage_red_hat_support",
+  "version": "1.0",
+  "changeType": "ui_migration_only",
+  "objective": "PatternFly Increment 1 minimal like-for-like UI swap with preserved workflow behavior",
+  "compatibility": {
+    "entryUri": "ui://engage-red-hat-support/app.html",
+    "entryUriMustRemainStable": true,
+    "stepUrisMustRemainStable": true,
+    "toolNamesMustRemainStable": true,
+    "toolArgumentShapesMustRemainStable": true,
+    "outputTemplateBehaviorMustRemainStable": true
+  },
+  "preservedStepFlow": [
+    {
+      "step": 1,
+      "name": "select_product",
+      "gate": "selected_product=linux",
+      "requiredAction": "continue_step_1"
+    },
+    {
+      "step": 2,
+      "name": "sos_report",
+      "gate": "artifact_ref_present_for_step_3_progression",
+      "requiredActions": [
+        "generate_sosreport",
+        "fetch_sosreport",
+        "continue_step_2"
+      ]
+    },
+    {
+      "step": 3,
+      "name": "jira_attach",
+      "requiredActions": [
+        "jira_connect_secure",
+        "jira_connection_status",
+        "jira_list_attachments",
+        "jira_attach_artifact",
+        "jira_disconnect"
+      ]
+    }
+  ],
+  "routing": {
+    "hashRoutes": [
+      "#step-1",
+      "#step-2",
+      "#step-3"
+    ],
+    "gateOutcomesMustMatchBaseline": true
+  },
+  "security": {
+    "patBoundaryUnchanged": true,
+    "patSentOnlyToSecureIntake": true,
+    "patClearedImmediatelyAfterConnect": true
+  },
+  "fallback": {
+    "textFallbackRequiredWhenUiUnavailable": true
+  }
+}

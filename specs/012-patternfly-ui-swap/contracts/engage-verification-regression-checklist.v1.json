@@ -1,0 +1,41 @@
+{
+  "version": "1.0",
+  "focus": "contract_preservation",
+  "checks": [
+    {
+      "id": "RG-001",
+      "name": "Step gating parity",
+      "assertion": "Step transitions and gate failures match baseline for all three steps"
+    },
+    {
+      "id": "RG-002",
+      "name": "Hash routing parity",
+      "assertion": "Direct and in-app navigation for #step-1/#step-2/#step-3 produce same allowed/blocked outcomes as baseline"
+    },
+    {
+      "id": "RG-003",
+      "name": "PAT clearing boundary",
+      "assertion": "PAT is sent only for secure intake and cleared immediately after connect"
+    },
+    {
+      "id": "RG-004",
+      "name": "Tool contract parity",
+      "assertion": "Tool names, argument shapes, and server interaction sequence remain unchanged"
+    },
+    {
+      "id": "RG-005",
+      "name": "URI compatibility",
+      "assertion": "Entry and step resource URIs remain unchanged and resolvable"
+    },
+    {
+      "id": "RG-006",
+      "name": "Metadata compatibility",
+      "assertion": "openai/outputTemplate and widget metadata wiring remain unchanged"
+    },
+    {
+      "id": "RG-007",
+      "name": "Fallback behavior",
+      "assertion": "Text fallback remains available when UI bundle is unavailable"
+    }
+  ]
+}

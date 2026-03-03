@@ -1,0 +1,46 @@
+{
+  "version": "1.0",
+  "scope": "minimal_like_for_like_ui_swap",
+  "mapping": [
+    {
+      "oldUiPiece": "workflow navigation buttons (nav-step-1/nav-step-2/nav-step-3)",
+      "patternFlyComponent": "Wizard",
+      "notes": "Wizard step navigation must defer to existing route+gate logic"
+    },
+    {
+      "oldUiPiece": "step sections (step-select-product/step-sos-report/step-jira-attach)",
+      "patternFlyComponent": "WizardStep",
+      "notes": "One step per existing workflow stage"
+    },
+    {
+      "oldUiPiece": "grouped form controls within each step",
+      "patternFlyComponent": "Form + FormGroup",
+      "notes": "No behavioral change, presentation only"
+    },
+    {
+      "oldUiPiece": "product-select",
+      "patternFlyComponent": "Select",
+      "notes": "Allowed value behavior remains linux-gated"
+    },
+    {
+      "oldUiPiece": "jira-url/jira-pat/fetch-reference/artifact-ref/connection-id/issue-key inputs",
+      "patternFlyComponent": "TextInput",
+      "notes": "Input IDs or data hooks may change; handler behavior must not"
+    },
+    {
+      "oldUiPiece": "action buttons (continue/connect/verify/status/list/attach/disconnect/generate/fetch)",
+      "patternFlyComponent": "ActionGroup + Button",
+      "notes": "Button click handlers must preserve existing call order and arguments"
+    },
+    {
+      "oldUiPiece": "status line (#status)",
+      "patternFlyComponent": "Alert (inline)",
+      "notes": "Status messaging semantics remain unchanged"
+    },
+    {
+      "oldUiPiece": "generate polling wait state",
+      "patternFlyComponent": "Spinner",
+      "notes": "Shown only during in-flight generate polling"
+    }
+  ]
+}
