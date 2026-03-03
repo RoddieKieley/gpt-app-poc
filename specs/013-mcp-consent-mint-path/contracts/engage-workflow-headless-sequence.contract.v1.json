@@ -1,0 +1,59 @@
+{
+  "workflow": "engage_red_hat_support_headless",
+  "version": "1.0",
+  "requiredSequence": [
+    {
+      "step": 1,
+      "call": "start_engage_red_hat_support",
+      "required": true
+    },
+    {
+      "step": 2,
+      "call": "select_engage_product",
+      "arguments": {
+        "product": "linux"
+      },
+      "required": true
+    },
+    {
+      "step": 3,
+      "call": "mint_engage_consent_token",
+      "required": true,
+      "notes": [
+        "workflow_session_id optional",
+        "strict validation when provided"
+      ]
+    },
+    {
+      "step": 4,
+      "call": "generate_sosreport",
+      "required": true,
+      "arguments": {
+        "consent_token": "required",
+        "workflow_session_id": "optional"
+      }
+    },
+    {
+      "step": 5,
+      "call": "fetch_sosreport",
+      "required": true,
+      "arguments": {
+        "fetch_reference": "required"
+      }
+    }
+  ],
+  "denials": {
+    "mintBeforeStep1MustFail": true,
+    "invalidWorkflowSessionIdMustFail": true,
+    "missingConsentTokenMustFail": true,
+    "replayMustFail": true,
+    "wrongUserMustFail": true,
+    "wrongSessionMustFail": true,
+    "wrongScopeMustFail": true,
+    "wrongStepMustFail": true
+  },
+  "nonGoals": {
+    "automaticConsentMinting": false,
+    "automaticGenerateAfterMint": false
+  }
+}

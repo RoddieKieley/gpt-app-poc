@@ -1,0 +1,41 @@
+{
+  "contract": "engage_consent_mint_mcp_tool",
+  "version": "1.0",
+  "tool": {
+    "name": "mint_engage_consent_token",
+    "description": "Mints an explicit consent token for generate_sosreport in headless/text workflows.",
+    "input": {
+      "workflow_session_id": {
+        "type": "string",
+        "required": false,
+        "validation": "non-empty if provided; must resolve to owned workflow session context"
+      }
+    },
+    "output": {
+      "requiredFields": [
+        "consent_token",
+        "expires_at",
+        "workflow_session_id"
+      ]
+    }
+  },
+  "security": {
+    "explicitInvocationRequired": true,
+    "automaticMintingForbidden": true,
+    "tokenBinding": [
+      "user",
+      "session",
+      "scope",
+      "step"
+    ],
+    "requiredScope": "generate_sosreport",
+    "requiredStep": 2,
+    "singleUse": true,
+    "shortLived": true
+  },
+  "compatibility": {
+    "webFlowUnchanged": true,
+    "webConsentEndpoint": "POST /api/engage/consent-tokens",
+    "generateStillConsentGated": true
+  }
+}

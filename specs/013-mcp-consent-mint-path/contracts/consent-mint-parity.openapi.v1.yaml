@@ -1,0 +1,80 @@
+openapi: 3.1.0
+info:
+  title: Engage Consent Mint Parity
+  version: "1.0.0"
+  description: >
+    Reference contract describing parity constraints between existing web consent
+    minting and new MCP consent mint tooling.
+paths:
+  /api/engage/consent-tokens:
+    post:
+      summary: Web consent mint endpoint (unchanged)
+      description: Existing web flow endpoint remains backward-compatible.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - workflow
+                - step
+                - requested_scope
+              properties:
+                workflow:
+                  type: string
+                  const: engage_red_hat_support
+                step:
+                  type: integer
+                  const: 2
+                requested_scope:
+                  type: string
+                  const: generate_sosreport
+                session_id:
+                  type: string
+                workflow_session_id:
+                  type: string
+                client_action_id:
+                  type: string
+      responses:
+        "201":
+          description: Consent token minted
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - consent_token
+                  - expires_at
+                  - workflow_session_id
+                properties:
+                  consent_token:
+                    type: string
+                  expires_at:
+                    type: string
+                    format: date-time
+                  workflow_session_id:
+                    type: string
+components:
+  schemas:
+    MintEngageConsentTokenToolResponse:
+      type: object
+      required:
+        - consent_token
+        - expires_at
+        - workflow_session_id
+      properties:
+        consent_token:
+          type: string
+        expires_at:
+          type: string
+          format: date-time
+        workflow_session_id:
+          type: string
+    MintEngageConsentTokenToolInput:
+      type: object
+      properties:
+        workflow_session_id:
+          type: string
+          minLength: 1
+      additionalProperties: false
