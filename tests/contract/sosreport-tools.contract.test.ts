@@ -76,6 +76,18 @@ test("sosreport tools are registered with expected metadata", async () => {
     assert.equal(fetchTool?.annotations?.destructiveHint, false);
     assert.equal(fetchTool?.annotations?.openWorldHint, false);
     assert.equal(fetchTool?._meta?.["openai/outputTemplate"], "ui://engage-red-hat-support/app.html");
+
+    const mintTool = listed.tools?.find((tool) => tool.name === "mint_engage_consent_token");
+    assert.ok(mintTool, "mint_engage_consent_token tool missing");
+    assert.equal(mintTool?.annotations?.readOnlyHint, false);
+    assert.equal(mintTool?.annotations?.destructiveHint, false);
+    assert.equal(mintTool?.annotations?.openWorldHint, false);
+    assert.equal(mintTool?._meta?.["openai/outputTemplate"], "ui://engage-red-hat-support/app.html");
+    const mintSchemaProps = Object.keys(mintTool?.inputSchema?.properties ?? {});
+    assert.ok(
+      mintSchemaProps.includes("workflow_session_id"),
+      "mint_engage_consent_token should expose optional workflow_session_id",
+    );
   } finally {
     srv.close();
   }

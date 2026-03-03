@@ -35,5 +35,10 @@ export const fetchSosreportSchema = z.object({
   fetch_reference: z.string().min(1, "fetch_reference is required"),
 });
 
+export const mintEngageConsentTokenSchema = z.object({
+  workflow_session_id: z.string().min(1, "workflow_session_id is required").optional(),
+});
+
 export type GenerateSosreportInput = z.infer<typeof generateSosreportSchema>;
 export type FetchSosreportInput = z.infer<typeof fetchSosreportSchema>;
+export type MintEngageConsentTokenInput = z.infer<typeof mintEngageConsentTokenSchema>;

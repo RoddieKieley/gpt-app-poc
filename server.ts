@@ -37,6 +37,7 @@ import { authorizeSensitiveToolCall } from "./src/security/sensitive-tool-policy
 import {
   fetchSosreportSchema,
   generateSosreportSchema,
+  mintEngageConsentTokenSchema,
   type GenerateSosreportInput,
 } from "./src/sosreport/sosreport-tool-schemas.js";
 import { handleFetchSosreport, handleGenerateSosreport } from "./src/sosreport/sosreport-tool-handlers.js";
@@ -224,7 +225,20 @@ const runGenerateJob = (input: {
   queueMicrotask(async () => {
     updateGenerateJob(input.jobId, { status: "running", errorCode: undefined, errorText: undefined });
     try {
-      const result = await handleGenerateSosreport(input.args);
+      const mockArchivePath = process.env.NODE_ENV === "test"
+        ? normalizeSessionId(process.env.SOSREPORT_TEST_ARCHIVE_PATH)
+        : null;
+      const result = mockArchivePath
+        ? await handleGenerateSosreport(input.args, {
+          runGenerate: async () => ({
+            exitCode: 0,
+            stdout: `Archive: ${mockArchivePath}`,
+            stderr: "",
+            timedOut: false,
+          }),
+          findLatest: async () => null,
+        })
+        : await handleGenerateSosreport(input.args);
       const fetchReference = String(result.structuredContent?.fetch_reference ?? "").trim();
       if (result.isError || fetchReference.length === 0) {
         const errorCode = String(result.structuredContent?.code ?? "generate_failed");
@@ -354,6 +368,81 @@ type JiraConnectionResponse = {
   expires_at: string;
   last_verified_at: string | null;
   text: string;
+};
+
+type ConsentMintOutcome =
+  | {
+      ok: true;
+      sessionId: string;
+      workflowSessionId: string;
+      consentToken: string;
+      expiresAt: string;
+      scope: "generate_sosreport";
+      step: 2;
+    }
+  | {
+      ok: false;
+      code: "workflow_session_invalid" | "product_selection_required";
+      message: string;
+      text: string;
+    };
+
+const mintConsentTokenForGenerate = (input: {
+  userId: string;
+  fallbackSessionId: string;
+  requestedSessionId?: string | null;
+  requestedWorkflowSessionId?: string | null;
+  clientActionId?: string;
+}): ConsentMintOutcome => {
+  const workflowState = input.requestedWorkflowSessionId
+    ? getWorkflowStateByWorkflowSessionId(input.userId, input.requestedWorkflowSessionId)
+    : null;
+  if (input.requestedWorkflowSessionId && !workflowState) {
+    return {
+      ok: false,
+      code: "workflow_session_invalid",
+      message: "Workflow session is invalid or no longer active.",
+      text: "Restart Step 1 and retry Step 2 generate.",
+    };
+  }
+
+  const sessionId = workflowState?.sessionId ?? input.requestedSessionId ?? input.fallbackSessionId;
+  if (!hasCompletedStep1LinuxSelection(input.userId, sessionId)) {
+    return {
+      ok: false,
+      code: "product_selection_required",
+      message: "Step 1 product selection is required before consent mint.",
+      text: "Select product linux first, then request permission to generate diagnostics.",
+    };
+  }
+
+  const minted = consentTokenService.mint({
+    userId: input.userId,
+    sessionId,
+    scope: "generate_sosreport",
+    step: 2,
+  });
+  const state = getOrCreateWorkflowState(input.userId, sessionId);
+  emitSecurityEvent({
+    action: "consent_mint",
+    outcome: "success",
+    userId: input.userId,
+    details: {
+      scope: minted.claims.scope,
+      step: minted.claims.step,
+      sessionId,
+      clientActionId: input.clientActionId,
+    },
+  });
+  return {
+    ok: true,
+    sessionId,
+    workflowSessionId: state.workflowSessionId,
+    consentToken: minted.token,
+    expiresAt: minted.expiresAt,
+    scope: minted.claims.scope,
+    step: minted.claims.step,
+  };
 };
 
 const createSecureJiraConnection = async (
@@ -572,6 +661,54 @@ registerAppTool(
 
 registerAppTool(
   server,
+  "mint_engage_consent_token",
+  {
+    title: "Mint Engage Consent Token",
+    description: "Mints explicit consent token for Step 2 sosreport generation.",
+    inputSchema: mintEngageConsentTokenSchema,
+    annotations: {
+      readOnlyHint: false,
+      openWorldHint: false,
+      destructiveHint: false,
+    },
+    _meta: {
+      ui: { resourceUri: engageResourceUri },
+      "openai/outputTemplate": engageResourceUri,
+      "openai/widgetAccessible": true,
+    },
+  },
+  async (args, extra) => {
+    const userId = resolveMcpUserId(extra?.authInfo);
+    const sessionId = resolveMcpSessionId(extra, userId);
+    const mint = mintConsentTokenForGenerate({
+      userId,
+      fallbackSessionId: sessionId,
+      requestedWorkflowSessionId: normalizeSessionId(args.workflow_session_id),
+    });
+    if (!mint.ok) {
+      return {
+        isError: true,
+        content: [{ type: "text", text: mint.text }],
+        structuredContent: {
+          code: mint.code,
+          next_step: "select_product",
+        },
+      };
+    }
+
+    return {
+      content: [{ type: "text", text: "Consent token minted for Step 2 generate_sosreport." }],
+      structuredContent: {
+        consent_token: mint.consentToken,
+        expires_at: mint.expiresAt,
+        workflow_session_id: mint.workflowSessionId,
+      },
+    };
+  },
+);
+
+registerAppTool(
+  server,
   "list_skills",
   {
     title: "List Available Skills",
@@ -689,6 +826,16 @@ registerAppTool(
     const workflowState = requestedWorkflowSessionId
       ? getWorkflowStateByWorkflowSessionId(userId, requestedWorkflowSessionId)
       : null;
+    if (requestedWorkflowSessionId && !workflowState) {
+      return {
+        isError: true,
+        content: [{
+          type: "text",
+          text: "Workflow session is invalid or no longer active. Restart Step 1 and retry generate.",
+        }],
+        structuredContent: { code: "workflow_session_invalid", next_step: "select_product" },
+      };
+    }
     const sessionId = workflowState?.sessionId ?? resolveMcpSessionId(extra, userId);
     if (!hasCompletedStep1LinuxSelection(userId, sessionId)) {
       return {
@@ -1165,46 +1312,25 @@ export const createApp = () => {
       });
     }
     const requestedWorkflowSessionId = normalizeSessionId(parsed.data.workflow_session_id);
-    const workflowState = requestedWorkflowSessionId
-      ? getWorkflowStateByWorkflowSessionId(req.userId, requestedWorkflowSessionId)
-      : null;
-    if (requestedWorkflowSessionId && !workflowState) {
+    const mint = mintConsentTokenForGenerate({
+      userId: req.userId,
+      fallbackSessionId: req.sessionId,
+      requestedSessionId: normalizeSessionId(parsed.data.session_id),
+      requestedWorkflowSessionId,
+      clientActionId: parsed.data.client_action_id,
+    });
+    if (!mint.ok) {
       return res.status(409).json({
-        code: "workflow_session_invalid",
-        message: "Workflow session is invalid or no longer active.",
-        text: "Restart Step 1 and retry Step 2 generate.",
+        code: mint.code,
+        message: mint.message,
+        text: mint.text,
       });
     }
-    const sessionId = workflowState?.sessionId ?? normalizeSessionId(parsed.data.session_id) ?? req.sessionId;
-    if (!hasCompletedStep1LinuxSelection(req.userId, sessionId)) {
-      return res.status(409).json({
-        code: "product_selection_required",
-        message: "Step 1 product selection is required before consent mint.",
-        text: "Select product linux first, then request permission to generate diagnostics.",
-      });
-    }
-    const minted = consentTokenService.mint({
-      userId: req.userId,
-      sessionId,
-      scope: "generate_sosreport",
-      step: 2,
-    });
-    emitSecurityEvent({
-      action: "consent_mint",
-      outcome: "success",
-      userId: req.userId,
-      details: {
-        scope: minted.claims.scope,
-        step: minted.claims.step,
-        sessionId,
-        clientActionId: parsed.data.client_action_id,
-      },
-    });
     return res.status(201).json({
-      consent_token: minted.token,
-      expires_at: minted.expiresAt,
-      scope: minted.claims.scope,
-      step: minted.claims.step,
+      consent_token: mint.consentToken,
+      expires_at: mint.expiresAt,
+      scope: mint.scope,
+      step: mint.step,
       text: "Consent token minted for Step 2 generate_sosreport.",
     });
   });

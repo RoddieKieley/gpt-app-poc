@@ -5,7 +5,12 @@ import { handleGenerateSosreport, handleFetchSosreport } from "../../src/sosrepo
 import { SosreportError } from "../../src/sosreport/sosreport-errors.js";
 import { ConsentTokenService } from "../../src/security/consent-token-service.js";
 import { authorizeSensitiveToolCall } from "../../src/security/sensitive-tool-policy.js";
-import { createMcpJsonRpcClient, mintConsentToken, startConsentTestServer } from "./consent-test-helpers.js";
+import {
+  createMcpJsonRpcClient,
+  mintConsentToken,
+  mintConsentTokenViaMcp,
+  startConsentTestServer,
+} from "./consent-test-helpers.js";
 
 test("generate_sosreport rejects conflicting options", async () => {
   const result = await handleGenerateSosreport({
@@ -124,6 +129,31 @@ test("generate_sosreport is denied until step 1 product selection completes", as
   }
 });
 
+test("mint_engage_consent_token is denied until step 1 product selection completes", async () => {
+  const { srv, base } = await startConsentTestServer("mint-before-step1");
+  try {
+    const client = await createGenerateClient(base, "default-user");
+    const mintResult = await mintConsentTokenViaMcp(client);
+    assert.equal(mintResult.isError, true);
+    assert.equal(mintResult.structuredContent?.code, "product_selection_required");
+  } finally {
+    srv.close();
+  }
+});
+
+test("mint_engage_consent_token rejects invalid workflow_session_id", async () => {
+  const { srv, base } = await startConsentTestServer("mint-invalid-workflow-session");
+  try {
+    const client = await createGenerateClient(base, "default-user");
+    await completeStep1ViaTools(client);
+    const mintResult = await mintConsentTokenViaMcp(client, "workflow-does-not-exist");
+    assert.equal(mintResult.isError, true);
+    assert.equal(mintResult.structuredContent?.code, "workflow_session_invalid");
+  } finally {
+    srv.close();
+  }
+});
+
 test("generate_sosreport is denied for invalid and replayed consent token via MCP path", async () => {
   const { srv, base } = await startConsentTestServer("invalid-replay");
   try {
@@ -170,6 +200,32 @@ test("generate_sosreport is denied for invalid and replayed consent token via MC
     });
     assert.equal(secondDecision.allowed, false);
     if (!secondDecision.allowed) assert.equal(secondDecision.reasonCode, "consent_replayed");
+  } finally {
+    srv.close();
+  }
+});
+
+test("generate_sosreport rejects invalid workflow_session_id when provided", async () => {
+  const { srv, base } = await startConsentTestServer("generate-invalid-workflow-session");
+  try {
+    const client = await createGenerateClient(base, "default-user");
+    await completeStep1ViaTools(client);
+    const sessionId = client.getSessionId();
+    const minted = await mintConsentToken({
+      base,
+      userId: "default-user",
+      sessionId,
+    });
+    assert.equal(minted.status, 201);
+    const token = String(minted.body.consent_token ?? "");
+    assert.ok(token.length > 0);
+
+    const result = (await client.call("tools/call", {
+      name: "generate_sosreport",
+      arguments: { consent_token: token, workflow_session_id: "workflow-does-not-exist" },
+    })) as { isError?: boolean; structuredContent?: { code?: string } };
+    assert.equal(result.isError, true);
+    assert.equal(result.structuredContent?.code, "workflow_session_invalid");
   } finally {
     srv.close();
   }

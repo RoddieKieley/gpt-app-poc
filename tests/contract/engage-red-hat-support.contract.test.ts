@@ -235,3 +235,40 @@ test("011 consent contract captures consent-gated step-2 requirements", async ()
   assert.equal(contract.consentGate.tokenSingleUse, true);
   assert.equal(contract.consentGate.replayMustFail, true);
 });
+
+test("013 contracts define MCP mint tool and headless sequence", async () => {
+  const base = path.join(process.cwd(), "specs", "013-mcp-consent-mint-path", "contracts");
+
+  const mintRaw = await fs.readFile(path.join(base, "engage-consent-mint-mcp.contract.v1.json"), "utf8");
+  const mintContract = JSON.parse(mintRaw) as {
+    tool?: { name?: string; output?: { requiredFields?: string[] } };
+    security?: { explicitInvocationRequired?: boolean; automaticMintingForbidden?: boolean };
+  };
+  assert.equal(mintContract.tool?.name, "mint_engage_consent_token");
+  assert.deepEqual(mintContract.tool?.output?.requiredFields, [
+    "consent_token",
+    "expires_at",
+    "workflow_session_id",
+  ]);
+  assert.equal(mintContract.security?.explicitInvocationRequired, true);
+  assert.equal(mintContract.security?.automaticMintingForbidden, true);
+
+  const sequenceRaw = await fs.readFile(
+    path.join(base, "engage-workflow-headless-sequence.contract.v1.json"),
+    "utf8",
+  );
+  const sequenceContract = JSON.parse(sequenceRaw) as {
+    requiredSequence?: Array<{ call?: string }>;
+    denials?: { mintBeforeStep1MustFail?: boolean; invalidWorkflowSessionIdMustFail?: boolean };
+  };
+  const calls = (sequenceContract.requiredSequence ?? []).map((step) => step.call);
+  assert.deepEqual(calls, [
+    "start_engage_red_hat_support",
+    "select_engage_product",
+    "mint_engage_consent_token",
+    "generate_sosreport",
+    "fetch_sosreport",
+  ]);
+  assert.equal(sequenceContract.denials?.mintBeforeStep1MustFail, true);
+  assert.equal(sequenceContract.denials?.invalidWorkflowSessionIdMustFail, true);
+});

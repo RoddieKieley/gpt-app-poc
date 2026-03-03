@@ -1,6 +1,10 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { fetchSosreportSchema, generateSosreportSchema } from "../../src/sosreport/sosreport-tool-schemas.js";
+import {
+  fetchSosreportSchema,
+  generateSosreportSchema,
+  mintEngageConsentTokenSchema,
+} from "../../src/sosreport/sosreport-tool-schemas.js";
 
 test("generate schema accepts valid options", () => {
   const parsed = generateSosreportSchema.parse({
@@ -48,5 +52,15 @@ test("generate schema accepts request without consent_token for middleware enfor
 
 test("fetch schema requires fetch_reference", () => {
   const result = fetchSosreportSchema.safeParse({});
+  assert.equal(result.success, false);
+});
+
+test("mint consent schema accepts omitted workflow_session_id", () => {
+  const result = mintEngageConsentTokenSchema.safeParse({});
+  assert.equal(result.success, true);
+});
+
+test("mint consent schema rejects empty workflow_session_id", () => {
+  const result = mintEngageConsentTokenSchema.safeParse({ workflow_session_id: "" });
   assert.equal(result.success, false);
 });

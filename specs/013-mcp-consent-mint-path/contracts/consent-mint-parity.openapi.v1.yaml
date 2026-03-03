@@ -46,14 +46,21 @@ paths:
                 required:
                   - consent_token
                   - expires_at
-                  - workflow_session_id
+                  - scope
+                  - step
                 properties:
                   consent_token:
                     type: string
                   expires_at:
                     type: string
                     format: date-time
-                  workflow_session_id:
+                  scope:
+                    type: string
+                    const: generate_sosreport
+                  step:
+                    type: integer
+                    const: 2
+                  text:
                     type: string
 components:
   schemas:

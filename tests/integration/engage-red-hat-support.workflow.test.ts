@@ -91,6 +91,65 @@ test("step-2 handoff requires fetch_reference before fetch and produces artifact
   assert.ok(artifactRef.startsWith("/tmp/"), "expected artifact_ref copied to /tmp");
 });
 
+test("web consent endpoint behavior remains unchanged for step-2 mint", async () => {
+  const { srv, base } = await startServer("web-consent-regression");
+  try {
+    const sessionId = `web-session-${randomUUID()}`;
+    const start = await fetch(`${base}/api/engage/workflow/start`, {
+      method: "POST",
+      headers: {
+        "content-type": "application/json",
+        "x-user-id": "web-regression-user",
+        "x-session-id": sessionId,
+      },
+      body: JSON.stringify({ session_id: sessionId }),
+    });
+    assert.equal(start.status, 200);
+
+    const select = await fetch(`${base}/api/engage/workflow/select-product`, {
+      method: "POST",
+      headers: {
+        "content-type": "application/json",
+        "x-user-id": "web-regression-user",
+        "x-session-id": sessionId,
+      },
+      body: JSON.stringify({ session_id: sessionId, product: "linux" }),
+    });
+    assert.equal(select.status, 200);
+
+    const mint = await fetch(`${base}/api/engage/consent-tokens`, {
+      method: "POST",
+      headers: {
+        "content-type": "application/json",
+        "x-user-id": "web-regression-user",
+        "x-session-id": sessionId,
+      },
+      body: JSON.stringify({
+        workflow: "engage_red_hat_support",
+        step: 2,
+        requested_scope: "generate_sosreport",
+        session_id: sessionId,
+        client_action_id: "web-regression",
+      }),
+    });
+    assert.equal(mint.status, 201);
+    const payload = await mint.json() as {
+      consent_token?: string;
+      expires_at?: string;
+      scope?: string;
+      step?: number;
+      workflow_session_id?: string;
+    };
+    assert.ok(String(payload.consent_token ?? "").length > 0);
+    assert.ok(String(payload.expires_at ?? "").length > 0);
+    assert.equal(payload.scope, "generate_sosreport");
+    assert.equal(payload.step, 2);
+    assert.equal(Object.hasOwn(payload, "workflow_session_id"), false);
+  } finally {
+    srv.close();
+  }
+});
+
 test("step-3 contract requires connection and issue-read verification before attach", async () => {
   const file = path.join(
     process.cwd(),

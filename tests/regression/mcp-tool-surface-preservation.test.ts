@@ -8,6 +8,7 @@ type JsonRpcResponse =
 const REQUIRED_TOOLS = [
   "list_skills",
   "get_skill",
+  "mint_engage_consent_token",
   "generate_sosreport",
   "fetch_sosreport",
   "jira_connect_secure",
