@@ -15,19 +15,19 @@
 
 **Purpose**: Add required UI dependencies and lock baseline before migration.
 
-- [ ] T001 Capture pre-migration baseline behavior notes for step gates/routes/contracts in `specs/012-patternfly-ui-swap/quickstart.md`
-- [ ] T002 Add React and PatternFly dependencies in `package.json`
-- [ ] T003 [P] Add TypeScript React types in `package.json`
-- [ ] T004 [P] Verify Vite TSX build support and keep single-file behavior in `vite.config.ts`
-- [ ] T005 Run install and produce lockfile updates in `package-lock.json`
-- [ ] T006 Run baseline build before UI migration in `package.json` scripts (`npm run build`) and record result in `specs/012-patternfly-ui-swap/quickstart.md`
-- [ ] T007 Run baseline contract/integration/regression suites (`npm run test:contract`, `npm run test:integration`, `npm run test:regression`) and record result in `specs/012-patternfly-ui-swap/quickstart.md`
+- [X] T001 Capture pre-migration baseline behavior notes for step gates/routes/contracts in `specs/012-patternfly-ui-swap/quickstart.md`
+- [X] T002 Add React and PatternFly dependencies in `package.json`
+- [X] T003 [P] Add TypeScript React types in `package.json`
+- [X] T004 [P] Verify Vite TSX build support and keep single-file behavior in `vite.config.ts`
+- [X] T005 Run install and produce lockfile updates in `package-lock.json`
+- [X] T006 Run baseline build before UI migration in `package.json` scripts (`npm run build`) and record result in `specs/012-patternfly-ui-swap/quickstart.md`
+- [X] T007 Run baseline contract/integration/regression suites (`npm run test:contract`, `npm run test:integration`, `npm run test:regression`) and record result in `specs/012-patternfly-ui-swap/quickstart.md`
 
 **Checkpoint (behavior parity)**: Baseline behavior and test/build status are documented before any rendering changes.
 
 **Verification tasks (phase exit)**:
 
-- [ ] T008 Verify no pre-migration contract drift by reviewing `specs/012-patternfly-ui-swap/contracts/engage-patternfly-migration.contract.v1.json` against current behavior
+- [X] T008 Verify no pre-migration contract drift by reviewing `specs/012-patternfly-ui-swap/contracts/engage-patternfly-migration.contract.v1.json` against current behavior
 
 ---
 
@@ -37,19 +37,19 @@
 
 **⚠️ CRITICAL**: No step-specific porting starts before this phase is complete.
 
-- [ ] T009 Create React app shell component skeleton with Wizard container in `src/mcp-app/App.tsx`
-- [ ] T010 [P] Create step presentational component stubs in `src/mcp-app/step-content.tsx`
-- [ ] T011 [P] Define parity-safe UI state/types in `src/mcp-app/state.ts`
-- [ ] T012 Replace raw HTML controls with React mount container in `mcp-app.html`
-- [ ] T013 Bootstrap React render root while preserving existing workflow logic entrypoint in `src/mcp-app.ts`
-- [ ] T014 Wire status presentation model (Alert placeholder, no behavior changes) in `src/mcp-app/App.tsx`
+- [X] T009 Create React app shell component skeleton with Wizard container in `src/mcp-app/App.tsx`
+- [X] T010 [P] Create step presentational component stubs in `src/mcp-app/step-content.tsx`
+- [X] T011 [P] Define parity-safe UI state/types in `src/mcp-app/state.ts`
+- [X] T012 Replace raw HTML controls with React mount container in `mcp-app.html`
+- [X] T013 Bootstrap React render root while preserving existing workflow logic entrypoint in `src/mcp-app.ts`
+- [X] T014 Wire status presentation model (Alert placeholder, no behavior changes) in `src/mcp-app/App.tsx`
 
 **Checkpoint (behavior parity)**: App loads through the same entry resource with React shell and no functional step flow changes.
 
 **Verification tasks (phase exit)**:
 
-- [ ] T015 Build and smoke-serve the shell migration (`npm run build`, `npm run serve`) and record results in `specs/012-patternfly-ui-swap/quickstart.md`
-- [ ] T016 Verify entrypoint and step URI compatibility still resolves (`ui://engage-red-hat-support/app.html` and step URIs) via checks documented in `specs/012-patternfly-ui-swap/quickstart.md`
+- [X] T015 Build and smoke-serve the shell migration (`npm run build`, `npm run serve`) and record results in `specs/012-patternfly-ui-swap/quickstart.md`
+- [X] T016 Verify entrypoint and step URI compatibility still resolves (`ui://engage-red-hat-support/app.html` and step URIs) via checks documented in `specs/012-patternfly-ui-swap/quickstart.md`
 
 ---
 
@@ -61,20 +61,20 @@
 
 ### Tests for User Story 1 (Step 1 slice)
 
-- [ ] T017 [P] [US1] Add Step 1 gate/continue parity integration assertions in `tests/integration/engage-red-hat-support.workflow.test.ts`
-- [ ] T018 [P] [US1] Add Step 1 contract-preservation assertions for unchanged tool surface in `tests/contract/engage-red-hat-support.contract.test.ts`
+- [X] T017 [P] [US1] Add Step 1 gate/continue parity integration assertions in `tests/integration/engage-red-hat-support.workflow.test.ts`
+- [X] T018 [P] [US1] Add Step 1 contract-preservation assertions for unchanged tool surface in `tests/contract/engage-red-hat-support.contract.test.ts`
 
 ### Implementation for User Story 1 (Step 1 slice)
 
-- [ ] T019 [US1] Implement PatternFly Step 1 form (`Form`, `FormGroup`, `Select`, `ActionGroup`, `Button`) in `src/mcp-app/step-content.tsx`
-- [ ] T020 [US1] Bind Step 1 PatternFly controls to existing `ensureLinuxSelection` and continue handlers in `src/mcp-app.ts`
-- [ ] T021 [US1] Preserve Step 1 status/error messaging semantics in `src/mcp-app/App.tsx`
+- [X] T019 [US1] Implement PatternFly Step 1 form (`Form`, `FormGroup`, `Select`, `ActionGroup`, `Button`) in `src/mcp-app/step-content.tsx`
+- [X] T020 [US1] Bind Step 1 PatternFly controls to existing `ensureLinuxSelection` and continue handlers in `src/mcp-app.ts`
+- [X] T021 [US1] Preserve Step 1 status/error messaging semantics in `src/mcp-app/App.tsx`
 
 **Checkpoint (behavior parity)**: Step 1 UX is PatternFly-based and Step 1 gate behavior remains unchanged.
 
 **Verification tasks (phase exit)**:
 
-- [ ] T022 [US1] Run targeted Step 1 parity checks (`tsx --test tests/integration/engage-red-hat-support.workflow.test.ts`) and log outcome in `specs/012-patternfly-ui-swap/quickstart.md`
+- [X] T022 [US1] Run targeted Step 1 parity checks (`tsx --test tests/integration/engage-red-hat-support.workflow.test.ts`) and log outcome in `specs/012-patternfly-ui-swap/quickstart.md`
 
 ---
 
@@ -86,20 +86,20 @@
 
 ### Tests for User Story 1 (Step 2 slice)
 
-- [ ] T023 [P] [US1] Add Step 2 generate/fetch and gating parity integration assertions in `tests/integration/engage-red-hat-support.workflow.test.ts`
-- [ ] T024 [P] [US1] Add Step 2 tool argument parity assertions for `generate_sosreport` and `fetch_sosreport` in `tests/contract/sosreport-tools.contract.test.ts`
+- [X] T023 [P] [US1] Add Step 2 generate/fetch and gating parity integration assertions in `tests/integration/engage-red-hat-support.workflow.test.ts`
+- [X] T024 [P] [US1] Add Step 2 tool argument parity assertions for `generate_sosreport` and `fetch_sosreport` in `tests/contract/sosreport-tools.contract.test.ts`
 
 ### Implementation for User Story 1 (Step 2 slice)
 
-- [ ] T025 [US1] Implement PatternFly Step 2 controls (`Form`, `FormGroup`, `TextInput`, `ActionGroup`, `Button`) in `src/mcp-app/step-content.tsx`
-- [ ] T026 [US1] Bind Step 2 PatternFly controls to existing consent/generate/fetch/polling handlers in `src/mcp-app.ts`
-- [ ] T027 [US1] Preserve Step 2 continue gate (`artifact_ref`) behavior in `src/mcp-app.ts`
+- [X] T025 [US1] Implement PatternFly Step 2 controls (`Form`, `FormGroup`, `TextInput`, `ActionGroup`, `Button`) in `src/mcp-app/step-content.tsx`
+- [X] T026 [US1] Bind Step 2 PatternFly controls to existing consent/generate/fetch/polling handlers in `src/mcp-app.ts`
+- [X] T027 [US1] Preserve Step 2 continue gate (`artifact_ref`) behavior in `src/mcp-app.ts`
 
 **Checkpoint (behavior parity)**: Step 2 remains explicit-action driven with unchanged gate success/failure outcomes.
 
 **Verification tasks (phase exit)**:
 
-- [ ] T028 [US1] Run targeted Step 2 integration and contract checks (`tsx --test tests/integration/engage-red-hat-support.workflow.test.ts` and `tsx --test tests/contract/sosreport-tools.contract.test.ts`) and record in `specs/012-patternfly-ui-swap/quickstart.md`
+- [X] T028 [US1] Run targeted Step 2 integration and contract checks (`tsx --test tests/integration/engage-red-hat-support.workflow.test.ts` and `tsx --test tests/contract/sosreport-tools.contract.test.ts`) and record in `specs/012-patternfly-ui-swap/quickstart.md`
 
 ---
 
@@ -111,20 +111,20 @@
 
 ### Tests for User Story 1 (Step 3 slice)
 
-- [ ] T029 [P] [US1] Add Step 3 action-sequence parity integration assertions in `tests/integration/engage-red-hat-support.workflow.test.ts`
-- [ ] T030 [P] [US1] Add Jira workflow contract parity assertions for unchanged tool names/args in `tests/contract/engage-red-hat-support.contract.test.ts`
+- [X] T029 [P] [US1] Add Step 3 action-sequence parity integration assertions in `tests/integration/engage-red-hat-support.workflow.test.ts`
+- [X] T030 [P] [US1] Add Jira workflow contract parity assertions for unchanged tool names/args in `tests/contract/engage-red-hat-support.contract.test.ts`
 
 ### Implementation for User Story 1 (Step 3 slice)
 
-- [ ] T031 [US1] Implement PatternFly Step 3 controls (`Form`, `FormGroup`, `TextInput`, `ActionGroup`, `Button`) in `src/mcp-app/step-content.tsx`
-- [ ] T032 [US1] Bind Step 3 PatternFly actions to existing connect/verify/list/attach/disconnect handlers in `src/mcp-app.ts`
-- [ ] T033 [US1] Preserve Step 3 attach precondition gates and completion state behavior in `src/mcp-app.ts`
+- [X] T031 [US1] Implement PatternFly Step 3 controls (`Form`, `FormGroup`, `TextInput`, `ActionGroup`, `Button`) in `src/mcp-app/step-content.tsx`
+- [X] T032 [US1] Bind Step 3 PatternFly actions to existing connect/verify/list/attach/disconnect handlers in `src/mcp-app.ts`
+- [X] T033 [US1] Preserve Step 3 attach precondition gates and completion state behavior in `src/mcp-app.ts`
 
 **Checkpoint (behavior parity)**: Full 3-step workflow is PatternFly-rendered and independently functional.
 
 **Verification tasks (phase exit)**:
 
-- [ ] T034 [US1] Run end-to-end workflow parity integration test (`tsx --test tests/integration/engage-red-hat-support.workflow.test.ts`) and record in `specs/012-patternfly-ui-swap/quickstart.md`
+- [X] T034 [US1] Run end-to-end workflow parity integration test (`tsx --test tests/integration/engage-red-hat-support.workflow.test.ts`) and record in `specs/012-patternfly-ui-swap/quickstart.md`
 
 ---
 
@@ -136,18 +136,18 @@
 
 ### Tests for User Story 2
 
-- [ ] T035 [P] [US2] Add explicit hash-route parity integration cases for valid/invalid gate states in `tests/integration/engage-red-hat-support.workflow.test.ts`
+- [X] T035 [P] [US2] Add explicit hash-route parity integration cases for valid/invalid gate states in `tests/integration/engage-red-hat-support.workflow.test.ts`
 
 ### Implementation for User Story 2
 
-- [ ] T036 [US2] Bind PatternFly Wizard navigation to existing hash/step resolution logic in `src/mcp-app.ts`
-- [ ] T037 [US2] Ensure route bootstrap semantics remain unchanged after PatternFly migration in `src/mcp-app.ts`
+- [X] T036 [US2] Bind PatternFly Wizard navigation to existing hash/step resolution logic in `src/mcp-app.ts`
+- [X] T037 [US2] Ensure route bootstrap semantics remain unchanged after PatternFly migration in `src/mcp-app.ts`
 
 **Checkpoint (behavior parity)**: Hash routing and gate-block behavior are unchanged from baseline.
 
 **Verification tasks (phase exit)**:
 
-- [ ] T038 [US2] Run hash-routing parity checks (`tsx --test tests/integration/engage-red-hat-support.workflow.test.ts`) and record in `specs/012-patternfly-ui-swap/quickstart.md`
+- [X] T038 [US2] Run hash-routing parity checks (`tsx --test tests/integration/engage-red-hat-support.workflow.test.ts`) and record in `specs/012-patternfly-ui-swap/quickstart.md`
 
 ---
 
@@ -159,22 +159,22 @@
 
 ### Tests for User Story 3
 
-- [ ] T039 [P] [US3] Add PAT clearing parity assertions after connect flow in `tests/integration/engage-red-hat-support.workflow.test.ts`
-- [ ] T040 [P] [US3] Add regression assertions for URI and metadata compatibility in `tests/regression/mcp-tool-surface-preservation.test.ts`
-- [ ] T041 [P] [US3] Add fallback-preservation regression assertions in `tests/regression/skill-resource-preservation.test.ts`
+- [X] T039 [P] [US3] Add PAT clearing parity assertions after connect flow in `tests/integration/engage-red-hat-support.workflow.test.ts`
+- [X] T040 [P] [US3] Add regression assertions for URI and metadata compatibility in `tests/regression/mcp-tool-surface-preservation.test.ts`
+- [X] T041 [P] [US3] Add fallback-preservation regression assertions in `tests/regression/skill-resource-preservation.test.ts`
 
 ### Implementation for User Story 3
 
-- [ ] T042 [US3] Replace status text line with inline PatternFly `Alert` while preserving message semantics in `src/mcp-app/App.tsx`
-- [ ] T043 [US3] Add PatternFly `Spinner` only for generate polling/in-flight states in `src/mcp-app/App.tsx` and `src/mcp-app.ts`
-- [ ] T044 [US3] Verify and preserve PAT clearing immediately after connect in `src/mcp-app.ts`
-- [ ] T045 [US3] Validate server-side resource URI and `openai/outputTemplate` wiring remain unchanged in `server.ts`
+- [X] T042 [US3] Replace status text line with inline PatternFly `Alert` while preserving message semantics in `src/mcp-app/App.tsx`
+- [X] T043 [US3] Add PatternFly `Spinner` only for generate polling/in-flight states in `src/mcp-app/App.tsx` and `src/mcp-app.ts`
+- [X] T044 [US3] Verify and preserve PAT clearing immediately after connect in `src/mcp-app.ts`
+- [X] T045 [US3] Validate server-side resource URI and `openai/outputTemplate` wiring remain unchanged in `server.ts`
 
 **Checkpoint (behavior parity)**: Contracts/security/fallback boundaries are preserved after UI migration.
 
 **Verification tasks (phase exit)**:
 
-- [ ] T046 [US3] Run targeted contract and regression suites (`npm run test:contract` and `npm run test:regression`) and log results in `specs/012-patternfly-ui-swap/quickstart.md`
+- [X] T046 [US3] Run targeted contract and regression suites (`npm run test:contract` and `npm run test:regression`) and log results in `specs/012-patternfly-ui-swap/quickstart.md`
 
 ---
 
@@ -182,12 +182,12 @@
 
 **Purpose**: Final cross-cutting validation and release readiness.
 
-- [ ] T047 [P] Refresh migration contract evidence if needed in `specs/012-patternfly-ui-swap/contracts/engage-patternfly-migration.contract.v1.json`
-- [ ] T048 [P] Refresh UI mapping evidence if needed in `specs/012-patternfly-ui-swap/contracts/engage-ui-component-map.v1.json`
-- [ ] T049 [P] Refresh verification checklist evidence if needed in `specs/012-patternfly-ui-swap/contracts/engage-verification-regression-checklist.v1.json`
-- [ ] T050 Run final build and full test matrix (`npm run build`, `npm run test:unit`, `npm run test:contract`, `npm run test:integration`, `npm run test:regression`) and record in `specs/012-patternfly-ui-swap/quickstart.md`
-- [ ] T051 Run final MCP URI/meta contract compatibility regression check against `ui://engage-red-hat-support/*` and `openai/outputTemplate` references in `tests/regression/mcp-tool-surface-preservation.test.ts` and `server.ts`
-- [ ] T052 Update final implementation verification notes and parity sign-off in `specs/012-patternfly-ui-swap/plan.md` and `specs/012-patternfly-ui-swap/quickstart.md`
+- [X] T047 [P] Refresh migration contract evidence if needed in `specs/012-patternfly-ui-swap/contracts/engage-patternfly-migration.contract.v1.json`
+- [X] T048 [P] Refresh UI mapping evidence if needed in `specs/012-patternfly-ui-swap/contracts/engage-ui-component-map.v1.json`
+- [X] T049 [P] Refresh verification checklist evidence if needed in `specs/012-patternfly-ui-swap/contracts/engage-verification-regression-checklist.v1.json`
+- [X] T050 Run final build and full test matrix (`npm run build`, `npm run test:unit`, `npm run test:contract`, `npm run test:integration`, `npm run test:regression`) and record in `specs/012-patternfly-ui-swap/quickstart.md`
+- [X] T051 Run final MCP URI/meta contract compatibility regression check against `ui://engage-red-hat-support/*` and `openai/outputTemplate` references in `tests/regression/mcp-tool-surface-preservation.test.ts` and `server.ts`
+- [X] T052 Update final implementation verification notes and parity sign-off in `specs/012-patternfly-ui-swap/plan.md` and `specs/012-patternfly-ui-swap/quickstart.md`
 
 ---
 

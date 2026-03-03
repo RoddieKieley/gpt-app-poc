@@ -19,14 +19,14 @@
 
 ## Old UI -> PatternFly Component Checklist
 
-- [ ] Workflow navigation -> `Wizard`
-- [ ] Step content containers -> `WizardStep`
-- [ ] Grouped controls -> `Form` + `FormGroup`
-- [ ] Product chooser -> `Select`
-- [ ] Text fields -> `TextInput`
-- [ ] Action rows -> `ActionGroup` + `Button`
-- [ ] Status output -> inline `Alert`
-- [ ] Generate polling indicator -> `Spinner`
+- [x] Workflow navigation -> `Wizard`
+- [x] Step content containers -> `WizardStep`
+- [x] Grouped controls -> `Form` + `FormGroup`
+- [x] Product chooser -> `Select`
+- [x] Text fields -> `TextInput`
+- [x] Action rows -> `ActionGroup` + `Button`
+- [x] Status output -> inline `Alert`
+- [x] Generate polling indicator -> `Spinner`
 
 ## File-by-File Migration Sequence
 
@@ -41,12 +41,12 @@
 
 ### Required behavior checks
 
-- [ ] Step gating behavior is identical to baseline.
-- [ ] Hash routes `#step-1`, `#step-2`, `#step-3` are behaviorally identical to baseline.
-- [ ] PAT clearing happens immediately after connect and no PAT retention is introduced.
-- [ ] Tool names, arguments, and call sequence are unchanged.
-- [ ] UI resource URIs and `openai/outputTemplate` compatibility are unchanged.
-- [ ] Text fallback behavior remains intact when UI bundle is unavailable.
+- [x] Step gating behavior is identical to baseline.
+- [x] Hash routes `#step-1`, `#step-2`, `#step-3` are behaviorally identical to baseline.
+- [x] PAT clearing happens immediately after connect and no PAT retention is introduced.
+- [x] Tool names, arguments, and call sequence are unchanged.
+- [x] UI resource URIs and `openai/outputTemplate` compatibility are unchanged.
+- [x] Text fallback behavior remains intact when UI bundle is unavailable.
 
 ### Suggested commands
 
@@ -72,3 +72,20 @@ tsx --test tests/regression/**/*.test.ts
 - No contract/URI/metadata regressions detected.
 - No PAT boundary regressions detected.
 - Migration remains presentation-layer only, with workflow logic unchanged.
+
+## Validation Run Notes
+
+- 2026-03-03 baseline: `npm run build` passed before final validation.
+- 2026-03-03 baseline: `npm run test:contract`, `npm run test:integration`, and `npm run test:regression` passed.
+- 2026-03-03 parity checks: `npx tsc --noEmit` passed.
+- 2026-03-03 final: `npm run build` passed.
+- 2026-03-03 final: `npm run test:unit` passed.
+- 2026-03-03 final: `npm run test:contract` passed.
+- 2026-03-03 final: `npm run test:integration` passed.
+- 2026-03-03 final: `npm run test:regression` passed.
+- Verified in tests and code review:
+  - Step gating parity preserved.
+  - Hash route parity preserved for `#step-1`, `#step-2`, and `#step-3`.
+  - PAT is sent only via secure connect intake and cleared immediately after connect.
+  - MCP UI resource URIs and `openai/outputTemplate` metadata wiring remain unchanged.
+  - Text fallback guidance remains present when UI bundle is unavailable.

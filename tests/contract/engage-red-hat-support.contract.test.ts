@@ -100,6 +100,7 @@ test("engage resources are discoverable with required metadata", async () => {
       tools?: Array<{
         name?: string;
         annotations?: { readOnlyHint?: boolean; openWorldHint?: boolean; destructiveHint?: boolean };
+        _meta?: Record<string, unknown>;
       }>;
     };
     const getSkillTool = listedTools.tools?.find((tool) => tool.name === "get_skill");
@@ -107,6 +108,11 @@ test("engage resources are discoverable with required metadata", async () => {
     assert.equal(getSkillTool?.annotations?.readOnlyHint, true);
     assert.equal(getSkillTool?.annotations?.openWorldHint, false);
     assert.equal(getSkillTool?.annotations?.destructiveHint, false);
+
+    const outputTemplateDrift = (listedTools.tools ?? [])
+      .filter((tool) => typeof tool.name === "string" && tool.name !== "list_skills" && tool.name !== "get_skill")
+      .some((tool) => tool._meta?.["openai/outputTemplate"] !== ENGAGE_UI_URI);
+    assert.equal(outputTemplateDrift, false, "tool output templates must remain bound to engage app URI");
 
     const getSkillResult = (await jsonRpc("tools/call", {
       name: "get_skill",

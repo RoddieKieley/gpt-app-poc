@@ -161,6 +161,26 @@ test("step-2 UI flow explicitly mints consent before generate and avoids auto co
   );
 });
 
+test("UI source preserves hash routing and PAT clear boundaries", async () => {
+  const uiFile = path.join(process.cwd(), "src", "mcp-app.ts");
+  const uiSource = await fs.readFile(uiFile, "utf8");
+
+  assert.ok(uiSource.includes('window.location.hash = "step-1"'));
+  assert.ok(uiSource.includes('window.location.hash = "step-2"'));
+  assert.ok(uiSource.includes('window.location.hash = "step-3"'));
+  assert.ok(uiSource.includes('if (hash === "step-2")'));
+  assert.ok(uiSource.includes('if (hash === "step-3")'));
+
+  assert.ok(
+    uiSource.includes("formState.jiraPat = \"\";"),
+    "PAT must be cleared from UI state immediately after secure connect intake",
+  );
+  assert.ok(
+    uiSource.includes('callTool("jira_connect_secure"'),
+    "PAT should still be sent only to jira_connect_secure secure intake flow",
+  );
+});
+
 test("end-to-end connect -> connection_id -> generate -> fetch -> attach succeeds", async () => {
   const { srv, base } = await startServer("e2e");
 

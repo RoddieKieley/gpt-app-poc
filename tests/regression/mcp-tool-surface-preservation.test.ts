@@ -70,11 +70,25 @@ test("MCP tool surface includes existing and new tools", async () => {
       },
       body: JSON.stringify({ jsonrpc: "2.0", method: "initialized" }),
     });
-    const listed = (await jsonRpc("tools/list")) as { tools?: Array<{ name: string }> };
+    const listed = (await jsonRpc("tools/list")) as {
+      tools?: Array<{ name: string; _meta?: Record<string, unknown> }>;
+    };
     const names = new Set((listed.tools ?? []).map((tool) => tool.name));
     for (const required of REQUIRED_TOOLS) {
       assert.ok(names.has(required), `missing tool ${required}`);
     }
+
+    const incompatibleTemplateTool = (listed.tools ?? []).find((tool) => {
+      if (!REQUIRED_TOOLS.includes(tool.name as (typeof REQUIRED_TOOLS)[number])) {
+        return false;
+      }
+      return tool._meta?.["openai/outputTemplate"] !== "ui://engage-red-hat-support/app.html";
+    });
+    assert.equal(
+      incompatibleTemplateTool === undefined,
+      true,
+      "required tools must keep openai/outputTemplate bound to engage app URI",
+    );
 
     const resources = (await jsonRpc("resources/list")) as { resources?: Array<{ uri?: string }> };
     const uris = new Set((resources.resources ?? []).map((entry) => entry.uri));

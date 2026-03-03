@@ -1,43 +1,9 @@
 import { App } from "@modelcontextprotocol/ext-apps";
-
-const statusEl = document.getElementById("status");
-const step1Section = document.getElementById("step-select-product");
-const step2Section = document.getElementById("step-sos-report");
-const step3Section = document.getElementById("step-jira-attach");
-const navStep1Btn = document.getElementById("nav-step-1");
-const navStep2Btn = document.getElementById("nav-step-2");
-const navStep3Btn = document.getElementById("nav-step-3");
-const step1ContinueBtn = document.getElementById("step-1-continue-btn");
-const step2ContinueBtn = document.getElementById("step-2-continue-btn");
-const connectBtn = document.getElementById("connect-btn");
-const verifyBtn = document.getElementById("verify-btn");
-const statusBtn = document.getElementById("status-btn");
-const generateBtn = document.getElementById("generate-btn");
-const fetchBtn = document.getElementById("fetch-btn") as HTMLButtonElement | null;
-const listBtn = document.getElementById("list-btn");
-const attachBtn = document.getElementById("attach-btn");
-const disconnectBtn = document.getElementById("disconnect-btn");
-const productSelectEl = document.getElementById("product-select") as HTMLSelectElement | null;
-const jiraUrlEl = document.getElementById("jira-url") as HTMLInputElement | null;
-const jiraPatEl = document.getElementById("jira-pat") as HTMLInputElement | null;
-const connectionIdEl = document.getElementById("connection-id") as HTMLInputElement | null;
-const issueKeyEl = document.getElementById("issue-key") as HTMLInputElement | null;
-const fetchReferenceEl = document.getElementById("fetch-reference") as HTMLInputElement | null;
-const artifactRefEl = document.getElementById("artifact-ref") as HTMLInputElement | null;
-const widgetBuildId = document
-  .querySelector('meta[name="gpt-app-build-id"]')
-  ?.getAttribute("content")
-  ?.trim();
-
-if (
-  !statusEl || !step1Section || !step2Section || !step3Section ||
-  !navStep1Btn || !navStep2Btn || !navStep3Btn || !step1ContinueBtn || !step2ContinueBtn ||
-  !connectBtn || !verifyBtn || !statusBtn || !generateBtn || !fetchBtn ||
-  !listBtn || !attachBtn || !disconnectBtn || !productSelectEl ||
-  !jiraUrlEl || !jiraPatEl || !connectionIdEl || !issueKeyEl || !fetchReferenceEl || !artifactRefEl
-) {
-  throw new Error("Missing required UI elements.");
-}
+import { createElement } from "react";
+import { createRoot } from "react-dom/client";
+import "@patternfly/react-core/dist/styles/base.css";
+import { EngageWorkflowApp } from "./mcp-app/App";
+import type { FormState, StatusVariant, UiState, WorkflowState, WorkflowStep } from "./mcp-app/state";
 
 type ToolTextContent = { type: string; text?: string };
 type ToolResult = {
@@ -63,24 +29,30 @@ type VerifyResponse = {
   text?: string;
 };
 
-type WorkflowStep = "select_product" | "sos_report" | "jira_attach" | "completed" | "failed";
-type WorkflowState = {
-  current_step: WorkflowStep;
-  selected_product?: string;
-  fetch_reference?: string;
-  artifact_ref?: string;
-  connection_id?: string;
-  issue_key?: string;
-  issue_access_verified: boolean;
-  last_error_code?: string;
-};
-
 const workflowState: WorkflowState = {
   current_step: "select_product",
   issue_access_verified: false,
 };
+const formState: FormState = {
+  product: "linux",
+  jiraUrl: "",
+  jiraPat: "",
+  connectionId: "",
+  issueKey: "",
+  fetchReference: "",
+  artifactRef: "",
+};
+const uiState: UiState = {
+  statusMessage: "Ready.",
+  statusVariant: "info",
+  isGenerating: false,
+};
+let render: () => void = () => {};
 const consentSessionId = `ui-${crypto.randomUUID()}`;
 let workflowSessionId: string | null = null;
+const appRoot = document.getElementById("app-root");
+if (!appRoot) throw new Error("Missing app root element.");
+const reactRoot = createRoot(appRoot);
 
 const app = new App({ name: "MCP Apps Support Workflows", version: "1.0.0" });
 
@@ -99,46 +71,37 @@ try {
   app.connect();
 } catch (error) {
   const message = error instanceof Error ? error.message : String(error);
-  statusEl.textContent = `Widget connection failed: ${message}`;
+  uiState.statusMessage = `Widget connection failed: ${message}`;
+  uiState.statusVariant = "danger";
 }
 
 const hydrateWorkflowFromToolResult = (result: ToolResult): void => {
   const structured = result.structuredContent ?? {};
   const fetchReference = String(structured.fetch_reference ?? "").trim();
   if (fetchReference) {
-    fetchReferenceEl.value = fetchReference;
+    formState.fetchReference = fetchReference;
     workflowState.fetch_reference = fetchReference;
     workflowState.current_step = "sos_report";
   }
 
   const archivePath = String(structured.archive_path ?? "").trim();
   if (archivePath) {
-    artifactRefEl.value = archivePath;
+    formState.artifactRef = archivePath;
     workflowState.artifact_ref = archivePath;
     workflowState.current_step = "sos_report";
   }
-
-  syncFetchButtonState();
 };
 
 app.ontoolresult = (result) => {
   hydrateWorkflowFromToolResult(result as ToolResult);
   const text = result.content?.find((item) => item.type === "text")?.text;
-  statusEl.textContent = text ?? "Tool executed.";
+  setStatus(text ?? "Tool executed.");
 };
 
-const setStatus = (message: string) => {
-  statusEl.textContent = message;
-};
-
-function syncFetchButtonState(): void {
-  fetchBtn.disabled = fetchReferenceEl.value.trim().length === 0;
-}
-
-const setStepVisible = (step: WorkflowStep) => {
-  step1Section.hidden = step !== "select_product";
-  step2Section.hidden = step !== "sos_report";
-  step3Section.hidden = step !== "jira_attach";
+const setStatus = (message: string, variant: StatusVariant = "info") => {
+  uiState.statusMessage = message;
+  uiState.statusVariant = variant;
+  render();
 };
 
 const setCurrentStep = (step: WorkflowStep) => {
@@ -150,18 +113,22 @@ const setCurrentStep = (step: WorkflowStep) => {
   } else if (step === "jira_attach") {
     window.location.hash = "step-3";
   }
-  setStepVisible(step);
+  render();
 };
 
+const widgetBuildId = document
+  .querySelector('meta[name="gpt-app-build-id"]')
+  ?.getAttribute("content")
+  ?.trim();
 if (widgetBuildId) {
-  setStatus(`Widget loaded (${widgetBuildId}).`);
+  setStatus(`Widget loaded (${widgetBuildId}).`, "success");
 }
 
 const ensureLinuxSelection = (): boolean => {
-  const selected = productSelectEl.value.trim().toLowerCase();
+  const selected = formState.product.trim().toLowerCase();
   if (selected !== "linux") {
     workflowState.last_error_code = "unsupported_product";
-    setStatus("Only Red Hat Enterprise Linux is currently supported for Engage Red Hat Support.");
+    setStatus("Only Red Hat Enterprise Linux is currently supported for Engage Red Hat Support.", "warning");
     return false;
   }
   workflowState.selected_product = selected;
@@ -174,12 +141,12 @@ const canEnterJiraStep = (): boolean =>
 
 const navigateToStep = (step: WorkflowStep): boolean => {
   if (step === "sos_report" && !canEnterSosStep()) {
-    setStatus("Complete step 1 with linux selection before step 2.");
+    setStatus("Complete step 1 with linux selection before step 2.", "warning");
     workflowState.last_error_code = "step_gate_select_product";
     return false;
   }
   if (step === "jira_attach" && !canEnterJiraStep()) {
-    setStatus("Complete step 2 (generate + fetch) before step 3.");
+    setStatus("Complete step 2 (generate + fetch) before step 3.", "warning");
     workflowState.last_error_code = "step_gate_sos_report";
     return false;
   }
@@ -187,15 +154,9 @@ const navigateToStep = (step: WorkflowStep): boolean => {
   return true;
 };
 
-const getConnectionId = (): string => connectionIdEl.value.trim();
-const getIssueKey = (): string => issueKeyEl.value.trim();
-const getFetchReference = (): string => fetchReferenceEl.value.trim();
-
-fetchReferenceEl.addEventListener("input", () => {
-  const value = fetchReferenceEl.value.trim();
-  workflowState.fetch_reference = value || undefined;
-  syncFetchButtonState();
-});
+const getConnectionId = (): string => formState.connectionId.trim();
+const getIssueKey = (): string => formState.issueKey.trim();
+const getFetchReference = (): string => formState.fetchReference.trim();
 
 const callTool = async (
   name: string,
@@ -210,17 +171,18 @@ const callTool = async (
     hydrateWorkflowFromToolResult(result);
     const text = result.content?.find((item) => item.type === "text")?.text;
     if (!options.suppressStatusUpdate) {
-      setStatus(text ?? "Operation completed.");
+      setStatus(text ?? "Operation completed.", result.isError ? "danger" : "success");
     }
+    render();
     return result;
   } catch (error) {
     const message = error instanceof Error ? error.message : String(error);
     if (options.redactErrorDetails) {
       const generic = "Connection failed. Verify URL and credentials.";
-      setStatus(generic);
+      setStatus(generic, "danger");
       return { isError: true, content: [{ type: "text", text: generic }] };
     }
-    setStatus(`Operation failed: ${message}`);
+    setStatus(`Operation failed: ${message}`, "danger");
     return { isError: true, content: [{ type: "text", text: message }] };
   }
 };
@@ -238,24 +200,24 @@ const verifyConnectionViaTool = async (connectionId: string): Promise<VerifyResp
     text: result.content?.find((item) => item.type === "text")?.text,
   };
   if (!status) {
-    setStatus(parsed.text ?? "Connection verification failed.");
+    setStatus(parsed.text ?? "Connection verification failed.", "danger");
     return null;
   }
   if (status === "expired" || status === "revoked") {
-    setStatus(`Connection is ${status}. Reconnect before continuing.`);
+    setStatus(`Connection is ${status}. Reconnect before continuing.`, "warning");
     return parsed;
   }
-  setStatus(parsed.text ?? `Connection is ${status}.`);
+  setStatus(parsed.text ?? `Connection is ${status}.`, "success");
   return parsed;
 };
 
 const connectJira = async (): Promise<ConnectResponse | null> => {
   if (!ensureLinuxSelection()) return null;
-  const jiraBaseUrl = jiraUrlEl.value.trim();
-  const pat = jiraPatEl.value;
+  const jiraBaseUrl = formState.jiraUrl.trim();
+  const pat = formState.jiraPat;
   if (!jiraBaseUrl || !pat) {
     workflowState.last_error_code = "missing_jira_connect_inputs";
-    setStatus("Jira URL and PAT are required.");
+    setStatus("Jira URL and PAT are required.", "warning");
     return null;
   }
   const result = await callTool("jira_connect_secure", {
@@ -268,16 +230,17 @@ const connectJira = async (): Promise<ConnectResponse | null> => {
   }
   const body = (result.structuredContent ?? {}) as ConnectResponse;
   if (body.connection_id) {
-    connectionIdEl.value = body.connection_id;
+    formState.connectionId = body.connection_id;
     workflowState.connection_id = body.connection_id;
   }
   if (body.status) {
-    setStatus(`Connected. Current lifecycle status: ${body.status}.`);
+    setStatus(`Connected. Current lifecycle status: ${body.status}.`, "success");
   } else {
-    setStatus(body.text ?? "Connected.");
+    setStatus(body.text ?? "Connected.", "success");
   }
   // Preserve PAT security boundary: never keep PAT in local UI state after intake.
-  jiraPatEl.value = "";
+  formState.jiraPat = "";
+  render();
   return body;
 };
 
@@ -285,7 +248,7 @@ const verifyConnection = async (): Promise<VerifyResponse | null> => {
   const connectionId = getConnectionId();
   if (!connectionId) {
     workflowState.last_error_code = "missing_connection_id";
-    setStatus("connection_id is required.");
+    setStatus("connection_id is required.", "warning");
     return null;
   }
   try {
@@ -294,24 +257,24 @@ const verifyConnection = async (): Promise<VerifyResponse | null> => {
     if (!response.ok) {
       const fallback = await verifyConnectionViaTool(connectionId);
       if (fallback) return fallback;
-      setStatus(body.text ?? "Connection verification failed.");
+      setStatus(body.text ?? "Connection verification failed.", "danger");
       workflowState.last_error_code = "connection_verification_failed";
       return null;
     }
     const status = String(body.status ?? "");
     if (status === "expired" || status === "revoked") {
-      setStatus(`Connection is ${status}. Reconnect before continuing.`);
+      setStatus(`Connection is ${status}. Reconnect before continuing.`, "warning");
       workflowState.last_error_code = `connection_${status}`;
       return body;
     }
     workflowState.connection_id = connectionId;
-    setStatus(body.text ?? `Connection is ${status || "connected"}.`);
+    setStatus(body.text ?? `Connection is ${status || "connected"}.`, "success");
     return body;
   } catch (error) {
     const fallback = await verifyConnectionViaTool(connectionId);
     if (fallback) return fallback;
     const message = error instanceof Error ? error.message : String(error);
-    setStatus(`Connection verification request failed (${message}).`);
+    setStatus(`Connection verification request failed (${message}).`, "danger");
     workflowState.last_error_code = "connection_verify_request_failed";
     return null;
   }
@@ -323,7 +286,7 @@ const verifyIssueReadAccess = async (): Promise<boolean> => {
   if (!connectionId || !issueKey) {
     workflowState.issue_access_verified = false;
     workflowState.last_error_code = "missing_issue_verification_inputs";
-    setStatus("connection_id and issue key are required before issue access verification.");
+    setStatus("connection_id and issue key are required before issue access verification.", "warning");
     return false;
   }
   const listed = await callTool("jira_list_attachments", {
@@ -333,12 +296,12 @@ const verifyIssueReadAccess = async (): Promise<boolean> => {
   if (listed.isError) {
     workflowState.issue_access_verified = false;
     workflowState.last_error_code = "issue_access_denied";
-    setStatus("Issue read verification failed. Resolve access before attach.");
+    setStatus("Issue read verification failed. Resolve access before attach.", "danger");
     return false;
   }
   workflowState.issue_access_verified = true;
   workflowState.issue_key = issueKey;
-  setStatus("Issue access verified. You can attach artifact.");
+  setStatus("Issue access verified. You can attach artifact.", "success");
   return true;
 };
 
@@ -361,13 +324,13 @@ const mintGenerateConsentToken = async (): Promise<string | null> => {
     });
     const body = await response.json() as { consent_token?: string; text?: string };
     if (!response.ok || !body.consent_token) {
-      setStatus(body.text ?? "Consent mint failed. Retry Step 2 Generate.");
+      setStatus(body.text ?? "Consent mint failed. Retry Step 2 Generate.", "danger");
       return null;
     }
     return body.consent_token;
   } catch (error) {
     const message = error instanceof Error ? error.message : String(error);
-    setStatus(`Consent mint request failed (${message}).`);
+    setStatus(`Consent mint request failed (${message}).`, "danger");
     return null;
   }
 };
@@ -384,14 +347,14 @@ const startWorkflowSession = async (): Promise<boolean> => {
     });
     const body = await response.json() as { workflow_session_id?: string; text?: string };
     if (!response.ok || !body.workflow_session_id) {
-      setStatus(body.text ?? "Unable to start workflow session.");
+      setStatus(body.text ?? "Unable to start workflow session.", "danger");
       return false;
     }
     workflowSessionId = body.workflow_session_id;
     return true;
   } catch (error) {
     const message = error instanceof Error ? error.message : String(error);
-    setStatus(`Workflow start failed (${message}).`);
+    setStatus(`Workflow start failed (${message}).`, "danger");
     return false;
   }
 };
@@ -412,13 +375,13 @@ const submitProductSelection = async (): Promise<boolean> => {
     });
     const body = await response.json() as { text?: string };
     if (!response.ok) {
-      setStatus(body.text ?? "Step 1 product selection failed.");
+      setStatus(body.text ?? "Step 1 product selection failed.", "danger");
       return false;
     }
     return true;
   } catch (error) {
     const message = error instanceof Error ? error.message : String(error);
-    setStatus(`Step 1 product submission failed (${message}).`);
+    setStatus(`Step 1 product submission failed (${message}).`, "danger");
     return false;
   }
 };
@@ -449,35 +412,21 @@ const pollGenerateJobUntilTerminal = async (jobId: string): Promise<GenerateJobR
   return null;
 };
 
-connectBtn.addEventListener("click", async () => {
-  await connectJira();
-});
-
-verifyBtn.addEventListener("click", async () => {
-  await verifyConnection();
-});
-
-statusBtn.addEventListener("click", async () => {
-  const connectionId = getConnectionId();
-  if (!connectionId) {
-    setStatus("connection_id is required.");
-    return;
-  }
-  await callTool("jira_connection_status", { connection_id: connectionId });
-});
-
-generateBtn.addEventListener("click", async () => {
+const onGenerate = async () => {
   if (!navigateToStep("sos_report")) return;
   if (!ensureLinuxSelection()) return;
+  uiState.isGenerating = true;
+  render();
   // Prevent stale fetch actions while a new generate is in-flight.
-  fetchReferenceEl.value = "";
+  formState.fetchReference = "";
   workflowState.fetch_reference = undefined;
-  syncFetchButtonState();
   // Diagnostic collection must only occur on explicit user action in Step 2.
   const consentToken = await mintGenerateConsentToken();
   if (!consentToken) {
     workflowState.last_error_code = "consent_mint_failed";
     workflowState.current_step = "failed";
+    uiState.isGenerating = false;
+    render();
     return;
   }
   const generated = await callTool("generate_sosreport", {
@@ -492,53 +441,65 @@ generateBtn.addEventListener("click", async () => {
       ?? "Fix the error and retry generate.";
     workflowState.last_error_code = "generate_failed";
     workflowState.current_step = "failed";
-    setStatus(`Generate step failed. ${reason}`);
+    setStatus(`Generate step failed. ${reason}`, "danger");
+    uiState.isGenerating = false;
+    render();
     return;
   }
   if (fetchReference) {
-    fetchReferenceEl.value = fetchReference;
+    formState.fetchReference = fetchReference;
     workflowState.fetch_reference = fetchReference;
-    syncFetchButtonState();
     workflowState.current_step = "sos_report";
-    setStatus("Generate succeeded. Proceed to fetch_sosreport.");
+    setStatus("Generate succeeded. Proceed to fetch_sosreport.", "success");
+    uiState.isGenerating = false;
+    render();
     return;
   }
   if (!generateJobId) {
-    setStatus("Generate accepted. Waiting for completion status...");
+    setStatus("Generate accepted. Waiting for completion status...", "info");
+    uiState.isGenerating = false;
+    render();
     return;
   }
 
-  setStatus("Generate started. Waiting for completion status...");
+  setStatus("Generate started. Waiting for completion status...", "info");
   const finalState = await pollGenerateJobUntilTerminal(generateJobId);
   if (!finalState) {
-    setStatus("Generate is still running. Keep this page open and retry in a few seconds.");
+    setStatus("Generate is still running. Keep this page open and retry in a few seconds.", "warning");
+    uiState.isGenerating = false;
+    render();
     return;
   }
   if (String(finalState.status ?? "") === "failed") {
     workflowState.last_error_code = String(finalState.error_code ?? "generate_failed");
     workflowState.current_step = "failed";
-    setStatus(finalState.text ?? "Generate failed. Retry Step 2 Generate.");
+    setStatus(finalState.text ?? "Generate failed. Retry Step 2 Generate.", "danger");
+    uiState.isGenerating = false;
+    render();
     return;
   }
   const polledFetchReference = String(finalState.fetch_reference ?? "").trim();
   if (!polledFetchReference) {
     workflowState.last_error_code = "missing_fetch_reference_after_generate";
-    setStatus("Generate completed but no fetch reference was returned. Retry generate.");
+    setStatus("Generate completed but no fetch reference was returned. Retry generate.", "warning");
+    uiState.isGenerating = false;
+    render();
     return;
   }
-  fetchReferenceEl.value = polledFetchReference;
+  formState.fetchReference = polledFetchReference;
   workflowState.fetch_reference = polledFetchReference;
-  syncFetchButtonState();
-  setStatus("Generate completed. Fetch is now enabled.");
-});
+  setStatus("Generate completed. Fetch is now enabled.", "success");
+  uiState.isGenerating = false;
+  render();
+};
 
-fetchBtn.addEventListener("click", async () => {
+const onFetch = async () => {
   if (!navigateToStep("sos_report")) return;
   if (!ensureLinuxSelection()) return;
   const fetchReference = getFetchReference();
   if (!fetchReference) {
     workflowState.last_error_code = "missing_fetch_reference";
-    setStatus("fetch_reference is required before fetch.");
+    setStatus("fetch_reference is required before fetch.", "warning");
     return;
   }
   const fetched = await callTool("fetch_sosreport", { fetch_reference: fetchReference });
@@ -546,39 +507,40 @@ fetchBtn.addEventListener("click", async () => {
   if (fetched.isError || !archivePath) {
     workflowState.last_error_code = "fetch_failed";
     workflowState.current_step = "failed";
-    setStatus("Fetch step failed. Fix the error and retry fetch.");
+    setStatus("Fetch step failed. Fix the error and retry fetch.", "danger");
     return;
   }
-  artifactRefEl.value = archivePath;
+  formState.artifactRef = archivePath;
   workflowState.artifact_ref = archivePath;
   workflowState.current_step = "sos_report";
-  setStatus("Fetch succeeded. Use the returned archive_path for attach.");
-});
+  setStatus("Fetch succeeded. Use the returned archive_path for attach.", "success");
+  render();
+};
 
-listBtn.addEventListener("click", async () => {
+const onList = async () => {
   await verifyIssueReadAccess();
-});
+};
 
-attachBtn.addEventListener("click", async () => {
+const onAttach = async () => {
   if (!navigateToStep("jira_attach")) return;
   const connectionId = getConnectionId();
   const issueKey = getIssueKey();
-  const artifactRef = artifactRefEl.value.trim();
+  const artifactRef = formState.artifactRef.trim();
   if (!connectionId || !issueKey || !artifactRef) {
     workflowState.last_error_code = "missing_attach_inputs";
-    setStatus("connection_id, issue key, and artifact path are required.");
+    setStatus("connection_id, issue key, and artifact path are required.", "warning");
     return;
   }
   const verified = await verifyConnection();
   if (!verified || verified.status !== "connected") {
     workflowState.last_error_code = "connection_not_verified_for_attach";
-    setStatus("Attach blocked: verify an active connection before attaching.");
+    setStatus("Attach blocked: verify an active connection before attaching.", "warning");
     return;
   }
   const issueAccessOk = await verifyIssueReadAccess();
   if (!issueAccessOk) {
     workflowState.last_error_code = "issue_access_not_verified";
-    setStatus("Attach blocked: verify issue read access before attaching.");
+    setStatus("Attach blocked: verify issue read access before attaching.", "warning");
     return;
   }
   const result = await callTool("jira_attach_artifact", {
@@ -589,35 +551,23 @@ attachBtn.addEventListener("click", async () => {
   if (result.isError) {
     workflowState.last_error_code = "attach_failed";
     workflowState.current_step = "failed";
-    setStatus("Attach step failed. Verify issue key, connection status, and artifact path.");
+    setStatus("Attach step failed. Verify issue key, connection status, and artifact path.", "danger");
     return;
   }
   workflowState.current_step = "completed";
-  setStatus("Attach succeeded. Workflow completed.");
-});
+  setStatus("Attach succeeded. Workflow completed.", "success");
+};
 
-disconnectBtn.addEventListener("click", async () => {
+const onDisconnect = async () => {
   const connectionId = getConnectionId();
   if (!connectionId) {
-    setStatus("connection_id is required.");
+    setStatus("connection_id is required.", "warning");
     return;
   }
   await callTool("jira_disconnect", { connection_id: connectionId });
-});
+};
 
-navStep1Btn.addEventListener("click", () => {
-  navigateToStep("select_product");
-});
-
-navStep2Btn.addEventListener("click", () => {
-  navigateToStep("sos_report");
-});
-
-navStep3Btn.addEventListener("click", () => {
-  navigateToStep("jira_attach");
-});
-
-step1ContinueBtn.addEventListener("click", async () => {
+const onStep1Continue = async () => {
   if (!ensureLinuxSelection()) return;
   if (!workflowSessionId) {
     const started = await startWorkflowSession();
@@ -632,18 +582,18 @@ step1ContinueBtn.addEventListener("click", async () => {
     return;
   }
   navigateToStep("sos_report");
-  setStatus("Step 1 complete. Continue with generate + fetch.");
-});
+  setStatus("Step 1 complete. Continue with generate + fetch.", "success");
+};
 
-step2ContinueBtn.addEventListener("click", () => {
+const onStep2Continue = () => {
   if (!workflowState.artifact_ref) {
-    setStatus("Complete generate + fetch to continue to step 3.");
+    setStatus("Complete generate + fetch to continue to step 3.", "warning");
     workflowState.last_error_code = "missing_artifact_ref_for_step3";
     return;
   }
   navigateToStep("jira_attach");
-  setStatus("Step 2 complete. Continue with connect, verify, and attach.");
-});
+  setStatus("Step 2 complete. Continue with connect, verify, and attach.", "success");
+};
 
 const bootstrapRoute = () => {
   const hash = window.location.hash.replace("#", "");
@@ -656,5 +606,67 @@ const bootstrapRoute = () => {
   }
 };
 
+render = () => {
+  reactRoot.render(
+    createElement(EngageWorkflowApp, {
+      currentStep: workflowState.current_step,
+      formState,
+      uiState,
+      onNavigateStep1: () => navigateToStep("select_product"),
+      onNavigateStep2: () => navigateToStep("sos_report"),
+      onNavigateStep3: () => navigateToStep("jira_attach"),
+      onProductChange: (value: string) => {
+        formState.product = value;
+        render();
+      },
+      onFetchReferenceChange: (value: string) => {
+        formState.fetchReference = value;
+        workflowState.fetch_reference = value.trim() || undefined;
+        render();
+      },
+      onArtifactRefChange: (value: string) => {
+        formState.artifactRef = value;
+        workflowState.artifact_ref = value.trim() || undefined;
+        render();
+      },
+      onJiraUrlChange: (value: string) => {
+        formState.jiraUrl = value;
+        render();
+      },
+      onJiraPatChange: (value: string) => {
+        formState.jiraPat = value;
+        render();
+      },
+      onConnectionIdChange: (value: string) => {
+        formState.connectionId = value;
+        workflowState.connection_id = value.trim() || undefined;
+        render();
+      },
+      onIssueKeyChange: (value: string) => {
+        formState.issueKey = value;
+        workflowState.issue_key = value.trim() || undefined;
+        render();
+      },
+      onStep1Continue,
+      onGenerate,
+      onFetch,
+      onStep2Continue,
+      onConnect: async () => { await connectJira(); },
+      onVerify: async () => { await verifyConnection(); },
+      onStatus: async () => {
+        const connectionId = getConnectionId();
+        if (!connectionId) {
+          setStatus("connection_id is required.", "warning");
+          return;
+        }
+        await callTool("jira_connection_status", { connection_id: connectionId });
+      },
+      onList,
+      onAttach,
+      onDisconnect,
+    }),
+  );
+};
+
 bootstrapRoute();
-syncFetchButtonState();
+render();

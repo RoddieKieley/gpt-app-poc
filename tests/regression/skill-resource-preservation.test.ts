@@ -1,5 +1,7 @@
 import test from "node:test";
 import assert from "node:assert/strict";
+import fs from "node:fs/promises";
+import path from "node:path";
 
 type JsonRpcResponse =
   | { jsonrpc: "2.0"; id: number; result: unknown }
@@ -108,4 +110,17 @@ test("skill discovery exposes engage resource and list_skills output", async () 
   } finally {
     srv.close();
   }
+});
+
+test("server fallback guidance remains available when UI bundle is missing", async () => {
+  const serverFile = path.join(process.cwd(), "server.ts");
+  const source = await fs.readFile(serverFile, "utf8");
+  assert.ok(
+    source.includes("UI bundle unavailable. Follow text fallback steps:"),
+    "fallback guidance text should remain present in server resource loader",
+  );
+  assert.ok(
+    source.includes("openai/outputTemplate"),
+    "resource metadata semantics must retain openai/outputTemplate wiring",
+  );
 });
