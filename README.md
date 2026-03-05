@@ -106,7 +106,7 @@ Technical readiness details live under `specs/003-chatgpt-app-technical-readines
   - no new MCP orchestration tool is introduced
 - Required 3-step conversational workflow:
   1. start workflow + select product (linux only) (`start_engage_red_hat_support` -> `select_engage_product`)
-  2. explicit consent mint + generate + fetch sos report (`POST /api/engage/consent-tokens` -> `generate_sosreport(consent_token)` -> `fetch_sosreport`)
+  2. explicit consent mint + generate + fetch sos report (`POST /api/engage/consent-tokens` for web UI OR `mint_engage_consent_token` for headless -> `generate_sosreport(consent_token)` -> `fetch_sosreport`)
   3. connect Jira via secure intake, verify connection, verify issue read access (`jira_list_attachments`), then attach (`jira_attach_artifact`)
 - Step 2 safeguards:
   - `generate_sosreport` is denied unless consent token is valid, unexpired, user/session-bound, scope-bound, step-bound, and single-use.
@@ -117,3 +117,34 @@ Technical readiness details live under `specs/003-chatgpt-app-technical-readines
   - PAT is only used in secure backend intake
   - PAT must never appear in MCP tool args/results/prompts/logs
   - downstream calls use opaque `connection_id` only
+
+### Headless MCP Step-2 snippet
+
+Use this sequence for text/headless clients. Ask for explicit user approval before minting.
+This compatibility guidance is additive hardening and does not change web UI consent behavior.
+
+```ts
+// 1) Ask user: "sosreport collects invasive diagnostics. Proceed?"
+// 2) Only if user says yes, mint consent.
+const mint = await callTool("mint_engage_consent_token", {
+  permission_granted: true,
+  workflow_session_id, // optional
+});
+
+// Prefer structured content.
+let consentToken = String(mint.structuredContent?.consent_token ?? "").trim();
+
+// Fallback for clients that only expose text content.
+if (!consentToken) {
+  const text = String(mint.content?.find((c) => c.type === "text")?.text ?? "");
+  const match = text.match(/^consent_token:\s*(.+)$/m);
+  consentToken = match?.[1]?.trim() ?? "";
+}
+
+if (!consentToken) throw new Error("Missing consent token from mint response");
+
+const generated = await callTool("generate_sosreport", {
+  consent_token: consentToken,
+  workflow_session_id, // optional
+});
+```

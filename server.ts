@@ -664,7 +664,7 @@ registerAppTool(
   "mint_engage_consent_token",
   {
     title: "Mint Engage Consent Token",
-    description: "Mints explicit consent token for Step 2 sosreport generation.",
+    description: "Mints explicit consent token for Step 2 sosreport generation after user permission is granted.",
     inputSchema: mintEngageConsentTokenSchema,
     annotations: {
       readOnlyHint: false,
@@ -678,6 +678,26 @@ registerAppTool(
     },
   },
   async (args, extra) => {
+    if (args.permission_granted !== true) {
+      return {
+        isError: true,
+        content: [
+          {
+            type: "text",
+            text: [
+              "Explicit permission is required before generating diagnostics.",
+              "Ask the user: \"sosreport collects invasive diagnostic data. Proceed with generation?\"",
+              "If the user answers yes, retry mint_engage_consent_token with permission_granted=true.",
+            ].join("\n"),
+          },
+        ],
+        structuredContent: {
+          code: "explicit_permission_required",
+          next_step: "ask_user_permission_then_retry_mint",
+        },
+      };
+    }
+
     const userId = resolveMcpUserId(extra?.authInfo);
     const sessionId = resolveMcpSessionId(extra, userId);
     const mint = mintConsentTokenForGenerate({
@@ -697,7 +717,16 @@ registerAppTool(
     }
 
     return {
-      content: [{ type: "text", text: "Consent token minted for Step 2 generate_sosreport." }],
+      content: [{
+        type: "text",
+        text: [
+          "Consent token minted for Step 2 generate_sosreport.",
+          `consent_token: ${mint.consentToken}`,
+          `expires_at: ${mint.expiresAt}`,
+          `workflow_session_id: ${mint.workflowSessionId}`,
+          "Use consent_token with generate_sosreport immediately (single-use, short-lived).",
+        ].join("\n"),
+      }],
       structuredContent: {
         consent_token: mint.consentToken,
         expires_at: mint.expiresAt,

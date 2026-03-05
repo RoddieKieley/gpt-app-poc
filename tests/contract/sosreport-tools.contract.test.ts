@@ -88,6 +88,10 @@ test("sosreport tools are registered with expected metadata", async () => {
       mintSchemaProps.includes("workflow_session_id"),
       "mint_engage_consent_token should expose optional workflow_session_id",
     );
+    assert.ok(
+      mintSchemaProps.includes("permission_granted"),
+      "mint_engage_consent_token should expose explicit permission_granted input",
+    );
   } finally {
     srv.close();
   }

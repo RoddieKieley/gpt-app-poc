@@ -241,10 +241,24 @@ test("013 contracts define MCP mint tool and headless sequence", async () => {
 
   const mintRaw = await fs.readFile(path.join(base, "engage-consent-mint-mcp.contract.v1.json"), "utf8");
   const mintContract = JSON.parse(mintRaw) as {
-    tool?: { name?: string; output?: { requiredFields?: string[] } };
+    tool?: {
+      name?: string;
+      input?: { permission_granted?: { required?: boolean; validation?: string } };
+      output?: { requiredFields?: string[] };
+    };
     security?: { explicitInvocationRequired?: boolean; automaticMintingForbidden?: boolean };
   };
   assert.equal(mintContract.tool?.name, "mint_engage_consent_token");
+  if (mintContract.tool?.input?.permission_granted) {
+    assert.equal(mintContract.tool.input.permission_granted.required, true);
+    assert.ok(
+      String(mintContract.tool.input.permission_granted.validation ?? "").includes("must be true"),
+      "mint contract should require explicit permission_granted=true when permission field is present",
+    );
+  } else {
+    // Backward-compatible contract interpretation: explicit permission is still enforced by sequence + runtime checks.
+    assert.equal(mintContract.security?.explicitInvocationRequired, true);
+  }
   assert.deepEqual(mintContract.tool?.output?.requiredFields, [
     "consent_token",
     "expires_at",
@@ -258,7 +272,7 @@ test("013 contracts define MCP mint tool and headless sequence", async () => {
     "utf8",
   );
   const sequenceContract = JSON.parse(sequenceRaw) as {
-    requiredSequence?: Array<{ call?: string }>;
+    requiredSequence?: Array<{ call?: string; arguments?: Record<string, unknown> }>;
     denials?: { mintBeforeStep1MustFail?: boolean; invalidWorkflowSessionIdMustFail?: boolean };
   };
   const calls = (sequenceContract.requiredSequence ?? []).map((step) => step.call);
@@ -269,6 +283,73 @@ test("013 contracts define MCP mint tool and headless sequence", async () => {
     "generate_sosreport",
     "fetch_sosreport",
   ]);
+  const mintStep = (sequenceContract.requiredSequence ?? []).find((step) => step.call === "mint_engage_consent_token");
+  if (mintStep?.arguments && Object.hasOwn(mintStep.arguments, "permission_granted")) {
+    assert.equal(mintStep.arguments.permission_granted, true);
+  }
   assert.equal(sequenceContract.denials?.mintBeforeStep1MustFail, true);
   assert.equal(sequenceContract.denials?.invalidWorkflowSessionIdMustFail, true);
+});
+
+test("014 contracts preserve explicit permission, parsing compatibility, and web no-regression", async () => {
+  const base = path.join(process.cwd(), "specs", "014-headless-consent-compat", "contracts");
+
+  const permissionRaw = await fs.readFile(path.join(base, "headless-consent-permission.contract.v1.json"), "utf8");
+  const permissionContract = JSON.parse(permissionRaw) as {
+    requirements?: {
+      explicitPermissionRequired?: boolean;
+      permissionInput?: { field?: string; requiredValue?: boolean };
+      mintWithoutExplicitPermission?: { mustFail?: boolean; errorCode?: string; mustProvideNextStepGuidance?: boolean };
+    };
+    mintOutput?: { requiredFields?: string[] };
+    compatibility?: { webFlowBehaviorChanged?: boolean };
+  };
+  assert.equal(permissionContract.requirements?.explicitPermissionRequired, true);
+  assert.equal(permissionContract.requirements?.permissionInput?.field, "permission_granted");
+  assert.equal(permissionContract.requirements?.permissionInput?.requiredValue, true);
+  assert.equal(permissionContract.requirements?.mintWithoutExplicitPermission?.mustFail, true);
+  assert.equal(permissionContract.requirements?.mintWithoutExplicitPermission?.errorCode, "explicit_permission_required");
+  assert.equal(permissionContract.requirements?.mintWithoutExplicitPermission?.mustProvideNextStepGuidance, true);
+  assert.deepEqual(permissionContract.mintOutput?.requiredFields, [
+    "consent_token",
+    "expires_at",
+    "workflow_session_id",
+  ]);
+  assert.equal(permissionContract.compatibility?.webFlowBehaviorChanged, false);
+
+  const parsingRaw = await fs.readFile(path.join(base, "mint-output-parsing-compat.contract.v1.json"), "utf8");
+  const parsingContract = JSON.parse(parsingRaw) as {
+    parsingPriority?: string[];
+    structuredContent?: { preferredSource?: boolean; requiredFields?: string[] };
+    textFallback?: { allowedWhenStructuredUnavailable?: boolean; expectedKeys?: string[] };
+    headlessSequence?: { requiredCalls?: string[] };
+  };
+  assert.deepEqual(parsingContract.parsingPriority, ["structuredContent", "content.text_fallback"]);
+  assert.equal(parsingContract.structuredContent?.preferredSource, true);
+  assert.deepEqual(parsingContract.structuredContent?.requiredFields, [
+    "consent_token",
+    "expires_at",
+    "workflow_session_id",
+  ]);
+  assert.equal(parsingContract.textFallback?.allowedWhenStructuredUnavailable, true);
+  assert.deepEqual(parsingContract.headlessSequence?.requiredCalls, [
+    "start_engage_red_hat_support",
+    "select_engage_product",
+    "mint_engage_consent_token",
+    "generate_sosreport",
+    "fetch_sosreport",
+  ]);
+
+  const webRaw = await fs.readFile(path.join(base, "web-consent-regression-compat.contract.v1.json"), "utf8");
+  const webContract = JSON.parse(webRaw) as {
+    compatibilityBoundary?: { webConsentFlowMustRemainUnchanged?: boolean; headlessAdditionsMustBeNonBreakingForWeb?: boolean };
+    protectedBehaviors?: { noAdditionalWebUserSteps?: boolean; noAutomaticDiagnosticsCollection?: boolean };
+    nonRetroactiveRule?: { historicalSpecsModified?: boolean; newContractsPackage?: string };
+  };
+  assert.equal(webContract.compatibilityBoundary?.webConsentFlowMustRemainUnchanged, true);
+  assert.equal(webContract.compatibilityBoundary?.headlessAdditionsMustBeNonBreakingForWeb, true);
+  assert.equal(webContract.protectedBehaviors?.noAdditionalWebUserSteps, true);
+  assert.equal(webContract.protectedBehaviors?.noAutomaticDiagnosticsCollection, true);
+  assert.equal(webContract.nonRetroactiveRule?.historicalSpecsModified, false);
+  assert.equal(webContract.nonRetroactiveRule?.newContractsPackage, "specs/014-headless-consent-compat/contracts");
 });

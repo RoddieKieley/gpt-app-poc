@@ -66,6 +66,14 @@
   3. Connect with PAT through `POST /api/jira/connections`, verify active `connection_id`, verify issue read access with `jira_list_attachments`, then run `jira_attach_artifact`.
 - Step 2 consent validation denies requests when token is missing, invalid, expired, replayed, wrong-user/session, or wrong-scope/step.
 
+### Headless MCP bridge compatibility note
+
+- This bridge guidance is additive compatibility hardening and must not alter web/UI consent behavior.
+- Before calling `mint_engage_consent_token`, ask the user for explicit approval because sosreport is invasive.
+- Headless clients must call `mint_engage_consent_token` with `permission_granted=true` only after that approval.
+- When reading mint results, parse `structuredContent.consent_token` first.
+- For clients that only expose text content, parse fallback lines in `content.text` (`consent_token`, `expires_at`, `workflow_session_id`).
+
 ### Lifecycle gating
 
 - `connected`: proceed with diagnostics/attach.

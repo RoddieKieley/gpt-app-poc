@@ -37,6 +37,7 @@ export const fetchSosreportSchema = z.object({
 
 export const mintEngageConsentTokenSchema = z.object({
   workflow_session_id: z.string().min(1, "workflow_session_id is required").optional(),
+  permission_granted: z.boolean().optional(),
 });
 
 export type GenerateSosreportInput = z.infer<typeof generateSosreportSchema>;

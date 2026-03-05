@@ -55,12 +55,17 @@ test("fetch schema requires fetch_reference", () => {
   assert.equal(result.success, false);
 });
 
-test("mint consent schema accepts omitted workflow_session_id", () => {
-  const result = mintEngageConsentTokenSchema.safeParse({});
+test("mint consent schema accepts explicit permission grant", () => {
+  const result = mintEngageConsentTokenSchema.safeParse({ permission_granted: true });
   assert.equal(result.success, true);
 });
 
 test("mint consent schema rejects empty workflow_session_id", () => {
   const result = mintEngageConsentTokenSchema.safeParse({ workflow_session_id: "" });
+  assert.equal(result.success, false);
+});
+
+test("mint consent schema rejects non-boolean permission_granted", () => {
+  const result = mintEngageConsentTokenSchema.safeParse({ permission_granted: "yes" });
   assert.equal(result.success, false);
 });

@@ -1,0 +1,32 @@
+{
+  "contract": "headless_consent_permission",
+  "version": "1.0",
+  "scope": "headless_text_clients",
+  "requirements": {
+    "explicitPermissionRequired": true,
+    "permissionInput": {
+      "field": "permission_granted",
+      "requiredValue": true
+    },
+    "mintWithoutExplicitPermission": {
+      "mustFail": true,
+      "errorCode": "explicit_permission_required",
+      "mustProvideNextStepGuidance": true
+    }
+  },
+  "mintOutput": {
+    "requiredFields": [
+      "consent_token",
+      "expires_at",
+      "workflow_session_id"
+    ]
+  },
+  "securityInvariants": {
+    "consentMustBeUserInitiated": true,
+    "automaticMintingForbidden": true,
+    "generateRequiresValidConsent": true
+  },
+  "compatibility": {
+    "webFlowBehaviorChanged": false
+  }
+}

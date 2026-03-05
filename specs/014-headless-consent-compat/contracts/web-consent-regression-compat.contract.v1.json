@@ -1,0 +1,24 @@
+{
+  "contract": "web_consent_regression_compatibility",
+  "version": "1.0",
+  "compatibilityBoundary": {
+    "webConsentFlowMustRemainUnchanged": true,
+    "headlessAdditionsMustBeNonBreakingForWeb": true
+  },
+  "protectedBehaviors": {
+    "existingConsentRouteSemanticsPreserved": true,
+    "noAdditionalWebUserSteps": true,
+    "noAutomaticDiagnosticsCollection": true
+  },
+  "verification": {
+    "requiredRegressionCoverage": [
+      "web consent route behavior",
+      "ui step-2 explicit mint behavior",
+      "headless changes do not alter web flow semantics"
+    ]
+  },
+  "nonRetroactiveRule": {
+    "historicalSpecsModified": false,
+    "newContractsPackage": "specs/014-headless-consent-compat/contracts"
+  }
+}

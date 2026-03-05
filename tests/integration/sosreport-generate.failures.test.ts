@@ -141,6 +141,19 @@ test("mint_engage_consent_token is denied until step 1 product selection complet
   }
 });
 
+test("mint_engage_consent_token requires explicit permission grant in MCP path", async () => {
+  const { srv, base } = await startConsentTestServer("mint-requires-explicit-permission");
+  try {
+    const client = await createGenerateClient(base, "default-user");
+    await completeStep1ViaTools(client);
+    const mintResult = await mintConsentTokenViaMcp(client, undefined, false);
+    assert.equal(mintResult.isError, true);
+    assert.equal(mintResult.structuredContent?.code, "explicit_permission_required");
+  } finally {
+    srv.close();
+  }
+});
+
 test("mint_engage_consent_token rejects invalid workflow_session_id", async () => {
   const { srv, base } = await startConsentTestServer("mint-invalid-workflow-session");
   try {

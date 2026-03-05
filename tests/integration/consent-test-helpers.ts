@@ -115,10 +115,15 @@ export const mintConsentToken = async (input: {
 export const mintConsentTokenViaMcp = async (
   client: ReturnType<typeof createMcpJsonRpcClient>,
   workflowSessionId?: string,
+  permissionGranted = true,
 ) => {
+  const args: Record<string, unknown> = { permission_granted: permissionGranted };
+  if (workflowSessionId) {
+    args.workflow_session_id = workflowSessionId;
+  }
   const result = (await client.call("tools/call", {
     name: "mint_engage_consent_token",
-    arguments: workflowSessionId ? { workflow_session_id: workflowSessionId } : {},
+    arguments: args,
   })) as {
     isError?: boolean;
     structuredContent?: {

@@ -1,0 +1,38 @@
+{
+  "contract": "mint_output_parsing_compatibility",
+  "version": "1.0",
+  "parsingPriority": [
+    "structuredContent",
+    "content.text_fallback"
+  ],
+  "structuredContent": {
+    "requiredFields": [
+      "consent_token",
+      "expires_at",
+      "workflow_session_id"
+    ],
+    "preferredSource": true
+  },
+  "textFallback": {
+    "allowedWhenStructuredUnavailable": true,
+    "expectedKeys": [
+      "consent_token",
+      "expires_at",
+      "workflow_session_id"
+    ]
+  },
+  "headlessSequence": {
+    "requiredCalls": [
+      "start_engage_red_hat_support",
+      "select_engage_product",
+      "mint_engage_consent_token",
+      "generate_sosreport",
+      "fetch_sosreport"
+    ]
+  },
+  "failureBehavior": {
+    "missingConsentMustFail": true,
+    "invalidConsentMustFail": true,
+    "replayedConsentMustFail": true
+  }
+}

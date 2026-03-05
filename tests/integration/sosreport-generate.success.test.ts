@@ -134,6 +134,21 @@ test("headless MCP flow mints consent then generates and fetches", async () => {
     const consentToken = String(minted.structuredContent?.consent_token ?? "");
     assert.ok(consentToken.length > 0);
     assert.equal(String(minted.structuredContent?.workflow_session_id ?? ""), workflowSessionId);
+    const mintedText = minted.content?.find((entry) => entry.type === "text")?.text ?? "";
+    const fallbackTokenMatch = mintedText.match(/^consent_token:\s*(.+)$/m);
+    const fallbackExpiresMatch = mintedText.match(/^expires_at:\s*(.+)$/m);
+    const fallbackWorkflowMatch = mintedText.match(/^workflow_session_id:\s*(.+)$/m);
+    assert.ok(fallbackTokenMatch?.[1]?.trim(), "text fallback must include consent_token");
+    assert.ok(fallbackExpiresMatch?.[1]?.trim(), "text fallback must include expires_at");
+    assert.ok(fallbackWorkflowMatch?.[1]?.trim(), "text fallback must include workflow_session_id");
+    assert.equal(fallbackTokenMatch?.[1]?.trim(), consentToken);
+    assert.equal(
+      String(minted.structuredContent?.consent_token ?? "").trim(),
+      consentToken,
+      "structuredContent must remain the primary token source",
+    );
+    assert.ok(mintedText.includes(`consent_token: ${consentToken}`));
+    assert.ok(mintedText.includes("single-use, short-lived"));
 
     const generated = (await client.call("tools/call", {
       name: "generate_sosreport",
