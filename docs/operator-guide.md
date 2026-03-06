@@ -60,6 +60,7 @@
 
 - Product scope is Linux-only for this workflow.
 - Compatibility entry URI remains `ui://engage-red-hat-support/app.html`.
+- Main engage skill is UI-first and remains the primary route.
 - End-to-end 3-step sequence:
   1. Start workflow and select product (`linux` only) via `start_engage_red_hat_support` + `select_engage_product` (or HTTP workflow start/select endpoints for UI flow).
   2. Mint one-time consent token with `POST /api/engage/consent-tokens`, run `generate_sosreport` with `consent_token`, then `fetch_sosreport` to obtain `artifact_ref`.
@@ -69,10 +70,22 @@
 ### Headless MCP bridge compatibility note
 
 - This bridge guidance is additive compatibility hardening and must not alter web/UI consent behavior.
+- When UI is unavailable, return fallback guidance that references alternate headless skill URI placeholder `skill://engage-red-hat-support-headless/SKILL.md` (placeholder only, not implemented in this feature).
 - Before calling `mint_engage_consent_token`, ask the user for explicit approval because sosreport is invasive.
 - Headless clients must call `mint_engage_consent_token` with `permission_granted=true` only after that approval.
 - When reading mint results, parse `structuredContent.consent_token` first.
 - For clients that only expose text content, parse fallback lines in `content.text` (`consent_token`, `expires_at`, `workflow_session_id`).
+
+### Environment selection and deterministic parsing
+
+- UI-capable hosts:
+  - Stay on primary UI flow and preserve current compatibility entry behavior.
+- Text-only/non-UI hosts:
+  - Follow fallback guidance and parse deterministic key lines from `content.text` when structured payloads are unavailable.
+- Required deterministic fallback keys by stage:
+  - Consent mint: `workflow_session_id`, `consent_token`, `expires_at`
+  - Generate status: `job_id`, `status`, `fetch_reference`
+  - Jira connect/status: `connection_id`
 
 ### Lifecycle gating
 
@@ -98,4 +111,11 @@
 - If exposure is suspected, revoke impacted connections immediately.
 - Reconnect users with new PAT intake only after mitigation.
 - Review security event logs for connect/verify/attach/revoke outcomes and denied access patterns.
+
+### Migration note (split-readiness only)
+
+- This is an additive split-readiness update.
+- Primary `engage-red-hat-support` skill remains UI-first.
+- Non-UI hosts are routed by guidance to alternate headless skill URI placeholder behavior.
+- No new headless skill implementation file or registration is created in this release.
 

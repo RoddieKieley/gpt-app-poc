@@ -300,3 +300,68 @@ test("end-to-end connect -> connection_id -> generate -> fetch -> attach succeed
     srv.close();
   }
 });
+
+test("fallback-routing guidance is additive and preserves compatibility entry behavior", async () => {
+  const { srv, base } = await startServer("routing-guidance");
+  const mcpUrl = `${base}/mcp`;
+  let sessionId: string | undefined;
+  let id = 1;
+
+  const jsonRpc = async (method: string, params?: unknown) => {
+    const response = await fetch(mcpUrl, {
+      method: "POST",
+      headers: {
+        "content-type": "application/json",
+        accept: "application/json, text/event-stream",
+        ...(sessionId ? { "mcp-session-id": sessionId } : {}),
+      },
+      body: JSON.stringify({ jsonrpc: "2.0", id: id++, method, params }),
+    });
+    assert.equal(response.ok, true);
+    if (!sessionId) {
+      sessionId = response.headers.get("mcp-session-id") ?? undefined;
+    }
+    const payload = await response.json() as { result?: unknown; error?: { message: string } };
+    if (payload.error) throw new Error(payload.error.message);
+    return payload.result;
+  };
+
+  try {
+    await jsonRpc("initialize", {
+      protocolVersion: "2024-11-05",
+      capabilities: {},
+      clientInfo: { name: "engage-routing-guidance", version: "1.0.0" },
+    });
+    await fetch(mcpUrl, {
+      method: "POST",
+      headers: {
+        "content-type": "application/json",
+        accept: "application/json, text/event-stream",
+        ...(sessionId ? { "mcp-session-id": sessionId } : {}),
+      },
+      body: JSON.stringify({ jsonrpc: "2.0", method: "initialized" }),
+    });
+
+    const start = await jsonRpc("tools/call", {
+      name: "start_engage_red_hat_support",
+      arguments: {},
+    }) as { structuredContent?: { compatibility_entry_uri?: string } };
+    assert.equal(start.structuredContent?.compatibility_entry_uri, "ui://engage-red-hat-support/app.html");
+
+    const skillRead = await jsonRpc("resources/read", {
+      uri: "skill://engage-red-hat-support/SKILL.md",
+    }) as { contents?: Array<{ text?: string }> };
+    const skillText = skillRead.contents?.[0]?.text ?? "";
+    assert.ok(skillText.includes("UI-first"), "skill should explicitly state UI-first behavior");
+    assert.ok(
+      skillText.includes("skill://engage-red-hat-support-headless/SKILL.md"),
+      "skill should reference alternate headless placeholder URI",
+    );
+    assert.ok(
+      skillText.includes("Out of Scope"),
+      "skill should state no new headless skill implementation in this feature",
+    );
+  } finally {
+    srv.close();
+  }
+});

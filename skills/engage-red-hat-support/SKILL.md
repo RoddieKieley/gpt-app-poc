@@ -4,6 +4,14 @@
 
 Guides operators through a Linux-only support workflow that securely connects Jira,
 generates and fetches a local sosreport artifact, and attaches it to a Jira issue.
+This is the primary UI-first skill for engage support workflows.
+
+## Routing Mode
+
+- Primary mode is UI-first via compatibility entry URI `ui://engage-red-hat-support/app.html`.
+- If UI is unavailable or host is text-only, return fallback routing guidance that points to:
+  - `skill://engage-red-hat-support-headless/SKILL.md` (placeholder URI; not implemented in this feature).
+- Do not attempt to register or invoke a new headless skill implementation in this phase.
 
 ## When To Use
 
@@ -25,6 +33,8 @@ generates and fetches a local sosreport artifact, and attaches it to a Jira issu
      `workflow_session_id` when available).
    - Parse `consent_token` from `structuredContent` first; if unavailable in your
      client, parse text fallback lines in `content.text`.
+   - Required deterministic fallback keys in this step are:
+     `workflow_session_id`, `consent_token`, `expires_at`, `job_id`, `status`, `fetch_reference`.
    - For web/UI clients, continue minting via `POST /api/engage/consent-tokens` with
      `workflow=engage_red_hat_support`, `step=2`, `requested_scope=generate_sosreport`.
    - Run `generate_sosreport` with `consent_token` from mint response.
@@ -36,6 +46,7 @@ generates and fetches a local sosreport artifact, and attaches it to a Jira issu
    - Verify connection with `jira_connection_status` or `GET /api/jira/connections/{connection_id}`.
    - Verify issue read access with `jira_list_attachments` using `connection_id` and `issue_key`.
    - Attach via `jira_attach_artifact` using `connection_id`, `issue_key`, `artifact_ref`.
+   - Required deterministic fallback key in this step is `connection_id`.
 4. If any step fails, stop and retry from the failed step after addressing the
    reported error.
 
@@ -52,3 +63,7 @@ generates and fetches a local sosreport artifact, and attaches it to a Jira issu
 
 You can complete select product -> generate/fetch sos -> connect/verify/attach with
 text fallback guidance for non-UI hosts and without exposing PAT in MCP-visible surfaces.
+
+## Out of Scope
+
+- Creating, registering, or activating a new headless skill implementation.

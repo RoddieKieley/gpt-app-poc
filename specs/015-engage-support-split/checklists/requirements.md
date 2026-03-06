@@ -28,6 +28,7 @@
 - [x] User scenarios cover primary flows
 - [x] Feature meets measurable outcomes defined in Success Criteria
 - [x] No implementation details leak into specification
+- [x] No files under `specs/014-headless-consent-compat/contracts/` are modified by this feature
 
 ## Notes
 

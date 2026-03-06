@@ -7,6 +7,13 @@
 
 Implement minimal, targeted split-readiness updates that keep `engage-red-hat-support` as the primary UI-first skill while defining deterministic text-only fallback contracts and migration semantics for a future alternate headless skill. Delivery is additive and backward-compatible: no new headless skill file, no removal of UI resources, and no regressions to current web/UI flow behavior.
 
+## Scope Guardrails
+
+- Do not create, register, or activate a new headless skill implementation in this feature.
+- Preserve compatibility entry behavior and existing `ui://engage-red-hat-support/app.html` flow semantics.
+- Keep split-readiness changes limited to approved skill/docs/contracts/tests updates.
+- Treat `specs/014-headless-consent-compat/contracts/*` as immutable historical baselines.
+
 ## Technical Context
 
 **Language/Version**: TypeScript (Node.js ESM) + Markdown/JSON contract artifacts  
@@ -40,6 +47,7 @@ Implement minimal, targeted split-readiness updates that keep `engage-red-hat-su
 - Deterministic fallback contract pattern: canonical `structuredContent` plus single machine-parseable text block with stable `key: value` lines for critical keys.
 - Validation strategy: three-layer safety net (`contract`, `integration`, `regression`) plus dedicated text-only completion verification that ignores `structuredContent`.
 - Migration semantics: additive compatibility hardening, explicit UI-first primary skill, and alternate headless skill URI placeholder only (no skill creation in this phase).
+- UI/headless assumption source: `specs/015-engage-support-split/ui-headless-assumption-map.md`.
 
 ## Phase 1 Design Decisions
 
@@ -98,7 +106,9 @@ Implement minimal, targeted split-readiness updates that keep `engage-red-hat-su
 
 - Add a test harness mode that intentionally reads only `content.text`.
 - Validate end-to-end handoff progression using parsed text keys:
+  - `workflow_session_id`, `consent_token`, and `expires_at` from mint outputs,
   - `job_id` from generate status path,
+  - `status` from generate status path,
   - `fetch_reference` for fetch handoff,
   - `connection_id` for Jira operations.
 - Verify machine parsing remains deterministic and single-pass for required keys.
@@ -141,6 +151,7 @@ specs/015-engage-support-split/
 ├── plan.md
 ├── research.md
 ├── data-model.md
+├── ui-headless-assumption-map.md
 ├── quickstart.md
 ├── contracts/
 │   ├── ui-headless-routing-semantics.contract.v1.json

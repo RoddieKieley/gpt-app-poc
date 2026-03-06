@@ -136,3 +136,21 @@ export const mintConsentTokenViaMcp = async (
   };
   return result;
 };
+
+export const asTextOnlyToolResult = <T extends {
+  isError?: boolean;
+  content?: Array<{ type?: string; text?: string }>;
+  structuredContent?: unknown;
+}>(result: T) => {
+  return {
+    isError: result.isError,
+    content: result.content ?? [],
+    text: (result.content ?? []).find((entry) => entry.type === "text")?.text ?? "",
+  };
+};
+
+export const parseDeterministicKey = (text: string, key: string): string => {
+  const escaped = key.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+  const match = text.match(new RegExp(`^${escaped}:\\s*(.+)$`, "m"));
+  return String(match?.[1] ?? "").trim();
+};

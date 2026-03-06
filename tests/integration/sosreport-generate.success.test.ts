@@ -5,9 +5,11 @@ import { handleGenerateSosreport } from "../../src/sosreport/sosreport-tool-hand
 import { ConsentTokenService } from "../../src/security/consent-token-service.js";
 import { authorizeSensitiveToolCall } from "../../src/security/sensitive-tool-policy.js";
 import {
+  asTextOnlyToolResult,
   createMcpJsonRpcClient,
   mintConsentToken,
   mintConsentTokenViaMcp,
+  parseDeterministicKey,
   startConsentTestServer,
 } from "./consent-test-helpers.js";
 
@@ -156,20 +158,33 @@ test("headless MCP flow mints consent then generates and fetches", async () => {
         consent_token: consentToken,
         workflow_session_id: workflowSessionId,
       },
-    })) as { structuredContent?: { job_id?: string; status?: string } };
+    })) as { structuredContent?: { job_id?: string; status?: string }; content?: Array<{ type?: string; text?: string }> };
     const jobId = String(generated.structuredContent?.job_id ?? "");
     assert.ok(jobId.length > 0);
+    const generatedText = generated.content?.find((entry) => entry.type === "text")?.text ?? "";
+    assert.equal(parseDeterministicKey(generatedText, "job_id"), jobId);
+    assert.equal(parseDeterministicKey(generatedText, "status"), "queued");
 
     const pollLimit = 60;
     let fetchReference = "";
+    let statusTextValue = "";
     for (let attempt = 0; attempt < pollLimit; attempt += 1) {
       const statusResult = (await client.call("tools/call", {
         name: "get_generate_sosreport_status",
         arguments: { job_id: jobId },
-      })) as { structuredContent?: { status?: string; fetch_reference?: string } };
+      })) as {
+        structuredContent?: { status?: string; fetch_reference?: string };
+        content?: Array<{ type?: string; text?: string }>;
+      };
       const status = String(statusResult.structuredContent?.status ?? "");
+      const statusText = statusResult.content?.find((entry) => entry.type === "text")?.text ?? "";
+      statusTextValue = parseDeterministicKey(statusText, "status");
+      const statusTextJob = parseDeterministicKey(statusText, "job_id");
+      assert.equal(statusTextJob, jobId);
+      assert.equal(statusTextValue, status);
       if (status === "succeeded") {
         fetchReference = String(statusResult.structuredContent?.fetch_reference ?? "");
+        assert.equal(parseDeterministicKey(statusText, "fetch_reference"), fetchReference);
         break;
       }
       if (status === "failed") {
@@ -178,6 +193,7 @@ test("headless MCP flow mints consent then generates and fetches", async () => {
       await new Promise((resolve) => setTimeout(resolve, 20));
     }
     assert.ok(fetchReference.length > 0);
+    assert.equal(statusTextValue, "succeeded");
 
     const fetched = (await client.call("tools/call", {
       name: "fetch_sosreport",
@@ -185,6 +201,85 @@ test("headless MCP flow mints consent then generates and fetches", async () => {
     })) as { structuredContent?: { archive_path?: string } };
     const archiveCopyPath = String(fetched.structuredContent?.archive_path ?? "");
     assert.ok(archiveCopyPath.startsWith("/tmp/"));
+  } finally {
+    delete process.env.SOSREPORT_TEST_ARCHIVE_PATH;
+    srv.close();
+  }
+});
+
+test("text-only bridge can complete mint and generate handoffs without structuredContent", async () => {
+  const archivePath = "/tmp/sosreport-mcp-text-only.tar.xz";
+  await fs.writeFile(archivePath, "mcp-text-only", "utf8");
+  process.env.SOSREPORT_TEST_ARCHIVE_PATH = archivePath;
+  const { srv, base } = await startConsentTestServer("mcp-text-only");
+
+  try {
+    const client = createMcpJsonRpcClient(base, "mcp-text-only-user");
+    await client.initialize();
+
+    await client.call("tools/call", {
+      name: "start_engage_red_hat_support",
+      arguments: {},
+    });
+    await client.call("tools/call", {
+      name: "select_engage_product",
+      arguments: { product: "linux" },
+    });
+
+    const mintedRaw = (await client.call("tools/call", {
+      name: "mint_engage_consent_token",
+      arguments: { permission_granted: true },
+    })) as {
+      isError?: boolean;
+      content?: Array<{ type?: string; text?: string }>;
+      structuredContent?: { consent_token?: string; expires_at?: string; workflow_session_id?: string };
+    };
+    const mintedTextOnly = asTextOnlyToolResult(mintedRaw);
+    assert.equal(mintedTextOnly.isError, undefined);
+    const consentToken = parseDeterministicKey(mintedTextOnly.text, "consent_token");
+    const expiresAt = parseDeterministicKey(mintedTextOnly.text, "expires_at");
+    const workflowSessionId = parseDeterministicKey(mintedTextOnly.text, "workflow_session_id");
+    assert.ok(consentToken.length > 0);
+    assert.ok(expiresAt.length > 0);
+    assert.ok(workflowSessionId.length > 0);
+
+    const generatedRaw = (await client.call("tools/call", {
+      name: "generate_sosreport",
+      arguments: {
+        consent_token: consentToken,
+      },
+    })) as { content?: Array<{ type?: string; text?: string }>; structuredContent?: { job_id?: string } };
+    const generatedTextOnly = asTextOnlyToolResult(generatedRaw);
+    const jobId = parseDeterministicKey(generatedTextOnly.text, "job_id");
+    assert.ok(jobId.length > 0);
+    assert.equal(parseDeterministicKey(generatedTextOnly.text, "status"), "queued");
+
+    let fetchReference = "";
+    const pollLimit = 60;
+    for (let attempt = 0; attempt < pollLimit; attempt += 1) {
+      const statusRaw = (await client.call("tools/call", {
+        name: "get_generate_sosreport_status",
+        arguments: { job_id: jobId },
+      })) as { content?: Array<{ type?: string; text?: string }> };
+      const statusTextOnly = asTextOnlyToolResult(statusRaw);
+      const status = parseDeterministicKey(statusTextOnly.text, "status");
+      assert.equal(parseDeterministicKey(statusTextOnly.text, "job_id"), jobId);
+      if (status === "succeeded") {
+        fetchReference = parseDeterministicKey(statusTextOnly.text, "fetch_reference");
+        break;
+      }
+      if (status === "failed") {
+        assert.fail("generate_sosreport job failed for text-only flow");
+      }
+      await new Promise((resolve) => setTimeout(resolve, 20));
+    }
+    assert.ok(fetchReference.length > 0);
+
+    const fetchedRaw = (await client.call("tools/call", {
+      name: "fetch_sosreport",
+      arguments: { fetch_reference: fetchReference },
+    })) as { structuredContent?: { archive_path?: string } };
+    assert.ok(String(fetchedRaw.structuredContent?.archive_path ?? "").startsWith("/tmp/"));
   } finally {
     delete process.env.SOSREPORT_TEST_ARCHIVE_PATH;
     srv.close();

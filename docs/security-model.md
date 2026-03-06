@@ -16,6 +16,20 @@
 - **Forbidden**: `pat`, `token`, `authorization`, or any equivalent secret fields in MCP tools or logs.
 - **Allowed (scoped exception)**: `consent_token` in `generate_sosreport` MCP arguments only.
 
+## Deterministic Fallback Output Security Rules
+
+- Structured output remains canonical when available; text fallback is compatibility path.
+- Deterministic text fallback lines must remain machine parseable for:
+  - `workflow_session_id`
+  - `consent_token`
+  - `expires_at`
+  - `job_id`
+  - `status`
+  - `fetch_reference`
+  - `connection_id`
+- Fallback text must never introduce secret-bearing fields (`pat`, `authorization`, raw credentials).
+- Key values in text fallback must match structured output values exactly for parity-checked fields.
+
 ## Threat Notes and Controls
 
 - **Log leakage**: mitigated by centralized redaction utilities.
@@ -23,4 +37,5 @@
 - **Credential replay after revoke/expiry**: mitigated by lifecycle state enforcement and vault revocation.
 - **Error-body leakage**: mitigated by mapped non-sensitive error messages.
 - **Replay attacks**: mitigated by one-time `jti` reservation/consumption checks.
+- **Text-parser drift**: mitigated by deterministic key formatting contracts and regression tests for text-only clients.
 

@@ -1,5 +1,10 @@
 import test from "node:test";
 import assert from "node:assert/strict";
+import {
+  asTextOnlyToolResult,
+  createMcpJsonRpcClient,
+  parseDeterministicKey,
+} from "./consent-test-helpers.js";
 
 test("connect and status flow returns opaque connection and non-secret state", async () => {
   process.env.NODE_ENV = "test";
@@ -109,6 +114,64 @@ test("connect returns updated lifecycle status when verification fails", async (
     assert.equal(status.status, 200);
     const body = await status.json() as { status: string };
     assert.equal(body.status, "error");
+  } finally {
+    srv.close();
+  }
+});
+
+test("MCP connect/status include deterministic connection_id and status fallback keys", async () => {
+  process.env.NODE_ENV = "test";
+  process.env.JIRA_MOCK_MODE = "1";
+  const { createApp } = await import("../../server.js");
+
+  const app = createApp();
+  const srv = app.listen(0);
+  const port = (srv.address() as { port: number }).port;
+  const base = `http://127.0.0.1:${port}`;
+
+  try {
+    const client = createMcpJsonRpcClient(base, "u-mcp");
+    await client.initialize();
+
+    const connectRaw = (await client.call("tools/call", {
+      name: "jira_connect_secure",
+      arguments: {
+        jira_base_url: "https://jira.example.com",
+        pat: "mcp-top-secret-pat",
+      },
+    })) as {
+      isError?: boolean;
+      content?: Array<{ type?: string; text?: string }>;
+      structuredContent?: { connection_id?: string; status?: string };
+    };
+    assert.equal(connectRaw.isError, undefined);
+    const connectTextOnly = asTextOnlyToolResult(connectRaw);
+    const structuredConnectionId = String(connectRaw.structuredContent?.connection_id ?? "");
+    const structuredStatus = String(connectRaw.structuredContent?.status ?? "");
+    assert.ok(structuredConnectionId.length > 0);
+    assert.ok(structuredStatus.length > 0);
+    assert.equal(parseDeterministicKey(connectTextOnly.text, "connection_id"), structuredConnectionId);
+    assert.equal(parseDeterministicKey(connectTextOnly.text, "status"), structuredStatus);
+
+    const statusRaw = (await client.call("tools/call", {
+      name: "jira_connection_status",
+      arguments: { connection_id: structuredConnectionId },
+    })) as {
+      isError?: boolean;
+      content?: Array<{ type?: string; text?: string }>;
+      structuredContent?: { connection_id?: string; status?: string };
+    };
+    assert.equal(statusRaw.isError, undefined);
+    const statusTextOnly = asTextOnlyToolResult(statusRaw);
+    assert.equal(
+      parseDeterministicKey(statusTextOnly.text, "connection_id"),
+      String(statusRaw.structuredContent?.connection_id ?? ""),
+    );
+    assert.equal(
+      parseDeterministicKey(statusTextOnly.text, "status"),
+      String(statusRaw.structuredContent?.status ?? ""),
+    );
+    assert.equal(statusTextOnly.text.includes("mcp-top-secret-pat"), false);
   } finally {
     srv.close();
   }

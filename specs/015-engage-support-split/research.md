@@ -47,3 +47,11 @@
 - **Alternatives considered**:
   - Omit alternate URI placeholder until headless exists: rejected because routing remains ambiguous.
   - Introduce temporary fake skill registration: rejected because it could imply unsupported behavior.
+
+## Compatibility baseline references (read-only)
+
+| Baseline Contract | Purpose | Change policy in this feature |
+|-------------------|---------|-------------------------------|
+| `specs/014-headless-consent-compat/contracts/headless-consent-permission.contract.v1.json` | Explicit permission gate for invasive diagnostics minting | Reference-only; no edits |
+| `specs/014-headless-consent-compat/contracts/mint-output-parsing-compat.contract.v1.json` | Structured-first parsing and text fallback expectations for mint output | Reference-only; no edits |
+| `specs/014-headless-consent-compat/contracts/web-consent-regression-compat.contract.v1.json` | Web consent no-regression boundary for additive headless compatibility changes | Reference-only; no edits |

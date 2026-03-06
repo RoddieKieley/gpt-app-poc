@@ -106,7 +106,10 @@ export const handleGenerateSosreport = async (
     };
     return {
       content: text(
-        `sosreport generated successfully at ${archivePath}. Use fetch_sosreport with fetch_reference to retrieve artifact metadata.`,
+        [
+          `sosreport generated successfully at ${archivePath}. Use fetch_sosreport with fetch_reference to retrieve artifact metadata.`,
+          `fetch_reference: ${archivePath}`,
+        ].join("\n"),
       ),
       structuredContent,
     };

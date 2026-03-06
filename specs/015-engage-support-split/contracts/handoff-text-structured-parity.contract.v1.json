@@ -6,6 +6,15 @@
     "fetch_reference",
     "connection_id"
   ],
+  "deterministicFallbackKeys": [
+    "workflow_session_id",
+    "consent_token",
+    "expires_at",
+    "job_id",
+    "status",
+    "fetch_reference",
+    "connection_id"
+  ],
   "parsingPolicy": {
     "priority": [
       "structuredContent",
@@ -21,7 +30,13 @@
   "parityRequirements": {
     "structuredAndTextValuesMustMatchExactly": true,
     "missingCriticalKeyMustFailContract": true,
-    "duplicateCriticalKeyMustFailContract": true
+    "duplicateCriticalKeyMustFailContract": true,
+    "mismatchedCriticalKeyValueMustFailContract": true
+  },
+  "failureConditions": {
+    "missingKey": "fail",
+    "duplicateKey": "fail",
+    "mismatchedValue": "fail"
   },
   "blockingHandoffs": {
     "job_id": {

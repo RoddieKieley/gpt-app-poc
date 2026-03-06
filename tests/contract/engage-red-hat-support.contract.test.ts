@@ -353,3 +353,62 @@ test("014 contracts preserve explicit permission, parsing compatibility, and web
   assert.equal(webContract.nonRetroactiveRule?.historicalSpecsModified, false);
   assert.equal(webContract.nonRetroactiveRule?.newContractsPackage, "specs/014-headless-consent-compat/contracts");
 });
+
+test("015 contracts enforce split-readiness routing, deterministic fallback keys, and 014 immutability", async () => {
+  const base = path.join(process.cwd(), "specs", "015-engage-support-split", "contracts");
+
+  const routingRaw = await fs.readFile(path.join(base, "ui-headless-routing-semantics.contract.v1.json"), "utf8");
+  const routingContract = JSON.parse(routingRaw) as {
+    routingPolicy?: {
+      primaryMode?: string;
+      uiUnavailableBehavior?: string;
+      alternateHeadlessSkillRegistrationInThisPhase?: boolean;
+      alternateHeadlessSkillImplementationInThisPhase?: boolean;
+    };
+    migrationSemantics?: { newHeadlessSkillCreated?: boolean; newHeadlessSkillRegistered?: boolean };
+  };
+  assert.equal(routingContract.routingPolicy?.primaryMode, "ui_first");
+  assert.equal(
+    routingContract.routingPolicy?.uiUnavailableBehavior,
+    "return_alternate_headless_skill_uri_placeholder",
+  );
+  assert.equal(routingContract.routingPolicy?.alternateHeadlessSkillRegistrationInThisPhase, false);
+  assert.equal(routingContract.routingPolicy?.alternateHeadlessSkillImplementationInThisPhase, false);
+  assert.equal(routingContract.migrationSemantics?.newHeadlessSkillCreated, false);
+  assert.equal(routingContract.migrationSemantics?.newHeadlessSkillRegistered, false);
+
+  const parityRaw = await fs.readFile(path.join(base, "handoff-text-structured-parity.contract.v1.json"), "utf8");
+  const parityContract = JSON.parse(parityRaw) as {
+    deterministicFallbackKeys?: string[];
+    parityRequirements?: { mismatchedCriticalKeyValueMustFailContract?: boolean };
+    failureConditions?: { missingKey?: string; duplicateKey?: string; mismatchedValue?: string };
+  };
+  assert.deepEqual(parityContract.deterministicFallbackKeys, [
+    "workflow_session_id",
+    "consent_token",
+    "expires_at",
+    "job_id",
+    "status",
+    "fetch_reference",
+    "connection_id",
+  ]);
+  assert.equal(parityContract.parityRequirements?.mismatchedCriticalKeyValueMustFailContract, true);
+  assert.equal(parityContract.failureConditions?.missingKey, "fail");
+  assert.equal(parityContract.failureConditions?.duplicateKey, "fail");
+  assert.equal(parityContract.failureConditions?.mismatchedValue, "fail");
+
+  const regressionRaw = await fs.readFile(
+    path.join(base, "web-ui-split-readiness-regression.contract.v1.json"),
+    "utf8",
+  );
+  const regressionContract = JSON.parse(regressionRaw) as {
+    compatibilityInvariants?: { forbidRetroactiveEditsTo014Contracts?: boolean; preserveCompatibilityEntryUri?: string };
+    historicalBaselineReferences?: { historicalContractsModified?: boolean };
+  };
+  assert.equal(regressionContract.compatibilityInvariants?.forbidRetroactiveEditsTo014Contracts, true);
+  assert.equal(
+    regressionContract.compatibilityInvariants?.preserveCompatibilityEntryUri,
+    "ui://engage-red-hat-support/app.html",
+  );
+  assert.equal(regressionContract.historicalBaselineReferences?.historicalContractsModified, false);
+});

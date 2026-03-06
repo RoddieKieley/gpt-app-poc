@@ -34,6 +34,19 @@
   - When a key is present in structured output, matching text fallback value must be present.
   - Key labels in fallback output must remain deterministic and parseable.
 
+## Deterministic key-format guidance
+
+- Required fallback format is `key: value` using stable key names and one key per line.
+- For split-readiness routing and bridge continuity, deterministic text fallback coverage must include:
+  - `workflow_session_id`
+  - `consent_token`
+  - `expires_at`
+  - `job_id`
+  - `status`
+  - `fetch_reference`
+  - `connection_id`
+- Keys must appear exactly once in a parse block for a given response shape.
+
 ## Entity: Output Representation Pair
 
 - **Purpose**: Models parity relationship between structured and text representations.

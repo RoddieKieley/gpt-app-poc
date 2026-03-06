@@ -24,12 +24,18 @@
     ],
     "requiredTextOnlyChecks": [
       "text_only_completion_without_structuredContent",
-      "critical_handoff_key_parity"
+      "critical_handoff_key_parity",
+      "deterministic_key_coverage_workflow_session_id_consent_token_expires_at_job_id_status_fetch_reference_connection_id"
     ]
   },
   "historicalBaselineReferences": {
     "headlessConsentCompatContracts": "specs/014-headless-consent-compat/contracts",
     "baselineUsedForComparisonOnly": true,
     "historicalContractsModified": false
+  },
+  "compatibilityInvariants": {
+    "preserveCompatibilityEntryUri": "ui://engage-red-hat-support/app.html",
+    "preserveUiResourceRegistration": true,
+    "forbidRetroactiveEditsTo014Contracts": true
   }
 }

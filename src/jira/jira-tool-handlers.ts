@@ -69,7 +69,11 @@ export const handleConnectionStatus = async (
   });
   return {
     content: text(
-      `Connection ${conn.connectionId} is ${conn.status}. Expires at ${conn.expiresAt}.`,
+      [
+        `Connection ${conn.connectionId} is ${conn.status}. Expires at ${conn.expiresAt}.`,
+        `connection_id: ${conn.connectionId}`,
+        `status: ${conn.status}`,
+      ].join("\n"),
     ),
     structuredContent: {
       connection_id: conn.connectionId,

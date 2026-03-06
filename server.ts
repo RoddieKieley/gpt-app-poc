@@ -190,7 +190,12 @@ const mapGenerateJobState = (job: GenerateSosreportJob) => {
       job_id: job.jobId,
       status: job.status,
       fetch_reference: job.fetchReference,
-      text: "Generate completed successfully.",
+      text: [
+        "Generate completed successfully.",
+        `job_id: ${job.jobId}`,
+        `status: ${job.status}`,
+        `fetch_reference: ${job.fetchReference ?? ""}`,
+      ].join("\n"),
     };
   }
   if (job.status === "failed") {
@@ -198,13 +203,21 @@ const mapGenerateJobState = (job: GenerateSosreportJob) => {
       job_id: job.jobId,
       status: job.status,
       error_code: job.errorCode ?? "generate_failed",
-      text: job.errorText ?? "Generate failed.",
+      text: [
+        job.errorText ?? "Generate failed.",
+        `job_id: ${job.jobId}`,
+        `status: ${job.status}`,
+      ].join("\n"),
     };
   }
   return {
     job_id: job.jobId,
     status: job.status,
-    text: "Generate in progress.",
+    text: [
+      "Generate in progress.",
+      `job_id: ${job.jobId}`,
+      `status: ${job.status}`,
+    ].join("\n"),
   };
 };
 
@@ -473,7 +486,11 @@ const createSecureJiraConnection = async (
     status: effective.status,
     expires_at: effective.expiresAt,
     last_verified_at: effective.lastVerifiedAt,
-    text: "Jira connection created successfully.",
+    text: [
+      "Jira connection created successfully.",
+      `connection_id: ${effective.connectionId}`,
+      `status: ${effective.status}`,
+    ].join("\n"),
   };
 };
 
@@ -917,7 +934,11 @@ registerAppTool(
       content: [
         {
           type: "text",
-          text: "Generate started. Poll status until completed, then fetch using returned fetch_reference.",
+          text: [
+            "Generate started. Poll status until completed, then fetch using returned fetch_reference.",
+            `job_id: ${job.jobId}`,
+            "status: queued",
+          ].join("\n"),
         },
       ],
       structuredContent: {
