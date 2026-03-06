@@ -1,0 +1,35 @@
+{
+  "contract": "web_ui_split_readiness_regression",
+  "version": "1.0",
+  "compatibilityBoundary": {
+    "webUiFlowMustRemainUnchanged": true,
+    "headlessSplitReadinessChangesMustBeNonBreakingForWebUi": true,
+    "uiResourcesMustRemainRegistered": true
+  },
+  "protectedBehaviors": {
+    "noAdditionalMandatoryWebUserSteps": true,
+    "uiStep2ExplicitConsentMintPreserved": true,
+    "noAutomaticInvasiveDiagnosticsCollection": true,
+    "existingOutputTemplatesRemainBoundToUiResource": true
+  },
+  "validationMatrix": {
+    "requiredContractChecks": [
+      "resource_discoverability",
+      "tool_surface_stability",
+      "ui_flow_semantics_unchanged"
+    ],
+    "requiredIntegrationChecks": [
+      "web_consent_endpoint_regression",
+      "end_to_end_ui_workflow_regression"
+    ],
+    "requiredTextOnlyChecks": [
+      "text_only_completion_without_structuredContent",
+      "critical_handoff_key_parity"
+    ]
+  },
+  "historicalBaselineReferences": {
+    "headlessConsentCompatContracts": "specs/014-headless-consent-compat/contracts",
+    "baselineUsedForComparisonOnly": true,
+    "historicalContractsModified": false
+  }
+}

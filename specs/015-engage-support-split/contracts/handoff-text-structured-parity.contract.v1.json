@@ -1,0 +1,49 @@
+{
+  "contract": "handoff_text_structured_parity",
+  "version": "1.0",
+  "criticalHandoffKeys": [
+    "job_id",
+    "fetch_reference",
+    "connection_id"
+  ],
+  "parsingPolicy": {
+    "priority": [
+      "structuredContent",
+      "content.text_fallback"
+    ],
+    "textFallbackRequiredWhenStructuredUnavailable": true,
+    "textFormat": {
+      "style": "deterministic_key_value_lines",
+      "delimiter": ":",
+      "keyOccurrenceRule": "exactly_once_per_key_in_parse_block"
+    }
+  },
+  "parityRequirements": {
+    "structuredAndTextValuesMustMatchExactly": true,
+    "missingCriticalKeyMustFailContract": true,
+    "duplicateCriticalKeyMustFailContract": true
+  },
+  "blockingHandoffs": {
+    "job_id": {
+      "requiredFor": [
+        "generate_status_polling"
+      ]
+    },
+    "fetch_reference": {
+      "requiredFor": [
+        "fetch_sosreport"
+      ]
+    },
+    "connection_id": {
+      "requiredFor": [
+        "jira_connection_status",
+        "jira_list_attachments",
+        "jira_attach_artifact"
+      ]
+    }
+  },
+  "compatibility": {
+    "existingStructuredContentConsumersUnchanged": true,
+    "textOnlyBridgeCompletionSupported": true
+  }
+}

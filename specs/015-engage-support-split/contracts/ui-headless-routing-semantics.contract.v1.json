@@ -1,0 +1,32 @@
+{
+  "contract": "ui_headless_routing_semantics",
+  "version": "1.0",
+  "scope": "engage_red_hat_support_primary_skill",
+  "routingPolicy": {
+    "primaryMode": "ui_first",
+    "uiUnavailableBehavior": "return_alternate_headless_skill_uri_placeholder",
+    "alternateHeadlessSkillRegistrationInThisPhase": false
+  },
+  "requiredSkillGuidance": {
+    "mustStateUiFirstExplicitly": true,
+    "mustDescribeNonUiFallback": true,
+    "mustIncludeAlternateHeadlessUriPlaceholder": true
+  },
+  "compatibilityBoundary": {
+    "existingUiResourcesMustRemainAvailable": true,
+    "existingWebUiWorkflowBehaviorChanged": false
+  },
+  "migrationSemantics": {
+    "mode": "additive_compatibility_hardening",
+    "newHeadlessSkillCreated": false,
+    "notesRequired": [
+      "ui_first_primary_skill",
+      "non_ui_routes_to_alternate_placeholder",
+      "no_web_ui_behavior_change"
+    ]
+  },
+  "securityInvariants": {
+    "patSecureIntakeOnly": true,
+    "explicitConsentRequiredBeforeInvasiveDiagnostics": true
+  }
+}

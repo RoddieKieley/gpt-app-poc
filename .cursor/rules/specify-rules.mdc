@@ -25,6 +25,8 @@ Auto-generated from all feature plans. Last updated: 2026-02-02
 - Existing in-memory workflow/session and consent single-use state (013-mcp-consent-mint-path)
 - TypeScript (Node.js, ESM) + `@modelcontextprotocol/sdk`, `@modelcontextprotocol/ext-apps`, `express`, `zod`, `tsx` (014-headless-consent-compat)
 - Existing in-memory workflow/session and consent state; no new persistence required (014-headless-consent-compat)
+- TypeScript (Node.js ESM) + Markdown/JSON contract artifacts + `@modelcontextprotocol/sdk`, `@modelcontextprotocol/ext-apps`, `express`, `zod`, `tsx --test` (015-engage-support-split)
+- Existing in-memory workflow state + existing backend secure token vault; no new datastore (015-engage-support-split)
 
 - TypeScript (Node.js 18+) + @modelcontextprotocol/sdk, @modelcontextprotocol/ext-apps, Express, cors, Vite, vite-plugin-singlefile, tsx (001-mcp-apps-hello-world)
 
@@ -44,9 +46,9 @@ npm test && npm run lint
 TypeScript (Node.js 18+): Follow standard conventions
 
 ## Recent Changes
+- 015-engage-support-split: Added TypeScript (Node.js ESM) + Markdown/JSON contract artifacts + `@modelcontextprotocol/sdk`, `@modelcontextprotocol/ext-apps`, `express`, `zod`, `tsx --test`
 - 014-headless-consent-compat: Added TypeScript (Node.js, ESM) + `@modelcontextprotocol/sdk`, `@modelcontextprotocol/ext-apps`, `express`, `zod`, `tsx`
 - 013-mcp-consent-mint-path: Added TypeScript (Node.js, ESM) + `@modelcontextprotocol/sdk`, `@modelcontextprotocol/ext-apps`, `express`, `zod`, `node:crypto`, `tsx`
-- 012-patternfly-ui-swap: Added TypeScript 5.9 (Node.js runtime for server, browser bundle for widget UI) + Existing MCP/Express stack plus `react`, `react-dom`, `@patternfly/react-core`, `@patternfly/react-icons`
 
 
 <!-- MANUAL ADDITIONS START -->
