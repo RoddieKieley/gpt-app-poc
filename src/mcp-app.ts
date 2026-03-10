@@ -35,7 +35,7 @@ const workflowState: WorkflowState = {
 };
 const formState: FormState = {
   product: "linux",
-  jiraUrl: "",
+  jiraUrl: "https://issues.redhat.com",
   jiraPat: "",
   connectionId: "",
   issueKey: "",
