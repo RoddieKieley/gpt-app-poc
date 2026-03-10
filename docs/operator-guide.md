@@ -75,6 +75,14 @@
 - Headless clients must call `mint_engage_consent_token` with `permission_granted=true` only after that approval.
 - When reading mint results, parse `structuredContent.consent_token` first.
 - For clients that only expose text content, parse fallback lines in `content.text` (`consent_token`, `expires_at`, `workflow_session_id`).
+- For async generate completion in text/headless flows, poll `get_generate_sosreport_status` until terminal state; recommended backoff is `1s -> 3s -> 5s -> 10s -> 20s -> 30s` (cap `30s`).
+- Optional alternative for MCP clients that support resources: subscribe/read `resource://engage/sosreport/jobs/{jobId}` for updates instead of status polling.
+- Example MCP sequence (replace `{jobId}` with the real generate job id):
+  ```json
+  {"method":"resources/subscribe","params":{"uri":"resource://engage/sosreport/jobs/{jobId}"}}
+  {"method":"resources/read","params":{"uri":"resource://engage/sosreport/jobs/{jobId}"}}
+  ```
+- Repeat `resources/read` until `status` is `succeeded` or `failed`.
 
 ### Environment selection and deterministic parsing
 

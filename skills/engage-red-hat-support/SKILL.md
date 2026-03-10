@@ -38,7 +38,23 @@ This is the primary UI-first skill for engage support workflows.
    - For web/UI clients, continue minting via `POST /api/engage/consent-tokens` with
      `workflow=engage_red_hat_support`, `step=2`, `requested_scope=generate_sosreport`.
    - Run `generate_sosreport` with `consent_token` from mint response.
-   - Run `fetch_sosreport` with the returned `fetch_reference`.
+   - If `generate_sosreport` is asynchronous, poll `get_generate_sosreport_status`
+     until completion before fetching.
+   - Recommended text-client polling backoff is:
+     1s -> 3s -> 5s -> 10s -> 20s -> 30s (cap at 30s between polls).
+   - Optional alternative for MCP clients with resource support:
+     subscribe/read `resource://engage/sosreport/jobs/{jobId}` for job updates
+     instead of polling the status tool.
+   - Example MCP sequence (replace `{jobId}` with the real generate job id):
+     ```json
+     {"method":"resources/subscribe","params":{"uri":"resource://engage/sosreport/jobs/{jobId}"}}
+     {"method":"resources/read","params":{"uri":"resource://engage/sosreport/jobs/{jobId}"}}
+     ```
+   - Repeat `resources/read` until `status` is `succeeded` or `failed`.
+   - Note that sosreport generation can take some time depending on host size,
+     plugin scope, and amount of collected Linux diagnostic data.
+   - Run `fetch_sosreport` with the returned `fetch_reference` after status is
+     `succeeded`.
    - Keep `artifact_ref` for step 3.
 3. Step 3 - Connect Jira and attach:
    - Connect Jira through secure backend intake (`POST /api/jira/connections`) with
