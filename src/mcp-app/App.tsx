@@ -1,7 +1,7 @@
 import { Alert, AlertVariant, PageSection, Title, Wizard, WizardStep } from "@patternfly/react-core";
 import type { ReactElement } from "react";
 import { Step1Content, Step2Content, Step3Content } from "./step-content";
-import type { FormState, UiState, WorkflowStep } from "./state";
+import type { FormState, JiraAuthMode, UiState, WorkflowStep } from "./state";
 
 type AppProps = {
   currentStep: WorkflowStep;
@@ -14,6 +14,9 @@ type AppProps = {
   onFetchReferenceChange: (value: string) => void;
   onArtifactRefChange: (value: string) => void;
   onJiraUrlChange: (value: string) => void;
+  onJiraAuthModeChange: (value: JiraAuthMode) => void;
+  onJiraEmailChange: (value: string) => void;
+  onJiraApiTokenChange: (value: string) => void;
   onJiraPatChange: (value: string) => void;
   onConnectionIdChange: (value: string) => void;
   onIssueKeyChange: (value: string) => void;
@@ -61,6 +64,9 @@ export function EngageWorkflowApp(props: AppProps) {
     onFetchReferenceChange,
     onArtifactRefChange,
     onJiraUrlChange,
+    onJiraAuthModeChange,
+    onJiraEmailChange,
+    onJiraApiTokenChange,
     onJiraPatChange,
     onConnectionIdChange,
     onIssueKeyChange,
@@ -122,11 +128,17 @@ export function EngageWorkflowApp(props: AppProps) {
         <WizardStep id={3} name="Step 3: Connect + Verify + Attach">
           <Step3Content
             jiraUrl={formState.jiraUrl}
+            jiraAuthMode={formState.jiraAuthMode}
+            jiraEmail={formState.jiraEmail}
+            jiraApiToken={formState.jiraApiToken}
             jiraPat={formState.jiraPat}
             connectionId={formState.connectionId}
             issueKey={formState.issueKey}
             artifactRef={formState.artifactRef}
             onJiraUrlChange={onJiraUrlChange}
+            onJiraAuthModeChange={onJiraAuthModeChange}
+            onJiraEmailChange={onJiraEmailChange}
+            onJiraApiTokenChange={onJiraApiTokenChange}
             onJiraPatChange={onJiraPatChange}
             onConnectionIdChange={onConnectionIdChange}
             onIssueKeyChange={onIssueKeyChange}

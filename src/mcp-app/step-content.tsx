@@ -13,6 +13,7 @@ import {
 } from "@patternfly/react-core";
 import { useState } from "react";
 import type { Ref } from "react";
+import type { JiraAuthMode } from "./state";
 
 type Step1Props = {
   product: string;
@@ -34,11 +35,17 @@ type Step2Props = {
 
 type Step3Props = {
   jiraUrl: string;
+  jiraAuthMode: JiraAuthMode;
+  jiraEmail: string;
+  jiraApiToken: string;
   jiraPat: string;
   connectionId: string;
   issueKey: string;
   artifactRef: string;
   onJiraUrlChange: (value: string) => void;
+  onJiraAuthModeChange: (value: JiraAuthMode) => void;
+  onJiraEmailChange: (value: string) => void;
+  onJiraApiTokenChange: (value: string) => void;
   onJiraPatChange: (value: string) => void;
   onConnectionIdChange: (value: string) => void;
   onIssueKeyChange: (value: string) => void;
@@ -133,11 +140,17 @@ export function Step2Content(props: Step2Props) {
 export function Step3Content(props: Step3Props) {
   const {
     jiraUrl,
+    jiraAuthMode,
+    jiraEmail,
+    jiraApiToken,
     jiraPat,
     connectionId,
     issueKey,
     artifactRef,
     onJiraUrlChange,
+    onJiraAuthModeChange,
+    onJiraEmailChange,
+    onJiraApiTokenChange,
     onJiraPatChange,
     onConnectionIdChange,
     onIssueKeyChange,
@@ -148,20 +161,62 @@ export function Step3Content(props: Step3Props) {
     onAttach,
     onDisconnect,
   } = props;
+  const [isAuthModeOpen, setIsAuthModeOpen] = useState(false);
 
   return (
     <Form>
       <FormGroup label="Jira base URL" fieldId="jira-url">
         <TextInput id="jira-url" value={jiraUrl} onChange={(_e, value) => onJiraUrlChange(value)} />
       </FormGroup>
-      <FormGroup label="Jira PAT" fieldId="jira-pat">
-        <TextInput
-          id="jira-pat"
-          type="password"
-          value={jiraPat}
-          onChange={(_e, value) => onJiraPatChange(value)}
-        />
+      <FormGroup label="Jira auth mode" fieldId="jira-auth-mode">
+        <Select
+          selected={jiraAuthMode}
+          isOpen={isAuthModeOpen}
+          onSelect={(_e, value) => {
+            onJiraAuthModeChange(String(value) as JiraAuthMode);
+            setIsAuthModeOpen(false);
+          }}
+          onOpenChange={(nextOpen: boolean) => setIsAuthModeOpen(nextOpen)}
+          toggle={(toggleRef: Ref<MenuToggleElement>) => (
+            <MenuToggle ref={toggleRef} onClick={() => setIsAuthModeOpen((prev) => !prev)}>
+              {jiraAuthMode === "basic_cloud" ? "Atlassian Cloud (email + API token)" : "Legacy bearer PAT"}
+            </MenuToggle>
+          )}
+        >
+          <SelectList>
+            <SelectOption value="basic_cloud">Atlassian Cloud (email + API token)</SelectOption>
+            <SelectOption value="bearer_pat">Legacy bearer PAT</SelectOption>
+          </SelectList>
+        </Select>
       </FormGroup>
+      {jiraAuthMode === "basic_cloud" ? (
+        <>
+          <FormGroup label="Atlassian account email" fieldId="jira-email">
+            <TextInput
+              id="jira-email"
+              value={jiraEmail}
+              onChange={(_e, value) => onJiraEmailChange(value)}
+            />
+          </FormGroup>
+          <FormGroup label="Jira API token" fieldId="jira-api-token">
+            <TextInput
+              id="jira-api-token"
+              type="password"
+              value={jiraApiToken}
+              onChange={(_e, value) => onJiraApiTokenChange(value)}
+            />
+          </FormGroup>
+        </>
+      ) : (
+        <FormGroup label="Jira PAT" fieldId="jira-pat">
+          <TextInput
+            id="jira-pat"
+            type="password"
+            value={jiraPat}
+            onChange={(_e, value) => onJiraPatChange(value)}
+          />
+        </FormGroup>
+      )}
       <FormGroup label="Connection ID" fieldId="connection-id">
         <TextInput
           id="connection-id"

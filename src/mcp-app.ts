@@ -35,7 +35,10 @@ const workflowState: WorkflowState = {
 };
 const formState: FormState = {
   product: "linux",
-  jiraUrl: "https://issues.redhat.com",
+  jiraUrl: "https://redhat.atlassian.net",
+  jiraAuthMode: "basic_cloud",
+  jiraEmail: "",
+  jiraApiToken: "",
   jiraPat: "",
   connectionId: "",
   issueKey: "",
@@ -214,16 +217,41 @@ const verifyConnectionViaTool = async (connectionId: string): Promise<VerifyResp
 const connectJira = async (): Promise<ConnectResponse | null> => {
   if (!ensureLinuxSelection()) return null;
   const jiraBaseUrl = formState.jiraUrl.trim();
-  const pat = formState.jiraPat;
-  if (!jiraBaseUrl || !pat) {
+  const authMode = formState.jiraAuthMode;
+  if (!jiraBaseUrl) {
     workflowState.last_error_code = "missing_jira_connect_inputs";
-    setStatus("Jira URL and PAT are required.", "warning");
+    setStatus("Jira URL is required.", "warning");
     return null;
   }
-  const result = await callTool("jira_connect_secure", {
-    jira_base_url: jiraBaseUrl,
-    pat,
-  }, { redactErrorDetails: true });
+  let payload: Record<string, unknown>;
+  if (authMode === "basic_cloud") {
+    const accountEmail = formState.jiraEmail.trim();
+    const apiToken = formState.jiraApiToken;
+    if (!accountEmail || !apiToken) {
+      workflowState.last_error_code = "missing_jira_connect_inputs";
+      setStatus("Jira URL, account email, and API token are required.", "warning");
+      return null;
+    }
+    payload = {
+      jira_base_url: jiraBaseUrl,
+      auth_mode: "basic_cloud",
+      account_email: accountEmail,
+      api_token: apiToken,
+    };
+  } else {
+    const pat = formState.jiraPat;
+    if (!pat) {
+      workflowState.last_error_code = "missing_jira_connect_inputs";
+      setStatus("Jira URL and PAT are required.", "warning");
+      return null;
+    }
+    payload = {
+      jira_base_url: jiraBaseUrl,
+      auth_mode: "bearer_pat",
+      pat,
+    };
+  }
+  const result = await callTool("jira_connect_secure", payload, { redactErrorDetails: true });
   if (result.isError) {
     workflowState.last_error_code = "jira_connect_failed";
     return null;
@@ -238,7 +266,8 @@ const connectJira = async (): Promise<ConnectResponse | null> => {
   } else {
     setStatus(body.text ?? "Connected.", "success");
   }
-  // Preserve PAT security boundary: never keep PAT in local UI state after intake.
+  // Preserve credential security boundary: never keep secret values in local UI state after intake.
+  formState.jiraApiToken = "";
   formState.jiraPat = "";
   render();
   return body;
@@ -631,6 +660,18 @@ render = () => {
       },
       onJiraUrlChange: (value: string) => {
         formState.jiraUrl = value;
+        render();
+      },
+      onJiraAuthModeChange: (value) => {
+        formState.jiraAuthMode = value;
+        render();
+      },
+      onJiraEmailChange: (value: string) => {
+        formState.jiraEmail = value;
+        render();
+      },
+      onJiraApiTokenChange: (value: string) => {
+        formState.jiraApiToken = value;
         render();
       },
       onJiraPatChange: (value: string) => {

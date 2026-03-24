@@ -1,4 +1,5 @@
 export type WorkflowStep = "select_product" | "sos_report" | "jira_attach" | "completed" | "failed";
+export type JiraAuthMode = "basic_cloud" | "bearer_pat";
 
 export type WorkflowState = {
   current_step: WorkflowStep;
@@ -14,6 +15,9 @@ export type WorkflowState = {
 export type FormState = {
   product: string;
   jiraUrl: string;
+  jiraAuthMode: JiraAuthMode;
+  jiraEmail: string;
+  jiraApiToken: string;
   jiraPat: string;
   connectionId: string;
   issueKey: string;
