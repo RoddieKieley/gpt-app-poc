@@ -27,6 +27,8 @@ Auto-generated from all feature plans. Last updated: 2026-02-02
 - Existing in-memory workflow/session and consent state; no new persistence required (014-headless-consent-compat)
 - TypeScript (Node.js ESM) + Markdown/JSON contract artifacts + `@modelcontextprotocol/sdk`, `@modelcontextprotocol/ext-apps`, `express`, `zod`, `tsx --test` (015-engage-support-split)
 - Existing in-memory workflow state + existing backend secure token vault; no new datastore (015-engage-support-split)
+- TypeScript (Node.js ESM) + Markdown/YAML/JSON planning artifacts + `express`, `zod`, `@modelcontextprotocol/sdk`, `tsx --test` (016-jira-cloud-auth)
+- Existing file-backed connection lifecycle store and encrypted token vault under `.data/` (016-jira-cloud-auth)
 
 - TypeScript (Node.js 18+) + @modelcontextprotocol/sdk, @modelcontextprotocol/ext-apps, Express, cors, Vite, vite-plugin-singlefile, tsx (001-mcp-apps-hello-world)
 
@@ -46,9 +48,9 @@ npm test && npm run lint
 TypeScript (Node.js 18+): Follow standard conventions
 
 ## Recent Changes
+- 016-jira-cloud-auth: Added TypeScript (Node.js ESM) + Markdown/YAML/JSON planning artifacts + `express`, `zod`, `@modelcontextprotocol/sdk`, `tsx --test`
 - 015-engage-support-split: Added TypeScript (Node.js ESM) + Markdown/JSON contract artifacts + `@modelcontextprotocol/sdk`, `@modelcontextprotocol/ext-apps`, `express`, `zod`, `tsx --test`
 - 014-headless-consent-compat: Added TypeScript (Node.js, ESM) + `@modelcontextprotocol/sdk`, `@modelcontextprotocol/ext-apps`, `express`, `zod`, `tsx`
-- 013-mcp-consent-mint-path: Added TypeScript (Node.js, ESM) + `@modelcontextprotocol/sdk`, `@modelcontextprotocol/ext-apps`, `express`, `zod`, `node:crypto`, `tsx`
 
 
 <!-- MANUAL ADDITIONS START -->

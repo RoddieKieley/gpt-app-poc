@@ -1,0 +1,241 @@
+openapi: 3.0.3
+info:
+  title: Jira Connection and Attachments Contract (Minimal Cloud Auth Migration)
+  version: 1.0.0
+  description: |
+    Additive contract for Jira Cloud-compatible authentication while preserving
+    existing workflow and response envelopes.
+servers:
+  - url: http://localhost:3001
+paths:
+  /api/jira/connections:
+    post:
+      summary: Create Jira connection via secure backend intake
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              oneOf:
+                - $ref: "#/components/schemas/LegacyBearerConnectRequest"
+                - $ref: "#/components/schemas/CloudBasicConnectRequest"
+      responses:
+        "201":
+          description: Connection created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/JiraConnectionResponse"
+        "422":
+          description: Validation or verification failure
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+  /api/jira/connections/{connection_id}:
+    get:
+      summary: Retrieve non-secret connection status
+      parameters:
+        - in: path
+          name: connection_id
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Connection status
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/JiraConnectionResponse"
+        "404":
+          description: Unknown connection
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+    delete:
+      summary: Revoke connection
+      parameters:
+        - in: path
+          name: connection_id
+          required: true
+          schema:
+            type: string
+      responses:
+        "204":
+          description: Revoked
+        "404":
+          description: Unknown connection
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+  /api/jira/issues/{issue_key}/attachments:
+    get:
+      summary: List issue attachments
+      parameters:
+        - in: path
+          name: issue_key
+          required: true
+          schema:
+            type: string
+        - in: header
+          name: x-connection-id
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Attachment list
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ListAttachmentsResponse"
+        "4XX":
+          description: Connection or access error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+    post:
+      summary: Attach artifact to issue
+      parameters:
+        - in: path
+          name: issue_key
+          required: true
+          schema:
+            type: string
+        - in: header
+          name: x-connection-id
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [artifact_ref]
+              properties:
+                artifact_ref:
+                  type: string
+      responses:
+        "201":
+          description: Attachment created
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/JiraAttachment"
+                  - type: object
+                    required: [text]
+                    properties:
+                      text:
+                        type: string
+        "4XX":
+          description: Validation, connection, or Jira error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+components:
+  schemas:
+    LegacyBearerConnectRequest:
+      type: object
+      required: [jira_base_url, pat]
+      properties:
+        jira_base_url:
+          type: string
+          format: uri
+        pat:
+          type: string
+        auth_mode:
+          type: string
+          enum: [bearer_pat]
+      description: Existing payload path preserved for backward compatibility.
+    CloudBasicConnectRequest:
+      type: object
+      required: [jira_base_url, auth_mode, account_email, api_token]
+      properties:
+        jira_base_url:
+          type: string
+          format: uri
+        auth_mode:
+          type: string
+          enum: [basic_cloud]
+        account_email:
+          type: string
+          format: email
+        api_token:
+          type: string
+      description: Cloud-compatible backend intake payload.
+    JiraConnectionResponse:
+      type: object
+      required:
+        - connection_id
+        - jira_base_url
+        - status
+        - expires_at
+        - last_verified_at
+        - text
+      properties:
+        connection_id:
+          type: string
+        jira_base_url:
+          type: string
+        status:
+          type: string
+        expires_at:
+          type: string
+          format: date-time
+        last_verified_at:
+          type: string
+          nullable: true
+          format: date-time
+        text:
+          type: string
+      description: Response shape intentionally unchanged.
+    JiraAttachment:
+      type: object
+      required:
+        - issue_key
+        - attachment_id
+        - filename
+        - size_bytes
+        - created_at
+      properties:
+        issue_key:
+          type: string
+        attachment_id:
+          type: string
+        filename:
+          type: string
+        size_bytes:
+          type: integer
+        created_at:
+          type: string
+          format: date-time
+    ListAttachmentsResponse:
+      type: object
+      required: [issue_key, attachments, text]
+      properties:
+        issue_key:
+          type: string
+        attachments:
+          type: array
+          items:
+            $ref: "#/components/schemas/JiraAttachment"
+        text:
+          type: string
+    ErrorResponse:
+      type: object
+      required: [code, message, text]
+      properties:
+        code:
+          type: string
+        message:
+          type: string
+        text:
+          type: string
