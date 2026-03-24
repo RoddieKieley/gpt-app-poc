@@ -6,19 +6,23 @@ test("log sanitizer redacts auth headers and token-like values", () => {
   const msg = sanitizeForLog({
     authorization: "Bearer super-secret",
     pat: "pat-value",
+    api_token: "api-token-value",
     token: "token-value",
   });
   assert.equal(msg.includes("super-secret"), false);
   assert.equal(msg.includes("pat-value"), false);
+  assert.equal(msg.includes("api-token-value"), false);
   assert.equal(msg.includes("token-value"), false);
 });
 
 test("log sanitizer redacts attach-step error details with token content", () => {
   const msg = sanitizeForLog(
-    "Attach failed for SUP-7: Authorization: Bearer abc123, pat=super-secret, token=xyz",
+    "Attach failed for SUP-7: Authorization: Bearer abc123, Authorization: Basic YWJjOmRlZg==, pat=super-secret, api_token=cloud-secret, token=xyz",
   );
   assert.equal(msg.includes("abc123"), false);
+  assert.equal(msg.includes("YWJjOmRlZg=="), false);
   assert.equal(msg.includes("super-secret"), false);
+  assert.equal(msg.includes("cloud-secret"), false);
   assert.equal(msg.includes("token=xyz"), false);
 });
 

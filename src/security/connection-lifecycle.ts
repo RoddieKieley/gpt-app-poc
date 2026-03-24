@@ -8,6 +8,8 @@ export type UserConnection = {
   connectionId: string;
   userId: string;
   jiraBaseUrl: string;
+  authMode?: "bearer_pat" | "basic_cloud";
+  accountEmail?: string | null;
   status: ConnectionStatus;
   createdAt: string;
   updatedAt: string;
@@ -46,21 +48,36 @@ export class ConnectionLifecycleStore {
     await fs.writeFile(this.filePath, JSON.stringify(store, null, 2), "utf8");
   }
 
-  private withDerivedState(record: UserConnection): UserConnection {
-    if (record.status === "revoked") return record;
-    if (new Date(record.expiresAt).getTime() <= Date.now()) {
-      return { ...record, status: "expired", updatedAt: nowIso() };
-    }
-    return record;
+  private normalizeRecord(record: UserConnection): UserConnection {
+    return {
+      ...record,
+      authMode: record.authMode ?? "bearer_pat",
+      accountEmail: record.accountEmail ?? null,
+    };
   }
 
-  async create(userId: string, jiraBaseUrl: string): Promise<UserConnection> {
+  private withDerivedState(record: UserConnection): UserConnection {
+    const normalized = this.normalizeRecord(record);
+    if (normalized.status === "revoked") return normalized;
+    if (new Date(normalized.expiresAt).getTime() <= Date.now()) {
+      return { ...normalized, status: "expired", updatedAt: nowIso() };
+    }
+    return normalized;
+  }
+
+  async create(
+    userId: string,
+    jiraBaseUrl: string,
+    options?: { authMode?: "bearer_pat" | "basic_cloud"; accountEmail?: string | null },
+  ): Promise<UserConnection> {
     const createdAt = nowIso();
     const expiresAt = new Date(Date.now() + this.ttlSeconds * 1000).toISOString();
     const record: UserConnection = {
       connectionId: randomUUID(),
       userId,
       jiraBaseUrl,
+      authMode: options?.authMode ?? "bearer_pat",
+      accountEmail: options?.accountEmail ?? null,
       status: "connected",
       createdAt,
       updatedAt: createdAt,
@@ -72,15 +89,20 @@ export class ConnectionLifecycleStore {
     const store = await this.readStore();
     store.records[record.connectionId] = record;
     await this.writeStore(store);
-    return record;
+    return this.normalizeRecord(record);
   }
 
   async getOwned(userId: string, connectionId: string): Promise<UserConnection | null> {
     const store = await this.readStore();
     const raw = store.records[connectionId];
     if (!raw || raw.userId !== userId) return null;
-    const derived = this.withDerivedState(raw);
-    if (derived.status !== raw.status) {
+    const normalized = this.normalizeRecord(raw);
+    const derived = this.withDerivedState(normalized);
+    if (
+      derived.status !== raw.status
+      || derived.authMode !== raw.authMode
+      || derived.accountEmail !== (raw.accountEmail ?? null)
+    ) {
       store.records[connectionId] = derived;
       await this.writeStore(store);
     }
@@ -91,9 +113,10 @@ export class ConnectionLifecycleStore {
     const store = await this.readStore();
     const raw = store.records[connectionId];
     if (!raw || raw.userId !== userId) return;
+    const normalized = this.normalizeRecord(raw);
     const next: UserConnection = {
-      ...raw,
-      status: this.withDerivedState(raw).status,
+      ...normalized,
+      status: this.withDerivedState(normalized).status,
       lastVerifiedAt: nowIso(),
       updatedAt: nowIso(),
       lastErrorCode: null,
@@ -106,7 +129,7 @@ export class ConnectionLifecycleStore {
     const store = await this.readStore();
     const raw = store.records[connectionId];
     if (!raw || raw.userId !== userId) return;
-    const derived = this.withDerivedState(raw);
+    const derived = this.withDerivedState(this.normalizeRecord(raw));
     const nextStatus: ConnectionStatus =
       derived.status === "revoked" || derived.status === "expired"
         ? derived.status
@@ -124,8 +147,9 @@ export class ConnectionLifecycleStore {
     const store = await this.readStore();
     const raw = store.records[connectionId];
     if (!raw || raw.userId !== userId) return null;
+    const normalized = this.normalizeRecord(raw);
     const revoked: UserConnection = {
-      ...raw,
+      ...normalized,
       status: "revoked",
       revokedAt: nowIso(),
       updatedAt: nowIso(),

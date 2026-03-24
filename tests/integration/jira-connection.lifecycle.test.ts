@@ -119,6 +119,39 @@ test("connect returns updated lifecycle status when verification fails", async (
   }
 });
 
+test("cloud connect with wrong email reports error status", async () => {
+  process.env.NODE_ENV = "test";
+  process.env.JIRA_MOCK_MODE = "1";
+  const { createApp } = await import("../../server.js");
+
+  const app = createApp();
+  const srv = app.listen(0);
+  const port = (srv.address() as { port: number }).port;
+  const base = `http://127.0.0.1:${port}`;
+
+  try {
+    const connect = await fetch(`${base}/api/jira/connections`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "x-user-id": "u6",
+      },
+      body: JSON.stringify({
+        jira_base_url: "https://redhat.atlassian.net",
+        auth_mode: "basic_cloud",
+        account_email: "wrong@example.com",
+        api_token: "cloud-token",
+      }),
+    });
+    assert.equal(connect.status, 201);
+    const created = await connect.json() as { connection_id: string; status: string };
+    assert.ok(created.connection_id);
+    assert.equal(created.status, "error");
+  } finally {
+    srv.close();
+  }
+});
+
 test("MCP connect/status include deterministic connection_id and status fallback keys", async () => {
   process.env.NODE_ENV = "test";
   process.env.JIRA_MOCK_MODE = "1";

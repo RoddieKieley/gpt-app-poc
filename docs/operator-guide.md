@@ -10,6 +10,7 @@
 ## Lifecycle Operations
 
 - Connect users through `POST /api/jira/connections`.
+- For Atlassian Cloud, use base URL format `https://<tenant>.atlassian.net` (for example `https://redhat.atlassian.net`).
 - Verify status through `GET /api/jira/connections/{connection_id}`.
 - Revoke through `DELETE /api/jira/connections/{connection_id}`.
 - Reconnect users when connection status is `expired` or `revoked`.
@@ -19,7 +20,7 @@
 - If credential compromise is suspected, revoke connection immediately.
 - Rotate `TOKEN_VAULT_MASTER_KEY` and reconnect all users if key exposure is suspected.
 - Review security event logs for `connect`, `attach`, `revoke`, and denied access patterns.
-- Never request users to paste PATs into prompts or MCP tool calls.
+- Never request users to paste PATs or API tokens into prompts or MCP tool calls.
 
 ## Local Sosreport Operations (Phase 1)
 
@@ -64,7 +65,9 @@
 - End-to-end 3-step sequence:
   1. Start workflow and select product (`linux` only) via `start_engage_red_hat_support` + `select_engage_product` (or HTTP workflow start/select endpoints for UI flow).
   2. Mint one-time consent token with `POST /api/engage/consent-tokens`, run `generate_sosreport` with `consent_token`, then `fetch_sosreport` to obtain `artifact_ref`.
-  3. Connect with PAT through `POST /api/jira/connections`, verify active `connection_id`, verify issue read access with `jira_list_attachments`, then run `jira_attach_artifact`.
+  3. Connect through `POST /api/jira/connections`, verify active `connection_id`, verify issue read access with `jira_list_attachments`, then run `jira_attach_artifact`.
+     - Legacy/self-hosted-compatible mode: `jira_base_url` + `pat`.
+     - Atlassian Cloud mode: `jira_base_url` + `auth_mode=basic_cloud` + `account_email` + `api_token`.
 - Step 2 consent validation denies requests when token is missing, invalid, expired, replayed, wrong-user/session, or wrong-scope/step.
 
 ### Headless MCP bridge compatibility note
@@ -103,21 +106,21 @@
 
 ### Secret boundary reminders
 
-- PAT must only be entered in secure backend intake requests.
-- PAT must never be passed in MCP tool arguments or shown in logs/transcripts.
+- PAT/API token values must only be entered in secure backend intake requests.
+- PAT/API token values must never be passed in MCP tool arguments or shown in logs/transcripts.
 - Downstream MCP and API usage should rely on opaque `connection_id`.
 
 ### Connection troubleshooting
 
 - Use `POST /api/jira/connections` (plural). The singular path is not a valid intake endpoint.
 - No extra request header in this app bypasses Jira SAML/SSO redirects.
-- If Jira redirects API calls to login/IdP, use a Jira API-capable base URL and a PAT that supports direct REST API access.
+- If Jira redirects API calls to login/IdP, use a Jira API-capable base URL and credentials that support direct REST API access (Cloud: account email + API token).
 - If `jira_list_attachments` fails, treat issue-read verification as failed and do not proceed to attach.
 
 ### Incident response
 
 - If exposure is suspected, revoke impacted connections immediately.
-- Reconnect users with new PAT intake only after mitigation.
+- Reconnect users with new credential intake only after mitigation.
 - Review security event logs for connect/verify/attach/revoke outcomes and denied access patterns.
 
 ### Migration note (split-readiness only)

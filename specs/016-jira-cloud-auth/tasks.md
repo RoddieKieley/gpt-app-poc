@@ -16,9 +16,9 @@
 
 **Purpose**: Prepare implementation artifacts and test baseline for smallest-change migration.
 
-- [ ] T001 Capture current failing Cloud baseline and expected behavior notes in `specs/016-jira-cloud-auth/quickstart.md`
-- [ ] T002 Verify target file list and smallest-change scope notes in `specs/016-jira-cloud-auth/plan.md`
-- [ ] T003 [P] Confirm contract assumptions for connect/status/list/attach in `specs/016-jira-cloud-auth/contracts/jira-cloud-auth-minimal-openapi.yaml`
+- [X] T001 Capture current failing Cloud baseline and expected behavior notes in `specs/016-jira-cloud-auth/quickstart.md`
+- [X] T002 Verify target file list and smallest-change scope notes in `specs/016-jira-cloud-auth/plan.md`
+- [X] T003 [P] Confirm contract assumptions for connect/status/list/attach in `specs/016-jira-cloud-auth/contracts/jira-cloud-auth-minimal-openapi.yaml`
 
 ---
 
@@ -28,12 +28,12 @@
 
 **⚠️ CRITICAL**: No user story implementation starts until this phase is complete.
 
-- [ ] T004 Add Jira auth context type and header builder utilities in `src/jira/jira-client.ts`
-- [ ] T005 Extend connect input schema with additive auth mode/email/token fields in `src/jira/jira-tool-schemas.ts`
-- [ ] T006 Add optional auth metadata fields with backward-compatible defaults in `src/security/connection-lifecycle.ts`
-- [ ] T007 Thread auth metadata through secure connection creation path in `server.ts`
-- [ ] T008 Update Jira tool handler credential resolution to produce auth context in `src/jira/jira-tool-handlers.ts`
-- [ ] T009 [P] Add/adjust common fixtures for Cloud and legacy connect payloads in `tests/contract/jira-connections.contract.test.ts`
+- [X] T004 Add Jira auth context type and header builder utilities in `src/jira/jira-client.ts`
+- [X] T005 Extend connect input schema with additive auth mode/email/token fields in `src/jira/jira-tool-schemas.ts`
+- [X] T006 Add optional auth metadata fields with backward-compatible defaults in `src/security/connection-lifecycle.ts`
+- [X] T007 Thread auth metadata through secure connection creation path in `server.ts`
+- [X] T008 Update Jira tool handler credential resolution to produce auth context in `src/jira/jira-tool-handlers.ts`
+- [X] T009 [P] Add/adjust common fixtures for Cloud and legacy connect payloads in `tests/contract/jira-connections.contract.test.ts`
 
 **Checkpoint**: Foundation ready for user-story implementation.
 
@@ -47,18 +47,18 @@
 
 ### Tests for User Story 1
 
-- [ ] T010 [P] [US1] Add unit tests for Basic-vs-Bearer auth header construction in `tests/unit/jira-client.test.ts`
-- [ ] T011 [P] [US1] Add contract tests for additive connect payload variants in `tests/contract/jira-connections.contract.test.ts`
-- [ ] T012 [P] [US1] Add integration coverage for Cloud connect -> list flow in `tests/integration/jira-attachments.success.test.ts`
-- [ ] T013 [P] [US1] Add explicit do-not-break response-shape assertions for connect/status/list in `tests/contract/jira-connections.contract.test.ts`
+- [X] T010 [P] [US1] Add unit tests for Basic-vs-Bearer auth header construction in `tests/unit/jira-client.test.ts`
+- [X] T011 [P] [US1] Add contract tests for additive connect payload variants in `tests/contract/jira-connections.contract.test.ts`
+- [X] T012 [P] [US1] Add integration coverage for Cloud connect -> list flow in `tests/integration/jira-attachments.success.test.ts`
+- [X] T013 [P] [US1] Add explicit do-not-break response-shape assertions for connect/status/list in `tests/contract/jira-connections.contract.test.ts`
 
 ### Implementation for User Story 1
 
-- [ ] T014 [US1] Implement Cloud Basic authorization header usage in `src/jira/jira-client.ts`
-- [ ] T015 [US1] Update secure connect intake parsing and auth-mode mapping in `server.ts`
-- [ ] T016 [US1] Persist and read auth metadata during connection lifecycle operations in `src/security/connection-lifecycle.ts`
-- [ ] T017 [US1] Wire auth context through status/list code paths in `src/jira/jira-tool-handlers.ts`
-- [ ] T018 [US1] Add validation/error mapping for Cloud auth input edge cases in `src/jira/jira-tool-schemas.ts`
+- [X] T014 [US1] Implement Cloud Basic authorization header usage in `src/jira/jira-client.ts`
+- [X] T015 [US1] Update secure connect intake parsing and auth-mode mapping in `server.ts`
+- [X] T016 [US1] Persist and read auth metadata during connection lifecycle operations in `src/security/connection-lifecycle.ts`
+- [X] T017 [US1] Wire auth context through status/list code paths in `src/jira/jira-tool-handlers.ts`
+- [X] T018 [US1] Add validation/error mapping for Cloud auth input edge cases in `src/jira/jira-tool-schemas.ts`
 
 **Checkpoint**: US1 should connect and list against Cloud independently.
 
@@ -72,14 +72,14 @@
 
 ### Tests for User Story 2
 
-- [ ] T019 [P] [US2] Extend integration test for connect -> list -> attach success path in `tests/integration/jira-attachments.success.test.ts`
-- [ ] T020 [P] [US2] Add do-not-break response-shape assertions for attach response in `tests/integration/jira-attachments.success.test.ts`
+- [X] T019 [P] [US2] Extend integration test for connect -> list -> attach success path in `tests/integration/jira-attachments.success.test.ts`
+- [X] T020 [P] [US2] Add do-not-break response-shape assertions for attach response in `tests/integration/jira-attachments.success.test.ts`
 
 ### Implementation for User Story 2
 
-- [ ] T021 [US2] Ensure attach path uses shared auth context without endpoint/route changes in `src/jira/jira-client.ts`
-- [ ] T022 [US2] Keep server attachment endpoint behavior stable while consuming auth metadata in `server.ts`
-- [ ] T023 [US2] Verify handler attach path remains `connection_id`-driven only in `src/jira/jira-tool-handlers.ts`
+- [X] T021 [US2] Ensure attach path uses shared auth context without endpoint/route changes in `src/jira/jira-client.ts`
+- [X] T022 [US2] Keep server attachment endpoint behavior stable while consuming auth metadata in `server.ts`
+- [X] T023 [US2] Verify handler attach path remains `connection_id`-driven only in `src/jira/jira-tool-handlers.ts`
 
 **Checkpoint**: US2 should upload artifacts without contract or workflow changes.
 
@@ -93,15 +93,15 @@
 
 ### Tests for User Story 3
 
-- [ ] T024 [P] [US3] Add or update no-secret-leakage assertions for new Cloud fields in `tests/regression/no-pat-leakage-mcp.test.ts`
-- [ ] T025 [P] [US3] Add or update log redaction assertions for Cloud auth inputs in `tests/regression/no-pat-leakage-logs.test.ts`
-- [ ] T026 [P] [US3] Add backward compatibility verification test for legacy bearer records in `tests/integration/jira-connection.lifecycle.test.ts`
+- [X] T024 [P] [US3] Add or update no-secret-leakage assertions for new Cloud fields in `tests/regression/no-pat-leakage-mcp.test.ts`
+- [X] T025 [P] [US3] Add or update log redaction assertions for Cloud auth inputs in `tests/regression/no-pat-leakage-logs.test.ts`
+- [X] T026 [P] [US3] Add backward compatibility verification test for legacy bearer records in `tests/integration/jira-connection.lifecycle.test.ts`
 
 ### Implementation for User Story 3
 
-- [ ] T027 [US3] Enforce backend-intake-only secret handling for Cloud/Bearer connect inputs in `server.ts`
-- [ ] T028 [US3] Ensure vault usage remains secret-only and non-MCP-visible in `src/security/token-vault.ts`
-- [ ] T029 [US3] Keep deterministic secret-safe fallback text and `connection_id`-only tool behavior in `src/jira/jira-tool-handlers.ts`
+- [X] T027 [US3] Enforce backend-intake-only secret handling for Cloud/Bearer connect inputs in `server.ts`
+- [X] T028 [US3] Ensure vault usage remains secret-only and non-MCP-visible in `src/security/token-vault.ts`
+- [X] T029 [US3] Keep deterministic secret-safe fallback text and `connection_id`-only tool behavior in `src/jira/jira-tool-handlers.ts`
 
 **Checkpoint**: US3 should pass security-boundary and backward-compatibility checks.
 
@@ -111,12 +111,12 @@
 
 **Purpose**: Docs alignment, full validation, and manual completion record.
 
-- [ ] T030 [P] Update Cloud auth operator instructions and base URL expectations in `docs/operator-guide.md`
-- [ ] T031 [P] Update security boundary documentation for Cloud auth semantics in `docs/security-model.md`
-- [ ] T032 [P] Update Jira connect step wording for Cloud credentials in `skills/engage-red-hat-support/SKILL.md`
-- [ ] T033 Run targeted test suite and record results in `specs/016-jira-cloud-auth/quickstart.md`
-- [ ] T034 Execute final manual verification against Jira Cloud issue `APPENG-999999` and record checklist outcomes in `specs/016-jira-cloud-auth/quickstart.md`
-- [ ] T035 Document legacy-path validation outcome (pass or explicit constraint note) in `specs/016-jira-cloud-auth/quickstart.md`
+- [X] T030 [P] Update Cloud auth operator instructions and base URL expectations in `docs/operator-guide.md`
+- [X] T031 [P] Update security boundary documentation for Cloud auth semantics in `docs/security-model.md`
+- [X] T032 [P] Update Jira connect step wording for Cloud credentials in `skills/engage-red-hat-support/SKILL.md`
+- [X] T033 Run targeted test suite and record results in `specs/016-jira-cloud-auth/quickstart.md`
+- [X] T034 Execute final manual verification against Jira Cloud issue `APPENG-999999` and record checklist outcomes in `specs/016-jira-cloud-auth/quickstart.md`
+- [X] T035 Document legacy-path validation outcome (pass or explicit constraint note) in `specs/016-jira-cloud-auth/quickstart.md`
 
 ---
 

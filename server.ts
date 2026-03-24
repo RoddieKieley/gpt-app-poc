@@ -13,7 +13,7 @@ import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { z } from "zod";
 import { SubscribeRequestSchema, UnsubscribeRequestSchema } from "@modelcontextprotocol/sdk/types.js";
-import { JiraClient } from "./src/jira/jira-client.js";
+import { JiraAuthContext, JiraClient } from "./src/jira/jira-client.js";
 import {
   attachArtifactSchema,
   connectionIdSchema,
@@ -383,6 +383,51 @@ type JiraConnectionResponse = {
   text: string;
 };
 
+type NormalizedConnectInput = {
+  jiraBaseUrl: string;
+  authMode: "bearer_pat" | "basic_cloud";
+  secret: string;
+  accountEmail: string | null;
+};
+
+const normalizeConnectInput = (
+  parsed: z.infer<typeof connectSchema>,
+): NormalizedConnectInput => {
+  const authMode = parsed.auth_mode ?? (parsed.api_token ? "basic_cloud" : "bearer_pat");
+  if (authMode === "basic_cloud") {
+    return {
+      jiraBaseUrl: parsed.jira_base_url,
+      authMode,
+      secret: String(parsed.api_token ?? ""),
+      accountEmail: String(parsed.account_email ?? ""),
+    };
+  }
+  return {
+    jiraBaseUrl: parsed.jira_base_url,
+    authMode,
+    secret: String(parsed.pat ?? ""),
+    accountEmail: null,
+  };
+};
+
+const authFromConnection = (
+  conn: { authMode?: "bearer_pat" | "basic_cloud"; accountEmail?: string | null },
+  secret: string,
+): JiraAuthContext | null => {
+  if (conn.authMode === "basic_cloud") {
+    if (!conn.accountEmail) return null;
+    return {
+      authMode: "basic_cloud",
+      accountEmail: conn.accountEmail,
+      secret,
+    };
+  }
+  return {
+    authMode: "bearer_pat",
+    secret,
+  };
+};
+
 type ConsentMintOutcome =
   | {
       ok: true;
@@ -460,13 +505,22 @@ const mintConsentTokenForGenerate = (input: {
 
 const createSecureJiraConnection = async (
   userId: string,
-  jiraBaseUrl: string,
-  pat: string,
+  input: NormalizedConnectInput,
 ): Promise<JiraConnectionResponse> => {
-  const conn = await lifecycleStore.create(userId, jiraBaseUrl);
-  await tokenVault.store(conn.connectionId, pat);
+  const conn = await lifecycleStore.create(userId, input.jiraBaseUrl, {
+    authMode: input.authMode,
+    accountEmail: input.accountEmail,
+  });
+  await tokenVault.store(conn.connectionId, input.secret);
   try {
-    await jiraClient.verifyConnection(jiraBaseUrl, pat);
+    const auth: JiraAuthContext = input.authMode === "basic_cloud"
+      ? {
+        authMode: "basic_cloud",
+        accountEmail: String(input.accountEmail ?? ""),
+        secret: input.secret,
+      }
+      : { authMode: "bearer_pat", secret: input.secret };
+    await jiraClient.verifyConnection(input.jiraBaseUrl, auth);
     await lifecycleStore.markVerified(userId, conn.connectionId);
   } catch (error) {
     const mapped = error as JiraMappedError;
@@ -1032,7 +1086,7 @@ registerAppTool(
   async (args, extra) => {
     const userId = resolveMcpUserId(extra?.authInfo);
     try {
-      const created = await createSecureJiraConnection(userId, args.jira_base_url, args.pat);
+      const created = await createSecureJiraConnection(userId, normalizeConnectInput(args));
       return {
         content: [{ type: "text", text: created.text }],
         structuredContent: created,
@@ -1452,14 +1506,14 @@ export const createApp = () => {
     return res.status(404).json({
       code: "not_found",
       message: "Endpoint not found.",
-      text: "Use POST /api/jira/connections (plural) with JSON body { jira_base_url, pat }.",
+      text: "Use POST /api/jira/connections (plural) with Cloud or bearer credential intake fields.",
     });
   });
 
   app.post("/api/jira/connections", async (req, res) => {
     try {
       const parsed = connectSchema.parse(req.body);
-      const created = await createSecureJiraConnection(req.userId, parsed.jira_base_url, parsed.pat);
+      const created = await createSecureJiraConnection(req.userId, normalizeConnectInput(parsed));
       return res.status(201).json(created);
     } catch (error) {
       const message = safeError(error).message;
@@ -1534,12 +1588,16 @@ export const createApp = () => {
       const code = conn.status === "expired" ? "connection_expired" : "connection_revoked";
       return res.status(401).json({ code, message: "Connection is not active.", text: "Reconnect before listing attachments." });
     }
-    const pat = await tokenVault.resolve(connectionId);
-    if (!pat) {
+    const secret = await tokenVault.resolve(connectionId);
+    if (!secret) {
       return res.status(401).json({ code: "invalid_credentials", message: "Credentials missing.", text: "Reconnect before listing attachments." });
     }
     try {
-      const attachments = await jiraClient.listAttachments(conn.jiraBaseUrl, pat, req.params.issue_key);
+      const auth = authFromConnection(conn, secret);
+      if (!auth) {
+        return res.status(401).json({ code: "invalid_credentials", message: "Credentials missing.", text: "Reconnect before listing attachments." });
+      }
+      const attachments = await jiraClient.listAttachments(conn.jiraBaseUrl, auth, req.params.issue_key);
       emitSecurityEvent({
         action: "list_attachments",
         outcome: "success",
@@ -1591,16 +1649,20 @@ export const createApp = () => {
       const code = conn.status === "expired" ? "connection_expired" : "connection_revoked";
       return res.status(401).json({ code, message: "Connection is not active.", text: "Reconnect before attaching files." });
     }
-    const pat = await tokenVault.resolve(connectionId);
-    if (!pat) {
+    const secret = await tokenVault.resolve(connectionId);
+    if (!secret) {
       return res.status(401).json({ code: "invalid_credentials", message: "Credentials missing.", text: "Reconnect before attaching files." });
     }
     try {
       const artifactRef = String(req.body.artifact_ref);
       const artifact = await resolveArtifactSelection(artifactRef);
+      const auth = authFromConnection(conn, secret);
+      if (!auth) {
+        return res.status(401).json({ code: "invalid_credentials", message: "Credentials missing.", text: "Reconnect before attaching files." });
+      }
       const uploaded = await jiraClient.attachArtifact(
         conn.jiraBaseUrl,
-        pat,
+        auth,
         req.params.issue_key,
         artifact.filePath,
         artifact.filename,

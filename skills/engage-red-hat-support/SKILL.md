@@ -58,7 +58,9 @@ This is the primary UI-first skill for engage support workflows.
    - Keep `artifact_ref` for step 3.
 3. Step 3 - Connect Jira and attach:
    - Connect Jira through secure backend intake (`POST /api/jira/connections`) with
-     `jira_base_url` and PAT, then store returned `connection_id`.
+     Cloud or legacy-compatible credentials, then store returned `connection_id`.
+   - Atlassian Cloud input: `jira_base_url` (`https://<tenant>.atlassian.net`), `auth_mode=basic_cloud`, `account_email`, `api_token`.
+   - Legacy/self-hosted-compatible input: `jira_base_url` and PAT.
    - Verify connection with `jira_connection_status` or `GET /api/jira/connections/{connection_id}`.
    - Verify issue read access with `jira_list_attachments` using `connection_id` and `issue_key`.
    - Attach via `jira_attach_artifact` using `connection_id`, `issue_key`, `artifact_ref`.
@@ -68,8 +70,8 @@ This is the primary UI-first skill for engage support workflows.
 
 ## Security Boundary
 
-- PAT is accepted only via the secure backend connection endpoint.
-- MCP tool calls must use opaque `connection_id`; never pass PAT or long-lived credentials in MCP args.
+- PAT/API token values are accepted only via the secure backend connection endpoint.
+- MCP tool calls must use opaque `connection_id`; never pass PAT/API token or long-lived credentials in MCP args.
 - The only token accepted in MCP args is step-scoped `consent_token` for
   `generate_sosreport`; it is short-lived, single-use, and user/session bound.
 - Consent minting is always explicit; do not auto-mint on workflow start, step transitions, or generate calls.
@@ -78,7 +80,7 @@ This is the primary UI-first skill for engage support workflows.
 ## Expected Outcome
 
 You can complete select product -> generate/fetch sos -> connect/verify/attach with
-text fallback guidance for non-UI hosts and without exposing PAT in MCP-visible surfaces.
+text fallback guidance for non-UI hosts and without exposing PAT/API token in MCP-visible surfaces.
 
 ## Out of Scope
 

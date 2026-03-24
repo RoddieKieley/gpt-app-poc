@@ -11,7 +11,17 @@ export type JiraAttachment = {
 
 type FetchLike = typeof fetch;
 
-const jiraAuthHeader = (pat: string) => `Bearer ${pat}`;
+export type JiraAuthContext =
+  | { authMode: "bearer_pat"; secret: string }
+  | { authMode: "basic_cloud"; accountEmail: string; secret: string };
+
+const jiraAuthHeader = (auth: JiraAuthContext): string => {
+  if (auth.authMode === "basic_cloud") {
+    const encoded = Buffer.from(`${auth.accountEmail}:${auth.secret}`, "utf8").toString("base64");
+    return `Basic ${encoded}`;
+  }
+  return `Bearer ${auth.secret}`;
+};
 
 const throwMapped = async (res: Response): Promise<never> => {
   const mapped = mapJiraHttpError(res.status);
@@ -26,9 +36,12 @@ const throwRedirectIfPresent = (res: Response): void => {
 export class JiraClient {
   constructor(private readonly fetchImpl: FetchLike = fetch) {}
 
-  async verifyConnection(baseUrl: string, pat: string): Promise<void> {
+  async verifyConnection(baseUrl: string, auth: JiraAuthContext): Promise<void> {
     if (process.env.JIRA_MOCK_MODE === "1") {
-      if (pat === "bad-token") {
+      if (auth.secret === "bad-token") {
+        throw mapJiraHttpError(401);
+      }
+      if (auth.authMode === "basic_cloud" && auth.accountEmail === "wrong@example.com") {
         throw mapJiraHttpError(401);
       }
       return;
@@ -38,7 +51,7 @@ export class JiraClient {
       method: "GET",
       redirect: "manual",
       headers: {
-        Authorization: jiraAuthHeader(pat),
+        Authorization: jiraAuthHeader(auth),
         Accept: "application/json",
       },
     });
@@ -48,7 +61,7 @@ export class JiraClient {
 
   async listAttachments(
     baseUrl: string,
-    pat: string,
+    auth: JiraAuthContext,
     issueKey: string,
   ): Promise<JiraAttachment[]> {
     if (process.env.JIRA_MOCK_MODE === "1") {
@@ -69,7 +82,7 @@ export class JiraClient {
       method: "GET",
       redirect: "manual",
       headers: {
-        Authorization: jiraAuthHeader(pat),
+        Authorization: jiraAuthHeader(auth),
         Accept: "application/json",
       },
     });
@@ -89,7 +102,7 @@ export class JiraClient {
 
   async attachArtifact(
     baseUrl: string,
-    pat: string,
+    auth: JiraAuthContext,
     issueKey: string,
     filePath: string,
     filename: string,
@@ -117,7 +130,7 @@ export class JiraClient {
       method: "POST",
       redirect: "manual",
       headers: {
-        Authorization: jiraAuthHeader(pat),
+        Authorization: jiraAuthHeader(auth),
         "X-Atlassian-Token": "no-check",
       },
       body: form,

@@ -1,4 +1,4 @@
-import { JiraClient } from "./jira-client.js";
+import { JiraAuthContext, JiraClient } from "./jira-client.js";
 import { resolveArtifactSelection } from "./artifact-selection.js";
 import { ConnectionLifecycleStore } from "../security/connection-lifecycle.js";
 import { TokenVault } from "../security/token-vault.js";
@@ -19,7 +19,7 @@ const text = (message: string): ToolContent[] => [{ type: "text", text: message 
 const activeConnection = async (
   ctx: JiraToolContext,
   connectionId: string,
-): Promise<{ baseUrl: string; pat: string }> => {
+): Promise<{ baseUrl: string; auth: JiraAuthContext }> => {
   const conn = await ctx.lifecycle.getOwned(ctx.userId, connectionId);
   if (!conn) {
     throw <JiraMappedError>{
@@ -42,15 +42,35 @@ const activeConnection = async (
       message: "Connection has expired. Reconnect to continue.",
     };
   }
-  const pat = await ctx.vault.resolve(connectionId);
-  if (!pat) {
+  const secret = await ctx.vault.resolve(connectionId);
+  if (!secret) {
     throw <JiraMappedError>{
       code: "invalid_credentials",
       status: 401,
       message: "Stored credentials are unavailable.",
     };
   }
-  return { baseUrl: conn.jiraBaseUrl, pat };
+  let auth: JiraAuthContext;
+  if (conn.authMode === "basic_cloud") {
+    if (!conn.accountEmail) {
+      throw <JiraMappedError>{
+        code: "invalid_credentials",
+        status: 401,
+        message: "Stored credentials are unavailable.",
+      };
+    }
+    auth = {
+      authMode: "basic_cloud",
+      accountEmail: conn.accountEmail,
+      secret,
+    };
+  } else {
+    auth = {
+      authMode: "bearer_pat",
+      secret,
+    };
+  }
+  return { baseUrl: conn.jiraBaseUrl, auth };
 };
 
 export const handleConnectionStatus = async (
@@ -91,7 +111,7 @@ export const handleListAttachments = async (
   issueKey: string,
 ) => {
   const creds = await activeConnection(ctx, connectionId);
-  const attachments = await ctx.client.listAttachments(creds.baseUrl, creds.pat, issueKey);
+  const attachments = await ctx.client.listAttachments(creds.baseUrl, creds.auth, issueKey);
   emitSecurityEvent({
     action: "list_attachments",
     outcome: "success",
@@ -114,7 +134,7 @@ export const handleAttachArtifact = async (
   const artifact = await resolveArtifactSelection(artifactRef);
   const uploaded = await ctx.client.attachArtifact(
     creds.baseUrl,
-    creds.pat,
+    creds.auth,
     issueKey,
     artifact.filePath,
     artifact.filename,

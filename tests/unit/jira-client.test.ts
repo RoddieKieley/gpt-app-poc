@@ -25,3 +25,33 @@ test("verifyConnection treats redirect-to-login as invalid credentials guidance"
   );
   assert.equal(redirectMode, "manual");
 });
+
+test("verifyConnection uses bearer auth header for legacy mode", async () => {
+  let authHeader = "";
+  const client = new JiraClient(async (_url, init) => {
+    authHeader = String((init?.headers as Record<string, string>)?.Authorization ?? "");
+    return new Response("{}", { status: 200 });
+  });
+
+  await client.verifyConnection("https://jira.example.com", {
+    authMode: "bearer_pat",
+    secret: "legacy-token",
+  });
+  assert.equal(authHeader, "Bearer legacy-token");
+});
+
+test("verifyConnection uses basic auth header for cloud mode", async () => {
+  let authHeader = "";
+  const client = new JiraClient(async (_url, init) => {
+    authHeader = String((init?.headers as Record<string, string>)?.Authorization ?? "");
+    return new Response("{}", { status: 200 });
+  });
+
+  await client.verifyConnection("https://jira.example.com", {
+    authMode: "basic_cloud",
+    accountEmail: "ops@example.com",
+    secret: "api-token",
+  });
+  const expected = `Basic ${Buffer.from("ops@example.com:api-token", "utf8").toString("base64")}`;
+  assert.equal(authHeader, expected);
+});

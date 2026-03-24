@@ -5,7 +5,44 @@ export const connectSchema = z.object({
     .string()
     .url()
     .refine((url) => url.startsWith("https://"), "jira_base_url must use HTTPS"),
-  pat: z.string().min(1, "pat is required"),
+  auth_mode: z.enum(["bearer_pat", "basic_cloud"]).optional(),
+  account_email: z.string().email().optional(),
+  pat: z.string().min(1, "pat is required").optional(),
+  api_token: z.string().min(1, "api_token is required").optional(),
+}).superRefine((input, ctx) => {
+  const mode = input.auth_mode ?? (input.api_token ? "basic_cloud" : "bearer_pat");
+  if (mode === "basic_cloud") {
+    if (!input.account_email) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        path: ["account_email"],
+        message: "account_email is required for basic_cloud auth",
+      });
+    }
+    if (!input.api_token) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        path: ["api_token"],
+        message: "api_token is required for basic_cloud auth",
+      });
+    }
+    if (input.pat) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        path: ["pat"],
+        message: "pat must not be provided for basic_cloud auth",
+      });
+    }
+    return;
+  }
+
+  if (!input.pat) {
+    ctx.addIssue({
+      code: z.ZodIssueCode.custom,
+      path: ["pat"],
+      message: "pat is required for bearer_pat auth",
+    });
+  }
 });
 
 export const connectionIdSchema = z.object({

@@ -1,12 +1,15 @@
 const SECRET_PATTERNS: RegExp[] = [
-  /(authorization\s*:\s*)(bearer\s+)?[a-z0-9._~+/=-]+/gi,
-  /("authorization"\s*:\s*")(bearer\s+)?([^"]+)(")/gi,
+  /(authorization\s*:\s*)((bearer|basic)\s+)?[a-z0-9._~+/=-]+/gi,
+  /("authorization"\s*:\s*")((bearer|basic)\s+)?([^"]+)(")/gi,
   /("pat"\s*:\s*")([^"]+)(")/gi,
+  /("api_token"\s*:\s*")([^"]+)(")/gi,
   /("consent_token"\s*:\s*")([^"]+)(")/gi,
   /("token"\s*:\s*")([^"]+)(")/gi,
   /(pat\s*[:=]\s*)[^\s,]+/gi,
+  /(api_token\s*[:=]\s*)[^\s,]+/gi,
   /(token\s*[:=]\s*)[^\s,]+/gi,
   /(bearer\s+)[a-z0-9._~+/=-]+/gi,
+  /(basic\s+)[a-z0-9._~+/=-]+/gi,
 ];
 
 export const redactSecrets = (value: string): string =>
@@ -18,6 +21,7 @@ export const redactSecrets = (value: string): string =>
           const match = String(args[0]);
           if (match.startsWith("\"authorization\"")) return "\"authorization\":\"[REDACTED]\"";
           if (match.startsWith("\"pat\"")) return "\"pat\":\"[REDACTED]\"";
+          if (match.startsWith("\"api_token\"")) return "\"api_token\":\"[REDACTED]\"";
           if (match.startsWith("\"consent_token\"")) return "\"consent_token\":\"[REDACTED]\"";
           if (match.startsWith("\"token\"")) return "\"token\":\"[REDACTED]\"";
           const p1 = typeof args[1] === "string" ? args[1] : "";

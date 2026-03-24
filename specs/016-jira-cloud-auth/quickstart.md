@@ -80,3 +80,34 @@
 1. Revert auth-mode metadata and auth-header changes in Jira/auth files.
 2. Re-run targeted tests to confirm legacy bearer-compatible flow behavior.
 3. Keep operator docs on last known-good auth instructions until patch update is ready.
+
+## 8) Validation run outcomes (2026-03-24)
+
+### Automated tests (touched areas)
+
+- `npm exec -- tsx --test tests/unit/jira-client.test.ts` - pass
+- `npm exec -- tsx --test tests/contract/jira-connections.contract.test.ts` - pass
+- `npm exec -- tsx --test tests/integration/jira-attachments.success.test.ts` - pass
+- `npm exec -- tsx --test tests/integration/jira-connection.lifecycle.test.ts` - pass
+- `npm exec -- tsx --test tests/integration/jira-attachments.failures.test.ts` - pass
+- `npm exec -- tsx --test tests/regression/no-pat-leakage-mcp.test.ts` - pass
+- `npm exec -- tsx --test tests/regression/no-pat-leakage-logs.test.ts` - pass
+
+### Manual Jira Cloud verification (`APPENG-999999`)
+
+- Happy path executed against `https://redhat.atlassian.net`:
+  - connect (`POST /api/jira/connections`) -> `201`, connection status `connected`
+  - connection status (`GET /api/jira/connections/{connection_id}`) -> `200`
+  - list attachments (`GET /api/jira/issues/APPENG-999999/attachments`) -> `200`
+  - attach artifact (`POST /api/jira/issues/APPENG-999999/attachments`) -> `201`
+
+### Negative checks executed
+
+- Wrong token (Cloud basic mode) -> connect response status `error` (HTTP `201` with lifecycle status error)
+- Wrong email (Cloud basic mode) -> connect response status `error` (HTTP `201` with lifecycle status error)
+- Missing issue mapping (`APPENG-999999`) -> list attachments `404`
+- Forbidden/missing/oversized mapping path verified by `tests/integration/jira-attachments.failures.test.ts` (403, 404, and oversized artifact rejection)
+
+### Legacy path validation outcome
+
+- Legacy bearer-compatible payload (`jira_base_url` + `pat`) remains accepted and operational in integration tests.
