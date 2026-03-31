@@ -1,0 +1,88 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1400" height="860" viewBox="0 0 1400 860" role="img" aria-labelledby="title desc">
+  <title id="title">GPT App POC Architecture Boundaries</title>
+  <desc id="desc">High-level architecture showing MCP and REST surfaces, security boundaries, state stores, and external integrations.</desc>
+  <defs>
+    <style>
+      .bg { fill: #020617; }
+      .title { fill: #e2e8f0; font: 700 30px "Segoe UI", Arial, sans-serif; }
+      .subtitle { fill: #94a3b8; font: 400 15px "Segoe UI", Arial, sans-serif; }
+      .boxTitle { fill: #e2e8f0; font: 700 16px "Segoe UI", Arial, sans-serif; }
+      .boxBody { fill: #cbd5e1; font: 500 13px "Segoe UI", Arial, sans-serif; }
+      .bannerText { fill: #e2e8f0; font: 600 12px "Segoe UI", Arial, sans-serif; }
+      .edge { stroke: #94a3b8; stroke-width: 2; fill: none; marker-end: url(#arrow); }
+      .dashed { stroke-dasharray: 8 6; }
+      .label { fill: #cbd5e1; font: 500 12px "Segoe UI", Arial, sans-serif; }
+    </style>
+    <marker id="arrow" markerWidth="10" markerHeight="10" refX="9" refY="3" orient="auto">
+      <path d="M0,0 L10,3 L0,6 z" fill="#94a3b8"/>
+    </marker>
+  </defs>
+
+  <rect class="bg" x="0" y="0" width="1400" height="860" rx="20"/>
+  <text class="title" x="40" y="56">GPT App POC Architecture and Trust Boundaries</text>
+  <text class="subtitle" x="40" y="84">Single service with dual protocol surfaces, backend-only secret handling, and workflow-gated operations</text>
+
+  <rect x="30" y="120" width="1340" height="700" rx="16" fill="#0f172a" stroke="#334155" stroke-width="2"/>
+  <text class="boxTitle" x="40" y="110">Application Runtime Boundary (Node/TypeScript)</text>
+
+  <rect x="70" y="190" width="360" height="180" rx="12" fill="#1e293b" stroke="#475569"/>
+  <text class="boxTitle" x="90" y="220">Ingress Surfaces</text>
+  <text class="boxBody" x="90" y="246">- MCP over Streamable HTTP (/mcp)</text>
+  <text class="boxBody" x="90" y="268">- REST APIs (/api/jira, /api/engage, /api/sosreport)</text>
+  <text class="boxBody" x="90" y="290">- UI resource serving (ui://...)</text>
+  <text class="boxBody" x="90" y="312">- Skill resource/tool discovery</text>
+
+  <rect x="470" y="190" width="420" height="280" rx="12" fill="#1e293b" stroke="#475569"/>
+  <text class="boxTitle" x="490" y="220">Domain and Policy Layer</text>
+  <text class="boxBody" x="490" y="246">- Jira domain: connect/status/list/attach/disconnect</text>
+  <text class="boxBody" x="490" y="268">- Sosreport domain: generate/fetch + async job tracking</text>
+  <text class="boxBody" x="490" y="290">- Consent token service and sensitive-tool authorization</text>
+  <text class="boxBody" x="490" y="312">- Redaction and security event logging</text>
+  <text class="boxBody" x="490" y="334">- Workflow state enforcement (step gates)</text>
+
+  <rect x="930" y="190" width="390" height="280" rx="12" fill="#1e293b" stroke="#475569"/>
+  <text class="boxTitle" x="950" y="220">State and Persistence</text>
+  <text class="boxBody" x="950" y="246">- Encrypted token vault file (.data/token-vault.json)</text>
+  <text class="boxBody" x="950" y="268">- Connection lifecycle store</text>
+  <text class="boxBody" x="950" y="290">- In-memory workflow/session maps</text>
+  <text class="boxBody" x="950" y="312">- In-memory generate job/status maps</text>
+  <text class="boxBody" x="950" y="334">- Resource subscription state</text>
+
+  <rect x="70" y="520" width="560" height="250" rx="12" fill="#1e293b" stroke="#475569"/>
+  <text class="boxTitle" x="90" y="550">Client and Host Side</text>
+  <text class="boxBody" x="90" y="576">- ChatGPT host / MCP clients</text>
+  <text class="boxBody" x="90" y="598">- Engage widget (React + PatternFly, single-file build)</text>
+  <text class="boxBody" x="90" y="620">- Web flow uses REST for secure credential intake and consent minting</text>
+  <text class="boxBody" x="90" y="642">- Tool flow uses MCP with opaque connection identifiers</text>
+
+  <rect x="670" y="520" width="650" height="250" rx="12" fill="#1e293b" stroke="#475569"/>
+  <text class="boxTitle" x="690" y="550">External and System Dependencies</text>
+  <text class="boxBody" x="690" y="576">- Jira Cloud / Jira-compatible APIs</text>
+  <text class="boxBody" x="690" y="598">- Local OS command execution for sos report</text>
+  <text class="boxBody" x="690" y="620">- Temporary artifact files and local filesystem interactions</text>
+  <text class="boxBody" x="690" y="642">- Public HTTPS endpoint for ChatGPT app integration</text>
+
+  <path class="edge" d="M430 280 C450 280, 450 280, 470 280"/>
+  <text class="label" x="452" y="332" transform="rotate(-90 452 332)">MCP + REST requests</text>
+
+  <path class="edge" d="M890 330 C910 330, 910 330, 930 330"/>
+  <text class="label" x="912" y="382" transform="rotate(-90 912 382)">state reads/writes</text>
+
+  <path class="edge" d="M350 520 C350 470, 350 470, 350 370"/>
+  <text class="label" x="360" y="460">client interactions</text>
+
+  <path class="edge" d="M1040 514 L1040 476"/>
+  <text class="label" x="1052" y="498">integration calls</text>
+
+  <rect x="470" y="120" width="410" height="64" rx="8" fill="#7c2d12"/>
+  <text class="bannerText" x="486" y="146">Trust boundary: credentials enter via backend endpoints only.</text>
+  <text class="bannerText" x="486" y="164">MCP tools never carry PAT/API token secrets.</text>
+
+  <rect x="70" y="120" width="360" height="64" rx="8" fill="#365314"/>
+  <text class="bannerText" x="86" y="146">Process boundary: one deployable service handles</text>
+  <text class="bannerText" x="86" y="164">MCP + REST + UI resource serving.</text>
+
+  <rect x="930" y="120" width="390" height="64" rx="8" fill="#1d4ed8"/>
+  <text class="bannerText" x="946" y="146">Control boundary: consent and policy checks gate</text>
+  <text class="bannerText" x="946" y="164">sensitive diagnostics actions.</text>
+</svg>
