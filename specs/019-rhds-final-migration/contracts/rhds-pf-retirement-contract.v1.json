@@ -101,5 +101,15 @@
       "Final migration report includes residual risks and owners",
       "All signoff gates pass or have explicit waiver rationale"
     ]
-  }
+  },
+  "batchCheckpoints": [
+    { "id": "B1", "family": "status", "status": "pass" },
+    { "id": "B2", "family": "buttons", "status": "pass" },
+    { "id": "B3", "family": "navigation", "status": "pass" }
+  ],
+  "retirementOutcomes": [
+    { "artifact": "@patternfly/react-core", "decision": "remove", "status": "completed" },
+    { "artifact": "@patternfly/react-icons", "decision": "remove", "status": "completed" },
+    { "artifact": "@patternfly/react-core/dist/styles/base.css", "decision": "remove", "status": "completed" }
+  ]
 }

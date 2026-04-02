@@ -1,16 +1,15 @@
-import { Wizard } from "@patternfly/react-core";
-import type { ReactElement, ReactNode } from "react";
+import type { ReactNode } from "react";
 import { resolveStepNavigation } from "./adapter-contract";
-import { resolveAdapterMode, type AdapterMode } from "./adapter-mode";
-
-const WizardAny = Wizard as unknown as (props: Record<string, unknown>) => ReactElement;
+import type { AdapterMode } from "./adapter-mode";
 
 type ProgressAffordanceAdapterProps = {
   stepIndex: number;
   onNavigateStep1: () => void;
   onNavigateStep2: () => void;
   onNavigateStep3: () => void;
-  children: ReactNode;
+  step1Content: ReactNode;
+  step2Content: ReactNode;
+  step3Content: ReactNode;
   mode?: AdapterMode;
 };
 
@@ -28,26 +27,48 @@ export function ProgressAffordanceAdapter({
   onNavigateStep1,
   onNavigateStep2,
   onNavigateStep3,
-  children,
-  mode,
+  step1Content,
+  step2Content,
+  step3Content,
+  mode: _mode,
 }: ProgressAffordanceAdapterProps) {
-  const resolvedMode = resolveAdapterMode("progress", mode);
-  const className =
-    resolvedMode === "rhds" ? "rhds-shell__wizard rhds-shell__wizard--hybrid" : "rhds-shell__wizard";
+  const contentByStep: Record<number, ReactNode> = {
+    1: step1Content,
+    2: step2Content,
+    3: step3Content,
+  };
 
   return (
-    <WizardAny
-      key={stepIndex}
-      className={className}
-      navAriaLabel="Workflow steps"
-      startAtStep={stepIndex}
-      onGoToStep={(_event: unknown, step: unknown) => {
-        const nextStepId = Number((step as { id?: number }).id ?? 1);
-        navigateByStepId(nextStepId, onNavigateStep1, onNavigateStep2, onNavigateStep3);
-      }}
-      footer={<div />}
-    >
-      {children}
-    </WizardAny>
+    <section className="rhds-shell__wizard" aria-label="Workflow steps">
+      <nav className="rhds-step-nav" aria-label="Workflow step navigation">
+        <button
+          type="button"
+          className={`rhds-step-nav__item ${stepIndex === 1 ? "rhds-step-nav__item--active" : ""}`}
+          aria-current={stepIndex === 1 ? "step" : undefined}
+          onClick={() => navigateByStepId(1, onNavigateStep1, onNavigateStep2, onNavigateStep3)}
+        >
+          Step 1: Select Product
+        </button>
+        <button
+          type="button"
+          className={`rhds-step-nav__item ${stepIndex === 2 ? "rhds-step-nav__item--active" : ""}`}
+          aria-current={stepIndex === 2 ? "step" : undefined}
+          onClick={() => navigateByStepId(2, onNavigateStep1, onNavigateStep2, onNavigateStep3)}
+        >
+          Step 2: Generate + Fetch sos
+        </button>
+        <button
+          type="button"
+          className={`rhds-step-nav__item ${stepIndex === 3 ? "rhds-step-nav__item--active" : ""}`}
+          aria-current={stepIndex === 3 ? "step" : undefined}
+          onClick={() => navigateByStepId(3, onNavigateStep1, onNavigateStep2, onNavigateStep3)}
+        >
+          Step 3: Connect + Verify + Attach
+        </button>
+      </nav>
+      <div className="rhds-step-panel">
+        {contentByStep[stepIndex] ?? step1Content}
+      </div>
+    </section>
   );
 }

@@ -1,4 +1,3 @@
-import { PageSection, Title, WizardStep } from "@patternfly/react-core";
 import { Step1Content, Step2Content, Step3Content } from "./step-content";
 import type { FormState, JiraAuthMode, UiState, WorkflowStep } from "./state";
 import { ProgressAffordanceAdapter } from "./ui/progress-affordance-adapter";
@@ -72,8 +71,8 @@ export function EngageWorkflowApp(props: AppProps) {
   const stepIndex = toStepIndex(currentStep);
 
   return (
-    <PageSection isFilled className="rhds-shell__page-section">
-      <Title headingLevel="h1" className="rhds-shell__title">Support Workflow Assistant</Title>
+    <section className="rhds-shell__page-section">
+      <h1 className="rhds-shell__title">Support Workflow Assistant</h1>
       <StatusDisplayAdapter
         message={uiState.statusMessage}
         variant={uiState.statusVariant}
@@ -83,15 +82,14 @@ export function EngageWorkflowApp(props: AppProps) {
         onNavigateStep1={onNavigateStep1}
         onNavigateStep2={onNavigateStep2}
         onNavigateStep3={onNavigateStep3}
-      >
-        <WizardStep id={1} name="Step 1: Select Product">
+        step1Content={(
           <Step1Content
             product={formState.product}
             onProductChange={onProductChange}
             onContinue={onStep1Continue}
           />
-        </WizardStep>
-        <WizardStep id={2} name="Step 2: Generate + Fetch sos">
+        )}
+        step2Content={(
           <Step2Content
             fetchReference={formState.fetchReference}
             artifactRef={formState.artifactRef}
@@ -103,8 +101,8 @@ export function EngageWorkflowApp(props: AppProps) {
             onFetch={onFetch}
             onContinue={onStep2Continue}
           />
-        </WizardStep>
-        <WizardStep id={3} name="Step 3: Connect + Verify + Attach">
+        )}
+        step3Content={(
           <Step3Content
             jiraUrl={formState.jiraUrl}
             jiraAuthMode={formState.jiraAuthMode}
@@ -128,8 +126,8 @@ export function EngageWorkflowApp(props: AppProps) {
             onAttach={onAttach}
             onDisconnect={onDisconnect}
           />
-        </WizardStep>
-      </ProgressAffordanceAdapter>
-    </PageSection>
+        )}
+      />
+    </section>
   );
 }

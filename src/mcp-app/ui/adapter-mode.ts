@@ -1,5 +1,5 @@
 export type AdapterFamily = "status" | "buttons" | "progress";
-export type AdapterMode = "patternfly" | "rhds";
+export type AdapterMode = "rhds";
 
 const FAMILY_ENV: Record<AdapterFamily, string> = {
   status: "RHDS_STEP1_STATUS_MODE",
@@ -10,14 +10,13 @@ const FAMILY_ENV: Record<AdapterFamily, string> = {
 const DEFAULT_MODE_BY_FAMILY: Record<AdapterFamily, AdapterMode> = {
   status: "rhds",
   buttons: "rhds",
-  progress: "patternfly",
+  progress: "rhds",
 };
 
 const toMode = (value: string | undefined): AdapterMode | null => {
   if (!value) return null;
   const normalized = value.trim().toLowerCase();
   if (normalized === "rhds") return "rhds";
-  if (normalized === "patternfly" || normalized === "pf") return "patternfly";
   return null;
 };
 

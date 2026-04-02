@@ -1,17 +1,3 @@
-import {
-  ActionGroup,
-  Form,
-  FormGroup,
-  MenuToggle,
-  MenuToggleElement,
-  Select,
-  SelectList,
-  SelectOption,
-  Spinner,
-  TextInput,
-} from "@patternfly/react-core";
-import { useState } from "react";
-import type { Ref } from "react";
 import type { JiraAuthMode } from "./state";
 import { ActionButtonAdapter } from "./ui/action-button-adapter";
 
@@ -59,38 +45,28 @@ type Step3Props = {
 
 export function Step1Content(props: Step1Props) {
   const { product, onProductChange, onContinue } = props;
-  const [isOpen, setIsOpen] = useState(false);
 
   return (
-    <Form className="rhds-step-form rhds-step-form--step1">
-      <FormGroup label="Supported product" fieldId="product-select">
-        <Select
-          selected={product}
-          isOpen={isOpen}
-          onSelect={(_e, value) => {
-            onProductChange(String(value));
-            setIsOpen(false);
-          }}
-          onOpenChange={(nextOpen: boolean) => setIsOpen(nextOpen)}
-          toggle={(toggleRef: Ref<MenuToggleElement>) => (
-            <MenuToggle ref={toggleRef} onClick={() => setIsOpen((prev) => !prev)}>
-              {product === "linux" ? "Red Hat Enterprise Linux" : product}
-            </MenuToggle>
-          )}
+    <form className="rhds-step-form rhds-step-form--step1">
+      <div className="rhds-field-group">
+        <label htmlFor="product-select" className="rhds-field-label">Supported product</label>
+        <select
+          id="product-select"
+          className="rhds-input"
+          value={product}
+          onChange={(event) => onProductChange(event.target.value)}
         >
-          <SelectList>
-            <SelectOption value="linux">Red Hat Enterprise Linux</SelectOption>
-            <SelectOption value="openshift">OpenShift (not yet supported)</SelectOption>
-            <SelectOption value="ansible">Ansible (not yet supported)</SelectOption>
-          </SelectList>
-        </Select>
-      </FormGroup>
-      <ActionGroup className="rhds-step-action-group">
+          <option value="linux">Red Hat Enterprise Linux</option>
+          <option value="openshift">OpenShift (not yet supported)</option>
+          <option value="ansible">Ansible (not yet supported)</option>
+        </select>
+      </div>
+      <div className="rhds-step-action-group">
         <ActionButtonAdapter id="step-1-continue-btn" onClick={onContinue}>
           Continue to Step 2
         </ActionButtonAdapter>
-      </ActionGroup>
-    </Form>
+      </div>
+    </form>
   );
 }
 
@@ -108,38 +84,43 @@ export function Step2Content(props: Step2Props) {
   } = props;
 
   return (
-    <Form className="rhds-step-form rhds-step-form--step2">
-      <FormGroup label="Generate and fetch sosreport" fieldId="generate-btn">
-        <ActionGroup className="rhds-step-action-group">
+    <form className="rhds-step-form rhds-step-form--step2">
+      <div className="rhds-field-group">
+        <label htmlFor="generate-btn" className="rhds-field-label">Generate and fetch sosreport</label>
+        <div className="rhds-step-action-group">
           <ActionButtonAdapter id="generate-btn" onClick={onGenerate}>
             Generate sosreport
           </ActionButtonAdapter>
           <ActionButtonAdapter id="fetch-btn" variant="secondary" isDisabled={!canFetch} onClick={onFetch}>
             Fetch sosreport
           </ActionButtonAdapter>
-          {isGenerating ? <Spinner className="rhds-step2-spinner" size="md" aria-label="Generating sosreport" /> : null}
-        </ActionGroup>
-      </FormGroup>
-      <FormGroup label="Fetch reference" fieldId="fetch-reference">
-        <TextInput
+          {isGenerating ? <span className="rhds-step2-spinner" role="status" aria-live="polite">Generating...</span> : null}
+        </div>
+      </div>
+      <div className="rhds-field-group">
+        <label htmlFor="fetch-reference" className="rhds-field-label">Fetch reference</label>
+        <input
           id="fetch-reference"
+          className="rhds-input"
           value={fetchReference}
-          onChange={(_e, value) => onFetchReferenceChange(value)}
+          onChange={(event) => onFetchReferenceChange(event.target.value)}
         />
-      </FormGroup>
-      <FormGroup label="Artifact path" fieldId="artifact-ref">
-        <TextInput
+      </div>
+      <div className="rhds-field-group">
+        <label htmlFor="artifact-ref" className="rhds-field-label">Artifact path</label>
+        <input
           id="artifact-ref"
+          className="rhds-input"
           value={artifactRef}
-          onChange={(_e, value) => onArtifactRefChange(value)}
+          onChange={(event) => onArtifactRefChange(event.target.value)}
         />
-      </FormGroup>
-      <ActionGroup className="rhds-step-action-group">
+      </div>
+      <div className="rhds-step-action-group">
         <ActionButtonAdapter id="step-2-continue-btn" onClick={onContinue}>
           Continue to Step 3
         </ActionButtonAdapter>
-      </ActionGroup>
-    </Form>
+      </div>
+    </form>
   );
 }
 
@@ -167,76 +148,87 @@ export function Step3Content(props: Step3Props) {
     onAttach,
     onDisconnect,
   } = props;
-  const [isAuthModeOpen, setIsAuthModeOpen] = useState(false);
 
   return (
-    <Form className="rhds-step-form rhds-step-form--step3">
-      <FormGroup label="Jira base URL" fieldId="jira-url">
-        <TextInput id="jira-url" value={jiraUrl} onChange={(_e, value) => onJiraUrlChange(value)} />
-      </FormGroup>
-      <FormGroup label="Jira auth mode" fieldId="jira-auth-mode">
-        <Select
-          selected={jiraAuthMode}
-          isOpen={isAuthModeOpen}
-          onSelect={(_e, value) => {
-            onJiraAuthModeChange(String(value) as JiraAuthMode);
-            setIsAuthModeOpen(false);
-          }}
-          onOpenChange={(nextOpen: boolean) => setIsAuthModeOpen(nextOpen)}
-          toggle={(toggleRef: Ref<MenuToggleElement>) => (
-            <MenuToggle ref={toggleRef} onClick={() => setIsAuthModeOpen((prev) => !prev)}>
-              {jiraAuthMode === "basic_cloud" ? "Atlassian Cloud (email + API token)" : "Legacy bearer PAT"}
-            </MenuToggle>
-          )}
+    <form className="rhds-step-form rhds-step-form--step3">
+      <div className="rhds-field-group">
+        <label htmlFor="jira-url" className="rhds-field-label">Jira base URL</label>
+        <input
+          id="jira-url"
+          className="rhds-input"
+          value={jiraUrl}
+          onChange={(event) => onJiraUrlChange(event.target.value)}
+        />
+      </div>
+      <div className="rhds-field-group">
+        <label htmlFor="jira-auth-mode" className="rhds-field-label">Jira auth mode</label>
+        <select
+          id="jira-auth-mode"
+          className="rhds-input"
+          value={jiraAuthMode}
+          onChange={(event) => onJiraAuthModeChange(event.target.value as JiraAuthMode)}
         >
-          <SelectList>
-            <SelectOption value="basic_cloud">Atlassian Cloud (email + API token)</SelectOption>
-            <SelectOption value="bearer_pat">Legacy bearer PAT</SelectOption>
-          </SelectList>
-        </Select>
-      </FormGroup>
+          <option value="basic_cloud">Atlassian Cloud (email + API token)</option>
+          <option value="bearer_pat">Legacy bearer PAT</option>
+        </select>
+      </div>
       {jiraAuthMode === "basic_cloud" ? (
         <>
-          <FormGroup label="Atlassian account email" fieldId="jira-email">
-            <TextInput
+          <div className="rhds-field-group">
+            <label htmlFor="jira-email" className="rhds-field-label">Atlassian account email</label>
+            <input
               id="jira-email"
+              className="rhds-input"
               value={jiraEmail}
-              onChange={(_e, value) => onJiraEmailChange(value)}
+              onChange={(event) => onJiraEmailChange(event.target.value)}
             />
-          </FormGroup>
-          <FormGroup label="Jira API token" fieldId="jira-api-token">
-            <TextInput
+          </div>
+          <div className="rhds-field-group">
+            <label htmlFor="jira-api-token" className="rhds-field-label">Jira API token</label>
+            <input
               id="jira-api-token"
               type="password"
+              className="rhds-input"
               value={jiraApiToken}
-              onChange={(_e, value) => onJiraApiTokenChange(value)}
+              onChange={(event) => onJiraApiTokenChange(event.target.value)}
             />
-          </FormGroup>
+          </div>
         </>
       ) : (
-        <FormGroup label="Jira PAT" fieldId="jira-pat">
-          <TextInput
+        <div className="rhds-field-group">
+          <label htmlFor="jira-pat" className="rhds-field-label">Jira PAT</label>
+          <input
             id="jira-pat"
             type="password"
+            className="rhds-input"
             value={jiraPat}
-            onChange={(_e, value) => onJiraPatChange(value)}
+            onChange={(event) => onJiraPatChange(event.target.value)}
           />
-        </FormGroup>
+        </div>
       )}
-      <FormGroup label="Connection ID" fieldId="connection-id">
-        <TextInput
+      <div className="rhds-field-group">
+        <label htmlFor="connection-id" className="rhds-field-label">Connection ID</label>
+        <input
           id="connection-id"
+          className="rhds-input"
           value={connectionId}
-          onChange={(_e, value) => onConnectionIdChange(value)}
+          onChange={(event) => onConnectionIdChange(event.target.value)}
         />
-      </FormGroup>
-      <FormGroup label="Issue key" fieldId="issue-key">
-        <TextInput id="issue-key" value={issueKey} onChange={(_e, value) => onIssueKeyChange(value)} />
-      </FormGroup>
-      <FormGroup label="Artifact reference" fieldId="step3-artifact-ref">
-        <TextInput id="step3-artifact-ref" value={artifactRef} readOnly />
-      </FormGroup>
-      <ActionGroup className="rhds-step-action-group">
+      </div>
+      <div className="rhds-field-group">
+        <label htmlFor="issue-key" className="rhds-field-label">Issue key</label>
+        <input
+          id="issue-key"
+          className="rhds-input"
+          value={issueKey}
+          onChange={(event) => onIssueKeyChange(event.target.value)}
+        />
+      </div>
+      <div className="rhds-field-group">
+        <label htmlFor="step3-artifact-ref" className="rhds-field-label">Artifact reference</label>
+        <input id="step3-artifact-ref" className="rhds-input" value={artifactRef} readOnly />
+      </div>
+      <div className="rhds-step-action-group">
         <ActionButtonAdapter id="connect-btn" onClick={onConnect}>Connect</ActionButtonAdapter>
         <ActionButtonAdapter id="verify-btn" variant="secondary" onClick={onVerify}>
           Verify connection
@@ -253,7 +245,7 @@ export function Step3Content(props: Step3Props) {
         <ActionButtonAdapter id="disconnect-btn" variant="link" onClick={onDisconnect}>
           Disconnect
         </ActionButtonAdapter>
-      </ActionGroup>
-    </Form>
+      </div>
+    </form>
   );
 }

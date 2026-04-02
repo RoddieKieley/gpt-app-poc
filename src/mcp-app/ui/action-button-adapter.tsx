@@ -1,7 +1,6 @@
-import { Button } from "@patternfly/react-core";
 import type { ReactNode } from "react";
 import { normalizeActionButtonVariant, type ActionButtonVariant } from "./adapter-contract";
-import { resolveAdapterMode, type AdapterMode } from "./adapter-mode";
+import type { AdapterMode } from "./adapter-mode";
 
 type ActionButtonAdapterProps = {
   id: string;
@@ -24,18 +23,9 @@ export function ActionButtonAdapter({
   isDisabled = false,
   onClick,
   children,
-  mode,
+  mode: _mode,
 }: ActionButtonAdapterProps) {
-  const resolvedMode = resolveAdapterMode("buttons", mode);
   const resolvedVariant = normalizeActionButtonVariant(variant);
-
-  if (resolvedMode === "patternfly") {
-    return (
-      <Button id={id} variant={resolvedVariant} isDisabled={isDisabled} onClick={onClick}>
-        {children}
-      </Button>
-    );
-  }
 
   return (
     <button

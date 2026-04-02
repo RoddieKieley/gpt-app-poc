@@ -1,21 +1,6 @@
-import { Alert, AlertVariant } from "@patternfly/react-core";
 import type { StatusVariant } from "../state";
 import { mapStatusVariantToken } from "./adapter-contract";
-import { resolveAdapterMode, type AdapterMode } from "./adapter-mode";
-
-export const toPatternflyAlertVariant = (variant: StatusVariant): AlertVariant => {
-  const token = mapStatusVariantToken(variant);
-  switch (token) {
-    case "success":
-      return AlertVariant.success;
-    case "warning":
-      return AlertVariant.warning;
-    case "danger":
-      return AlertVariant.danger;
-    default:
-      return AlertVariant.info;
-  }
-};
+import type { AdapterMode } from "./adapter-mode";
 
 type StatusDisplayAdapterProps = {
   message: string;
@@ -31,21 +16,7 @@ const toRhdsClassName = (variant: StatusVariant): string => {
   return "rhds-status rhds-status--info";
 };
 
-export function StatusDisplayAdapter({ message, variant, mode }: StatusDisplayAdapterProps) {
-  const resolvedMode = resolveAdapterMode("status", mode);
-
-  if (resolvedMode === "patternfly") {
-    return (
-      <Alert
-        id="status"
-        isInline
-        className="rhds-shell__status-alert"
-        variant={toPatternflyAlertVariant(variant)}
-        title={message}
-      />
-    );
-  }
-
+export function StatusDisplayAdapter({ message, variant, mode: _mode }: StatusDisplayAdapterProps) {
   return (
     <div
       id="status"
