@@ -1,0 +1,51 @@
+{
+  "version": "1.0",
+  "scope": "step0_visual_only",
+  "invariants": [
+    {
+      "id": "VG-001",
+      "name": "Step gating parity",
+      "assertion": "Step 2 remains blocked until linux selection; Step 3 remains blocked until artifact_ref exists."
+    },
+    {
+      "id": "VG-002",
+      "name": "Hash routing parity",
+      "assertion": "#step-1, #step-2, #step-3 route handling and block/allow outcomes remain identical to baseline."
+    },
+    {
+      "id": "VG-003",
+      "name": "Generate/fetch parity",
+      "assertion": "Generate, status polling, and fetch pathways preserve sequencing, gating, and final artifact handoff."
+    },
+    {
+      "id": "VG-004",
+      "name": "Jira flow parity",
+      "assertion": "Connect, verify, status, list, attach, and disconnect behavior contracts remain unchanged."
+    },
+    {
+      "id": "VG-005",
+      "name": "Tool invocation parity",
+      "assertion": "Tool names, argument shapes, and call ordering in UI logic remain unchanged."
+    },
+    {
+      "id": "VG-006",
+      "name": "Fallback continuity",
+      "assertion": "Text fallback remains available and semantically unchanged if UI bundle is unavailable."
+    },
+    {
+      "id": "VG-007",
+      "name": "Build/serve parity",
+      "assertion": "Existing build and serve commands succeed without workflow behavior changes."
+    }
+  ],
+  "manual_gates": [
+    "step_gating_and_hash_routing",
+    "generate_fetch_flow",
+    "jira_connect_verify_list_attach_disconnect"
+  ],
+  "rollback_trigger": [
+    "Any failed invariant",
+    "Any gate behavior drift from baseline",
+    "Any build/serve contract break"
+  ]
+}

@@ -1,0 +1,386 @@
+openapi: 3.0.3
+info:
+  title: Step 0 Visual Alignment Behavioral Freeze Contract
+  version: 1.0.0
+  description: |
+    Step 0 contract freezes currently used workflow/Jira HTTP interfaces while
+    allowing presentational-only UI changes. No endpoint additions or semantic
+    changes are permitted in this step.
+servers:
+  - url: http://localhost:3001
+paths:
+  /api/engage/workflow/start:
+    post:
+      summary: Start engage workflow session
+      responses:
+        "200":
+          description: Workflow session started
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/WorkflowStartResponse"
+  /api/engage/workflow/select-product:
+    post:
+      summary: Select Step 1 product (linux required)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/SelectProductRequest"
+      responses:
+        "200":
+          description: Product selected
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SelectProductResponse"
+        "409":
+          description: Invalid workflow session
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "422":
+          description: Unsupported product
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+  /api/engage/consent-tokens:
+    post:
+      summary: Mint consent token for Step 2 generate
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ConsentMintRequest"
+      responses:
+        "201":
+          description: Consent token minted
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ConsentMintResponse"
+        "400":
+          description: Validation error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "409":
+          description: Workflow gating conflict
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+  /api/sosreport/jobs/{job_id}:
+    get:
+      summary: Poll async generate_sosreport job status
+      parameters:
+        - in: path
+          name: job_id
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Job state
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/GenerateJobState"
+        "404":
+          description: Unknown job
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+  /api/jira/connections:
+    post:
+      summary: Create secure Jira connection
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              oneOf:
+                - $ref: "#/components/schemas/CloudConnectRequest"
+                - $ref: "#/components/schemas/BearerConnectRequest"
+      responses:
+        "201":
+          description: Connection created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/JiraConnectionResponse"
+        "422":
+          description: Validation/connect failure
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+  /api/jira/connections/{connection_id}:
+    get:
+      summary: Verify connection status
+      parameters:
+        - in: path
+          name: connection_id
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Connection status
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/JiraConnectionResponse"
+        "404":
+          description: Connection missing
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+    delete:
+      summary: Revoke Jira connection
+      parameters:
+        - in: path
+          name: connection_id
+          required: true
+          schema:
+            type: string
+      responses:
+        "204":
+          description: Revoked
+        "404":
+          description: Connection missing
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+  /api/jira/issues/{issue_key}/attachments:
+    get:
+      summary: List issue attachments (read access verify path)
+      parameters:
+        - in: path
+          name: issue_key
+          required: true
+          schema:
+            type: string
+        - in: header
+          name: x-connection-id
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Attachment list
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ListAttachmentsResponse"
+        "4XX":
+          description: Access or connection error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+    post:
+      summary: Attach artifact to issue
+      parameters:
+        - in: path
+          name: issue_key
+          required: true
+          schema:
+            type: string
+        - in: header
+          name: x-connection-id
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [artifact_ref]
+              properties:
+                artifact_ref:
+                  type: string
+      responses:
+        "201":
+          description: Attachment uploaded
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [issue_key, attachment_id, filename, size_bytes, created_at, text]
+                properties:
+                  issue_key:
+                    type: string
+                  attachment_id:
+                    type: string
+                  filename:
+                    type: string
+                  size_bytes:
+                    type: integer
+                  created_at:
+                    type: string
+                  text:
+                    type: string
+        "4XX":
+          description: Validation/access/connect error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+components:
+  schemas:
+    WorkflowStartResponse:
+      type: object
+      required: [workflow, workflow_session_id, current_step, text]
+      properties:
+        workflow:
+          type: string
+        workflow_session_id:
+          type: string
+        current_step:
+          type: string
+        text:
+          type: string
+    SelectProductRequest:
+      type: object
+      required: [product]
+      properties:
+        session_id:
+          type: string
+        workflow_session_id:
+          type: string
+        product:
+          type: string
+    SelectProductResponse:
+      type: object
+      required: [workflow, workflow_session_id, selected_product, current_step, text]
+      properties:
+        workflow:
+          type: string
+        workflow_session_id:
+          type: string
+        selected_product:
+          type: string
+        current_step:
+          type: string
+        text:
+          type: string
+    ConsentMintRequest:
+      type: object
+      required: [workflow, step, requested_scope]
+      properties:
+        workflow:
+          type: string
+        step:
+          type: integer
+        requested_scope:
+          type: string
+        session_id:
+          type: string
+        workflow_session_id:
+          type: string
+        client_action_id:
+          type: string
+    ConsentMintResponse:
+      type: object
+      required: [consent_token, expires_at, scope, step, text]
+      properties:
+        consent_token:
+          type: string
+        expires_at:
+          type: string
+        scope:
+          type: string
+        step:
+          type: integer
+        text:
+          type: string
+    GenerateJobState:
+      type: object
+      required: [job_id, status, text]
+      properties:
+        job_id:
+          type: string
+        status:
+          type: string
+        fetch_reference:
+          type: string
+          nullable: true
+        error_code:
+          type: string
+          nullable: true
+        text:
+          type: string
+    CloudConnectRequest:
+      type: object
+      required: [jira_base_url, auth_mode, account_email, api_token]
+      properties:
+        jira_base_url:
+          type: string
+        auth_mode:
+          type: string
+          enum: [basic_cloud]
+        account_email:
+          type: string
+        api_token:
+          type: string
+    BearerConnectRequest:
+      type: object
+      required: [jira_base_url, auth_mode, pat]
+      properties:
+        jira_base_url:
+          type: string
+        auth_mode:
+          type: string
+          enum: [bearer_pat]
+        pat:
+          type: string
+    JiraConnectionResponse:
+      type: object
+      required: [connection_id, jira_base_url, status, expires_at, last_verified_at, text]
+      properties:
+        connection_id:
+          type: string
+        jira_base_url:
+          type: string
+        status:
+          type: string
+        expires_at:
+          type: string
+        last_verified_at:
+          type: string
+          nullable: true
+        text:
+          type: string
+    ListAttachmentsResponse:
+      type: object
+      required: [issue_key, attachments, text]
+      properties:
+        issue_key:
+          type: string
+        attachments:
+          type: array
+          items:
+            type: object
+        text:
+          type: string
+    ErrorResponse:
+      type: object
+      required: [code, message, text]
+      properties:
+        code:
+          type: string
+        message:
+          type: string
+        text:
+          type: string
