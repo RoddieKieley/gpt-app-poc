@@ -1,7 +1,8 @@
-import { Alert, AlertVariant, PageSection, Title, Wizard, WizardStep } from "@patternfly/react-core";
-import type { ReactElement } from "react";
+import { PageSection, Title, WizardStep } from "@patternfly/react-core";
 import { Step1Content, Step2Content, Step3Content } from "./step-content";
 import type { FormState, JiraAuthMode, UiState, WorkflowStep } from "./state";
+import { ProgressAffordanceAdapter } from "./ui/progress-affordance-adapter";
+import { StatusDisplayAdapter } from "./ui/status-display-adapter";
 
 type AppProps = {
   currentStep: WorkflowStep;
@@ -32,25 +33,11 @@ type AppProps = {
   onDisconnect: () => void;
 };
 
-const statusToVariant = (variant: UiState["statusVariant"]): AlertVariant => {
-  switch (variant) {
-    case "success":
-      return AlertVariant.success;
-    case "warning":
-      return AlertVariant.warning;
-    case "danger":
-      return AlertVariant.danger;
-    default:
-      return AlertVariant.info;
-  }
-};
-
 const toStepIndex = (step: WorkflowStep): number => {
   if (step === "sos_report") return 2;
   if (step === "jira_attach") return 3;
   return 1;
 };
-const WizardAny = Wizard as unknown as (props: Record<string, unknown>) => ReactElement;
 
 export function EngageWorkflowApp(props: AppProps) {
   const {
@@ -87,25 +74,15 @@ export function EngageWorkflowApp(props: AppProps) {
   return (
     <PageSection isFilled className="rhds-shell__page-section">
       <Title headingLevel="h1" className="rhds-shell__title">Support Workflow Assistant</Title>
-      <Alert
-        id="status"
-        isInline
-        className="rhds-shell__status-alert"
-        variant={statusToVariant(uiState.statusVariant)}
-        title={uiState.statusMessage}
+      <StatusDisplayAdapter
+        message={uiState.statusMessage}
+        variant={uiState.statusVariant}
       />
-      <WizardAny
-        key={stepIndex}
-        className="rhds-shell__wizard"
-        navAriaLabel="Workflow steps"
-        startAtStep={stepIndex}
-        onGoToStep={(_event: unknown, step: unknown) => {
-          const stepId = Number((step as { id?: number }).id ?? 1);
-          if (stepId === 1) onNavigateStep1();
-          if (stepId === 2) onNavigateStep2();
-          if (stepId === 3) onNavigateStep3();
-        }}
-        footer={<div />}
+      <ProgressAffordanceAdapter
+        stepIndex={stepIndex}
+        onNavigateStep1={onNavigateStep1}
+        onNavigateStep2={onNavigateStep2}
+        onNavigateStep3={onNavigateStep3}
       >
         <WizardStep id={1} name="Step 1: Select Product">
           <Step1Content
@@ -152,7 +129,7 @@ export function EngageWorkflowApp(props: AppProps) {
             onDisconnect={onDisconnect}
           />
         </WizardStep>
-      </WizardAny>
+      </ProgressAffordanceAdapter>
     </PageSection>
   );
 }

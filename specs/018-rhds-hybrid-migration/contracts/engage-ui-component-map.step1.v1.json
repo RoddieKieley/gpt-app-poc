@@ -8,13 +8,20 @@
       "id": "B1",
       "name": "status-display",
       "riskLevel": "low",
+      "state": "validated",
+      "evidence": [
+        "tests/mcp-app/regression/b1-status-parity.test.ts",
+        "tests/mcp-app/regression/b1-status-a11y.md",
+        "tests/mcp-app/regression/b1-status-visual.md",
+        "tests/mcp-app/regression/b1-status-rollback.md"
+      ],
       "mapping": [
         {
           "uiSurface": "status line (#status)",
           "existingOwner": "PatternFly Alert (inline)",
           "step1Owner": "RHDS-compatible status display adapter",
           "adapterId": "status-display-adapter",
-          "rollback": "adapter_mode=patternfly"
+          "rollback": "RHDS_STEP1_STATUS_MODE=patternfly"
         }
       ]
     },
@@ -22,13 +29,20 @@
       "id": "B2",
       "name": "low-coupling-action-buttons",
       "riskLevel": "medium-low",
+      "state": "validated",
+      "evidence": [
+        "tests/mcp-app/regression/b2-buttons-parity.test.ts",
+        "tests/mcp-app/regression/b2-buttons-a11y.md",
+        "tests/mcp-app/regression/b2-buttons-visual.md",
+        "tests/mcp-app/regression/b2-buttons-rollback.md"
+      ],
       "mapping": [
         {
           "uiSurface": "action buttons in step flows",
           "existingOwner": "PatternFly ActionGroup + Button",
           "step1Owner": "Hybrid action button adapter (PF/RHDS selectable)",
           "adapterId": "action-button-adapter",
-          "rollback": "adapter_mode=patternfly"
+          "rollback": "RHDS_STEP1_BUTTON_MODE=patternfly"
         }
       ]
     },
@@ -36,16 +50,28 @@
       "id": "B3",
       "name": "optional-progress-affordance-alignment",
       "riskLevel": "medium",
+      "state": "validated_pf_first",
+      "evidence": [
+        "tests/mcp-app/regression/b3-navigation-parity.test.ts",
+        "tests/mcp-app/regression/b3-navigation-a11y.md",
+        "tests/mcp-app/regression/b3-navigation-visual.md",
+        "tests/mcp-app/regression/b3-navigation-rollback.md"
+      ],
       "mapping": [
         {
           "uiSurface": "wizard/progress affordance alignment",
           "existingOwner": "PatternFly Wizard/WizardStep presentation",
-          "step1Owner": "Hybrid progress affordance adapter",
+          "step1Owner": "Hybrid progress affordance adapter (PatternFly-first default)",
           "adapterId": "progress-affordance-adapter",
-          "rollback": "adapter_mode=patternfly"
+          "rollback": "RHDS_STEP1_PROGRESS_MODE=patternfly"
         }
       ]
     }
+  ],
+  "step2Remaining": [
+    "Replace PatternFly-first progress affordance path with full RHDS equivalent once gating parity confidence is established.",
+    "Expand RHDS coverage from low-coupling buttons to remaining high-complexity control groups.",
+    "Complete replacement of PatternFly-only wizard/form surfaces currently retained for risk control."
   ],
   "outOfScope": [
     "full PatternFly replacement",

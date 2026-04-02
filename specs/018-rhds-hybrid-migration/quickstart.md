@@ -18,6 +18,13 @@ Execute Step 1-only migration in incremental milestones while preserving all wor
 
 Do not start the next milestone unless current milestone clears its go/no-go gate.
 
+## Batch Execution Policy
+
+- Only one component family can be migrated per active batch.
+- B2 is blocked until B1 gate passes.
+- B3 is blocked until B2 gate passes.
+- If a batch fails go/no-go, execute rollback for that batch before any new substitutions.
+
 ## B1 Procedure
 
 1. Add `status-display-adapter` and wire it from `src/mcp-app/App.tsx`.
@@ -69,3 +76,18 @@ Do not start the next milestone unless current milestone clears its go/no-go gat
 - Every substituted surface has a tested rollback path.
 - Contracts and mapping artifacts in `specs/018-rhds-hybrid-migration/contracts/` are updated.
 - No updates were made to historical `specs/012-patternfly-ui-swap/` artifacts.
+
+## Step 1 Execution Report
+
+### Parity and Risk Summary
+
+- B1 status substitution: PASS for behavior parity, accessibility sanity, and visual consistency.
+- B2 low-coupling button substitution: PASS for callback/disabled-state parity with rollback verified.
+- B3 progress/navigation adapter: PASS with PatternFly-first default retained for risk control; no gating semantics changes introduced.
+- Full workflow parity check: PASS via `tests/integration/engage-red-hat-support.workflow.test.ts`.
+
+### Explicit Step 2 Remaining Scope
+
+- Replace PatternFly-first progress affordance path with full RHDS equivalent once parity confidence remains stable.
+- Expand RHDS substitution into high-risk/complex workflow control families still retained in PatternFly.
+- Complete full replacement of remaining PatternFly-specific wizard and form presentation surfaces.

@@ -1,6 +1,5 @@
 import {
   ActionGroup,
-  Button,
   Form,
   FormGroup,
   MenuToggle,
@@ -14,6 +13,7 @@ import {
 import { useState } from "react";
 import type { Ref } from "react";
 import type { JiraAuthMode } from "./state";
+import { ActionButtonAdapter } from "./ui/action-button-adapter";
 
 type Step1Props = {
   product: string;
@@ -86,7 +86,9 @@ export function Step1Content(props: Step1Props) {
         </Select>
       </FormGroup>
       <ActionGroup className="rhds-step-action-group">
-        <Button id="step-1-continue-btn" onClick={onContinue}>Continue to Step 2</Button>
+        <ActionButtonAdapter id="step-1-continue-btn" onClick={onContinue}>
+          Continue to Step 2
+        </ActionButtonAdapter>
       </ActionGroup>
     </Form>
   );
@@ -109,10 +111,12 @@ export function Step2Content(props: Step2Props) {
     <Form className="rhds-step-form rhds-step-form--step2">
       <FormGroup label="Generate and fetch sosreport" fieldId="generate-btn">
         <ActionGroup className="rhds-step-action-group">
-          <Button id="generate-btn" onClick={onGenerate}>Generate sosreport</Button>
-          <Button id="fetch-btn" variant="secondary" isDisabled={!canFetch} onClick={onFetch}>
+          <ActionButtonAdapter id="generate-btn" onClick={onGenerate}>
+            Generate sosreport
+          </ActionButtonAdapter>
+          <ActionButtonAdapter id="fetch-btn" variant="secondary" isDisabled={!canFetch} onClick={onFetch}>
             Fetch sosreport
-          </Button>
+          </ActionButtonAdapter>
           {isGenerating ? <Spinner className="rhds-step2-spinner" size="md" aria-label="Generating sosreport" /> : null}
         </ActionGroup>
       </FormGroup>
@@ -131,7 +135,9 @@ export function Step2Content(props: Step2Props) {
         />
       </FormGroup>
       <ActionGroup className="rhds-step-action-group">
-        <Button id="step-2-continue-btn" onClick={onContinue}>Continue to Step 3</Button>
+        <ActionButtonAdapter id="step-2-continue-btn" onClick={onContinue}>
+          Continue to Step 3
+        </ActionButtonAdapter>
       </ActionGroup>
     </Form>
   );
@@ -231,12 +237,22 @@ export function Step3Content(props: Step3Props) {
         <TextInput id="step3-artifact-ref" value={artifactRef} readOnly />
       </FormGroup>
       <ActionGroup className="rhds-step-action-group">
-        <Button id="connect-btn" onClick={onConnect}>Connect</Button>
-        <Button id="verify-btn" variant="secondary" onClick={onVerify}>Verify connection</Button>
-        <Button id="status-btn" variant="secondary" onClick={onStatus}>Check status tool</Button>
-        <Button id="list-btn" variant="secondary" onClick={onList}>List attachments</Button>
-        <Button id="attach-btn" variant="secondary" onClick={onAttach}>Attach artifact</Button>
-        <Button id="disconnect-btn" variant="link" onClick={onDisconnect}>Disconnect</Button>
+        <ActionButtonAdapter id="connect-btn" onClick={onConnect}>Connect</ActionButtonAdapter>
+        <ActionButtonAdapter id="verify-btn" variant="secondary" onClick={onVerify}>
+          Verify connection
+        </ActionButtonAdapter>
+        <ActionButtonAdapter id="status-btn" variant="secondary" onClick={onStatus}>
+          Check status tool
+        </ActionButtonAdapter>
+        <ActionButtonAdapter id="list-btn" variant="secondary" onClick={onList}>
+          List attachments
+        </ActionButtonAdapter>
+        <ActionButtonAdapter id="attach-btn" variant="secondary" onClick={onAttach}>
+          Attach artifact
+        </ActionButtonAdapter>
+        <ActionButtonAdapter id="disconnect-btn" variant="link" onClick={onDisconnect}>
+          Disconnect
+        </ActionButtonAdapter>
       </ActionGroup>
     </Form>
   );
