@@ -2,6 +2,7 @@ import { App } from "@modelcontextprotocol/ext-apps";
 import { createElement } from "react";
 import { createRoot } from "react-dom/client";
 import "@patternfly/react-core/dist/styles/base.css";
+import "./mcp-app/rhds-step0.css";
 import { EngageWorkflowApp } from "./mcp-app/App";
 import type { FormState, StatusVariant, UiState, WorkflowState, WorkflowStep } from "./mcp-app/state";
 

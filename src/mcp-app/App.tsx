@@ -85,16 +85,18 @@ export function EngageWorkflowApp(props: AppProps) {
   const stepIndex = toStepIndex(currentStep);
 
   return (
-    <PageSection isFilled>
-      <Title headingLevel="h1">Support Workflow Assistant</Title>
+    <PageSection isFilled className="rhds-shell__page-section">
+      <Title headingLevel="h1" className="rhds-shell__title">Support Workflow Assistant</Title>
       <Alert
         id="status"
         isInline
+        className="rhds-shell__status-alert"
         variant={statusToVariant(uiState.statusVariant)}
         title={uiState.statusMessage}
       />
       <WizardAny
         key={stepIndex}
+        className="rhds-shell__wizard"
         navAriaLabel="Workflow steps"
         startAtStep={stepIndex}
         onGoToStep={(_event: unknown, step: unknown) => {

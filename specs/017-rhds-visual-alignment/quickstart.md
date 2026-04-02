@@ -64,6 +64,15 @@ Re-run manual gates:
 - Generate/fetch parity
 - Jira connect/verify/list/attach/disconnect parity
 
+## 5) Execution Notes (Step 0)
+
+- Integration tests passed (`npm run test:integration`).
+- Regression tests passed (`npm run test:regression`).
+- Build passed (`npm run build`).
+- No-behavior-delta evidence recorded in:
+  - `specs/017-rhds-visual-alignment/validation/no-behavior-delta.md`
+  - `specs/017-rhds-visual-alignment/validation/baseline.md`
+
 ## Rollback
 
 Rollback immediately if any parity gate fails:

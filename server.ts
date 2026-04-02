@@ -600,14 +600,59 @@ const loadEngageWidgetHtml = async (): Promise<string> => {
   <head>
     <meta charset="utf-8" />
     <title>Engage Red Hat Support</title>
+    <style>
+      :root {
+        --rhds-font-family: "Red Hat Text", "Noto Sans", "Segoe UI", sans-serif;
+        --rhds-heading-font: "Red Hat Display", "Noto Sans", "Segoe UI", sans-serif;
+        --rhds-shell-bg: #f8f8f8;
+        --rhds-surface-bg: #ffffff;
+        --rhds-text-primary: #151515;
+        --rhds-text-muted: #4f5255;
+        --rhds-border-subtle: #d2d2d2;
+      }
+      body {
+        margin: 0;
+        padding: 1.5rem;
+        font-family: var(--rhds-font-family);
+        background: var(--rhds-shell-bg);
+        color: var(--rhds-text-primary);
+      }
+      main {
+        max-width: 52rem;
+        margin: 0 auto;
+        background: var(--rhds-surface-bg);
+        border: 1px solid var(--rhds-border-subtle);
+        border-radius: 0.375rem;
+        padding: 1rem 1.25rem;
+      }
+      h1 {
+        margin: 0 0 0.75rem 0;
+        font-family: var(--rhds-heading-font);
+        font-size: 1.125rem;
+      }
+      p {
+        margin: 0 0 0.75rem 0;
+      }
+      ol {
+        margin: 0;
+        padding-left: 1.25rem;
+        color: var(--rhds-text-muted);
+      }
+      li + li {
+        margin-top: 0.375rem;
+      }
+    </style>
   </head>
   <body>
-    <p>UI bundle unavailable. Follow text fallback steps:</p>
-    <ol>
-      <li>Start workflow and select supported product (linux only).</li>
-      <li>Request explicit consent token, then run generate_sosreport and fetch_sosreport to produce artifact_ref.</li>
-      <li>Use secure Jira intake to obtain connection_id, verify issue access, then attach artifact.</li>
-    </ol>
+    <main>
+      <h1>Engage Red Hat Support</h1>
+      <p>UI bundle unavailable. Follow text fallback steps:</p>
+      <ol>
+        <li>Start workflow and select supported product (linux only).</li>
+        <li>Request explicit consent token, then run generate_sosreport and fetch_sosreport to produce artifact_ref.</li>
+        <li>Use secure Jira intake to obtain connection_id, verify issue access, then attach artifact.</li>
+      </ol>
+    </main>
   </body>
 </html>`;
   }

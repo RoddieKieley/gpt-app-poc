@@ -62,7 +62,7 @@ export function Step1Content(props: Step1Props) {
   const [isOpen, setIsOpen] = useState(false);
 
   return (
-    <Form>
+    <Form className="rhds-step-form rhds-step-form--step1">
       <FormGroup label="Supported product" fieldId="product-select">
         <Select
           selected={product}
@@ -85,7 +85,7 @@ export function Step1Content(props: Step1Props) {
           </SelectList>
         </Select>
       </FormGroup>
-      <ActionGroup>
+      <ActionGroup className="rhds-step-action-group">
         <Button id="step-1-continue-btn" onClick={onContinue}>Continue to Step 2</Button>
       </ActionGroup>
     </Form>
@@ -106,14 +106,14 @@ export function Step2Content(props: Step2Props) {
   } = props;
 
   return (
-    <Form>
+    <Form className="rhds-step-form rhds-step-form--step2">
       <FormGroup label="Generate and fetch sosreport" fieldId="generate-btn">
-        <ActionGroup>
+        <ActionGroup className="rhds-step-action-group">
           <Button id="generate-btn" onClick={onGenerate}>Generate sosreport</Button>
           <Button id="fetch-btn" variant="secondary" isDisabled={!canFetch} onClick={onFetch}>
             Fetch sosreport
           </Button>
-          {isGenerating ? <Spinner size="md" aria-label="Generating sosreport" /> : null}
+          {isGenerating ? <Spinner className="rhds-step2-spinner" size="md" aria-label="Generating sosreport" /> : null}
         </ActionGroup>
       </FormGroup>
       <FormGroup label="Fetch reference" fieldId="fetch-reference">
@@ -130,7 +130,7 @@ export function Step2Content(props: Step2Props) {
           onChange={(_e, value) => onArtifactRefChange(value)}
         />
       </FormGroup>
-      <ActionGroup>
+      <ActionGroup className="rhds-step-action-group">
         <Button id="step-2-continue-btn" onClick={onContinue}>Continue to Step 3</Button>
       </ActionGroup>
     </Form>
@@ -164,7 +164,7 @@ export function Step3Content(props: Step3Props) {
   const [isAuthModeOpen, setIsAuthModeOpen] = useState(false);
 
   return (
-    <Form>
+    <Form className="rhds-step-form rhds-step-form--step3">
       <FormGroup label="Jira base URL" fieldId="jira-url">
         <TextInput id="jira-url" value={jiraUrl} onChange={(_e, value) => onJiraUrlChange(value)} />
       </FormGroup>
@@ -230,7 +230,7 @@ export function Step3Content(props: Step3Props) {
       <FormGroup label="Artifact reference" fieldId="step3-artifact-ref">
         <TextInput id="step3-artifact-ref" value={artifactRef} readOnly />
       </FormGroup>
-      <ActionGroup>
+      <ActionGroup className="rhds-step-action-group">
         <Button id="connect-btn" onClick={onConnect}>Connect</Button>
         <Button id="verify-btn" variant="secondary" onClick={onVerify}>Verify connection</Button>
         <Button id="status-btn" variant="secondary" onClick={onStatus}>Check status tool</Button>
