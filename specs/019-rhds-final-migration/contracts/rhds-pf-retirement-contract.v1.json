@@ -1,0 +1,105 @@
+{
+  "version": "1.0",
+  "scope": "rhds_final_phase_retirement",
+  "objective": "Complete RHDS-first migration and retire PatternFly dependencies with parity evidence.",
+  "pfInventory": [
+    {
+      "id": "pf-css-base-import",
+      "filePath": "src/mcp-app.ts",
+      "symbol": "@patternfly/react-core/dist/styles/base.css",
+      "usageType": "stylesheet",
+      "replacementTarget": "RHDS-only style stack",
+      "requiredOutcome": "removed"
+    },
+    {
+      "id": "pf-app-shell-primitives",
+      "filePath": "src/mcp-app/App.tsx",
+      "symbol": "PageSection, Title, WizardStep",
+      "usageType": "component",
+      "replacementTarget": "RHDS equivalents",
+      "requiredOutcome": "replaced"
+    },
+    {
+      "id": "pf-step-content-primitives",
+      "filePath": "src/mcp-app/step-content.tsx",
+      "symbol": "Form, FormGroup, Select, MenuToggle, Spinner, TextInput, ActionGroup",
+      "usageType": "component",
+      "replacementTarget": "RHDS form/input/progress equivalents",
+      "requiredOutcome": "replaced"
+    },
+    {
+      "id": "pf-adapter-button-fallback",
+      "filePath": "src/mcp-app/ui/action-button-adapter.tsx",
+      "symbol": "Button",
+      "usageType": "component",
+      "replacementTarget": "RHDS button rendering only",
+      "requiredOutcome": "removed"
+    },
+    {
+      "id": "pf-adapter-progress-fallback",
+      "filePath": "src/mcp-app/ui/progress-affordance-adapter.tsx",
+      "symbol": "Wizard",
+      "usageType": "component",
+      "replacementTarget": "RHDS-first progress affordance",
+      "requiredOutcome": "removed_or_justified"
+    },
+    {
+      "id": "pf-adapter-status-fallback",
+      "filePath": "src/mcp-app/ui/status-display-adapter.tsx",
+      "symbol": "Alert",
+      "usageType": "component",
+      "replacementTarget": "RHDS status rendering only",
+      "requiredOutcome": "removed"
+    },
+    {
+      "id": "pf-mode-flags",
+      "filePath": "src/mcp-app/ui/adapter-mode.ts",
+      "symbol": "patternfly mode aliases/defaults",
+      "usageType": "mode_flag",
+      "replacementTarget": "RHDS-only default mode behavior",
+      "requiredOutcome": "removed_or_justified"
+    }
+  ],
+  "packageRetirementCandidates": [
+    {
+      "artifact": "@patternfly/react-core",
+      "type": "dependency",
+      "requiredOutcome": "remove_or_justify"
+    },
+    {
+      "artifact": "@patternfly/react-icons",
+      "type": "dependency",
+      "requiredOutcome": "remove_or_justify"
+    }
+  ],
+  "parityInvariants": [
+    "step gating behavior",
+    "route/hash behavior",
+    "tool call order and arguments",
+    "status semantics",
+    "secure credential handling boundaries",
+    "MCP UI resource build and serve mechanics"
+  ],
+  "regressionMatrix": [
+    "happy_path",
+    "blocked_gating",
+    "error_recovery",
+    "loading_polling",
+    "accessibility_visual"
+  ],
+  "signoffGates": [
+    { "gateId": "A", "name": "Behavior parity evidence complete" },
+    { "gateId": "B", "name": "Dependency retirement complete or justified" },
+    { "gateId": "C", "name": "Credential and tool boundary invariants preserved" },
+    { "gateId": "D", "name": "Cutover and rollback procedures validated" },
+    { "gateId": "E", "name": "Final migration report approved" }
+  ],
+  "doneDefinition": {
+    "requires": [
+      "All in-scope PF inventory items are replaced/removed or justified as residual",
+      "Parity matrix categories pass with evidence",
+      "Final migration report includes residual risks and owners",
+      "All signoff gates pass or have explicit waiver rationale"
+    ]
+  }
+}

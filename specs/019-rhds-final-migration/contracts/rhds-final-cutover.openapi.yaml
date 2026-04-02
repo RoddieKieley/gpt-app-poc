@@ -1,0 +1,236 @@
+openapi: 3.1.0
+info:
+  title: RHDS Final Migration Cutover Contract
+  version: 1.0.0
+  description: >
+    Planning-level API contract for final-phase RHDS migration execution,
+    parity validation, rollback decisioning, and signoff gate recording.
+servers:
+  - url: https://planning.local
+    description: Documentation-only server
+paths:
+  /migration/rhds-final/cutover/start:
+    post:
+      summary: Start final migration cutover execution
+      operationId: startRhdsFinalCutover
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CutoverStartRequest'
+      responses:
+        '202':
+          description: Cutover execution accepted
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CutoverState'
+  /migration/rhds-final/parity/runs:
+    post:
+      summary: Record a full regression matrix run
+      operationId: recordParityMatrixRun
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ParityMatrixRun'
+      responses:
+        '201':
+          description: Parity matrix run recorded
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ParityMatrixRun'
+  /migration/rhds-final/dependencies/decisions:
+    post:
+      summary: Record dependency retirement decisions
+      operationId: recordDependencyRetirement
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/DependencyDecisionBatch'
+      responses:
+        '200':
+          description: Dependency decision batch recorded
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DependencyDecisionBatch'
+  /migration/rhds-final/rollback:
+    post:
+      summary: Trigger rollback for final cutover
+      operationId: rollbackRhdsFinalCutover
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RollbackRequest'
+      responses:
+        '202':
+          description: Rollback accepted
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CutoverState'
+  /migration/rhds-final/signoff:
+    post:
+      summary: Submit signoff gate outcomes for closure
+      operationId: submitSignoff
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SignoffSubmission'
+      responses:
+        '200':
+          description: Signoff accepted
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SignoffSubmission'
+components:
+  schemas:
+    CutoverStartRequest:
+      type: object
+      required: [changeSetRef, baselineEvidenceRef, initiatedBy]
+      properties:
+        changeSetRef:
+          type: string
+        baselineEvidenceRef:
+          type: string
+        initiatedBy:
+          type: string
+    CutoverState:
+      type: object
+      required: [cutoverId, status, currentStep]
+      properties:
+        cutoverId:
+          type: string
+        status:
+          type: string
+          enum: [running, blocked, rolled_back, completed]
+        currentStep:
+          type: integer
+          minimum: 1
+        notes:
+          type: string
+    ParityMatrixRun:
+      type: object
+      required:
+        - runId
+        - happyPath
+        - blockedGating
+        - errorRecovery
+        - loadingPolling
+        - a11yVisual
+        - overallResult
+      properties:
+        runId:
+          type: string
+        happyPath:
+          $ref: '#/components/schemas/MatrixResult'
+        blockedGating:
+          $ref: '#/components/schemas/MatrixResult'
+        errorRecovery:
+          $ref: '#/components/schemas/MatrixResult'
+        loadingPolling:
+          $ref: '#/components/schemas/MatrixResult'
+        a11yVisual:
+          $ref: '#/components/schemas/MatrixResult'
+        overallResult:
+          type: string
+          enum: [pass, fail, blocked]
+        evidenceRefs:
+          type: array
+          items:
+            type: string
+    MatrixResult:
+      type: object
+      required: [status]
+      properties:
+        status:
+          type: string
+          enum: [pass, fail, blocked]
+        notes:
+          type: string
+    DependencyDecisionBatch:
+      type: object
+      required: [items]
+      properties:
+        items:
+          type: array
+          minItems: 1
+          items:
+            $ref: '#/components/schemas/DependencyDecision'
+    DependencyDecision:
+      type: object
+      required: [artifact, decision]
+      properties:
+        artifact:
+          type: string
+        decision:
+          type: string
+          enum: [remove, retain]
+        justification:
+          type: string
+        riskLevel:
+          type: string
+          enum: [low, medium, high]
+        followUpOwner:
+          type: string
+        targetPhase:
+          type: string
+    RollbackRequest:
+      type: object
+      required: [cutoverId, trigger, requestedBy]
+      properties:
+        cutoverId:
+          type: string
+        trigger:
+          type: string
+          enum:
+            - behavior_regression
+            - accessibility_failure
+            - visual_blocker
+            - build_serve_failure
+        requestedBy:
+          type: string
+        notes:
+          type: string
+    SignoffSubmission:
+      type: object
+      required: [gates, submittedBy]
+      properties:
+        gates:
+          type: array
+          minItems: 5
+          items:
+            $ref: '#/components/schemas/SignoffGate'
+        submittedBy:
+          type: string
+        residualRisks:
+          type: array
+          items:
+            type: string
+    SignoffGate:
+      type: object
+      required: [gateId, status]
+      properties:
+        gateId:
+          type: string
+          enum: [A, B, C, D, E]
+        status:
+          type: string
+          enum: [pass, fail, waived]
+        evidenceRef:
+          type: string
+        approver:
+          type: string
+        notes:
+          type: string
