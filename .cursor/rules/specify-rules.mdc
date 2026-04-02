@@ -31,6 +31,8 @@ Auto-generated from all feature plans. Last updated: 2026-02-02
 - Existing file-backed connection lifecycle store and encrypted token vault under `.data/` (016-jira-cloud-auth)
 - TypeScript 5.9 + React 19 + `@patternfly/react-core`, `@patternfly/react-icons`, `@modelcontextprotocol/ext-apps`, `vite` (017-rhds-visual-alignment)
 - N/A for Step 0 (no new persistence) (017-rhds-visual-alignment)
+- TypeScript + React (existing project baseline) + `@patternfly/react-core`, RHDS component library (incremental hybrid usage), existing app state/types in `src/mcp-app` (018-rhds-hybrid-migration)
+- N/A (UI migration only; no data model persistence change) (018-rhds-hybrid-migration)
 
 - TypeScript (Node.js 18+) + @modelcontextprotocol/sdk, @modelcontextprotocol/ext-apps, Express, cors, Vite, vite-plugin-singlefile, tsx (001-mcp-apps-hello-world)
 
@@ -50,9 +52,9 @@ npm test && npm run lint
 TypeScript (Node.js 18+): Follow standard conventions
 
 ## Recent Changes
+- 018-rhds-hybrid-migration: Added TypeScript + React (existing project baseline) + `@patternfly/react-core`, RHDS component library (incremental hybrid usage), existing app state/types in `src/mcp-app`
 - 017-rhds-visual-alignment: Added TypeScript 5.9 + React 19 + `@patternfly/react-core`, `@patternfly/react-icons`, `@modelcontextprotocol/ext-apps`, `vite`
 - 016-jira-cloud-auth: Added TypeScript (Node.js ESM) + Markdown/YAML/JSON planning artifacts + `express`, `zod`, `@modelcontextprotocol/sdk`, `tsx --test`
-- 015-engage-support-split: Added TypeScript (Node.js ESM) + Markdown/JSON contract artifacts + `@modelcontextprotocol/sdk`, `@modelcontextprotocol/ext-apps`, `express`, `zod`, `tsx --test`
 
 
 <!-- MANUAL ADDITIONS START -->

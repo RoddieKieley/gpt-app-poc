@@ -1,0 +1,55 @@
+{
+  "version": "1.0",
+  "scope": "step1_hybrid_pf_rhds",
+  "sourceReference": "specs/012-patternfly-ui-swap/contracts/engage-ui-component-map.v1.json",
+  "immutabilityNote": "Historical v1 map remains unchanged; this file defines Step 1 hybrid state only.",
+  "milestones": [
+    {
+      "id": "B1",
+      "name": "status-display",
+      "riskLevel": "low",
+      "mapping": [
+        {
+          "uiSurface": "status line (#status)",
+          "existingOwner": "PatternFly Alert (inline)",
+          "step1Owner": "RHDS-compatible status display adapter",
+          "adapterId": "status-display-adapter",
+          "rollback": "adapter_mode=patternfly"
+        }
+      ]
+    },
+    {
+      "id": "B2",
+      "name": "low-coupling-action-buttons",
+      "riskLevel": "medium-low",
+      "mapping": [
+        {
+          "uiSurface": "action buttons in step flows",
+          "existingOwner": "PatternFly ActionGroup + Button",
+          "step1Owner": "Hybrid action button adapter (PF/RHDS selectable)",
+          "adapterId": "action-button-adapter",
+          "rollback": "adapter_mode=patternfly"
+        }
+      ]
+    },
+    {
+      "id": "B3",
+      "name": "optional-progress-affordance-alignment",
+      "riskLevel": "medium",
+      "mapping": [
+        {
+          "uiSurface": "wizard/progress affordance alignment",
+          "existingOwner": "PatternFly Wizard/WizardStep presentation",
+          "step1Owner": "Hybrid progress affordance adapter",
+          "adapterId": "progress-affordance-adapter",
+          "rollback": "adapter_mode=patternfly"
+        }
+      ]
+    }
+  ],
+  "outOfScope": [
+    "full PatternFly replacement",
+    "workflow logic changes",
+    "contract/signature changes in src/mcp-app.ts, App.tsx, step-content.tsx"
+  ]
+}

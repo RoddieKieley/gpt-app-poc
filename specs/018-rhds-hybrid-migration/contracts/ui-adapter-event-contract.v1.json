@@ -1,0 +1,66 @@
+{
+  "version": "1.0",
+  "scope": "ui_adapter_event_contracts_step1",
+  "principle": "Adapters may change rendering implementation only; behavior/event contracts remain stable.",
+  "adapters": [
+    {
+      "adapterId": "status-display-adapter",
+      "surface": "status_display",
+      "inputs": [
+        { "name": "statusMessage", "type": "string", "required": true },
+        { "name": "statusVariant", "type": "info|success|warning|danger", "required": true }
+      ],
+      "events": [],
+      "invariants": [
+        "Status content remains semantically equivalent to baseline behavior.",
+        "Severity mapping remains consistent with baseline."
+      ],
+      "rollback": {
+        "mode": "patternfly",
+        "expectedOutcome": "Previous status rendering behavior restored."
+      }
+    },
+    {
+      "adapterId": "action-button-adapter",
+      "surface": "action_buttons",
+      "inputs": [
+        { "name": "id", "type": "string", "required": true },
+        { "name": "label", "type": "string", "required": true },
+        { "name": "variant", "type": "primary|secondary|link", "required": true },
+        { "name": "isDisabled", "type": "boolean", "required": false, "default": false }
+      ],
+      "events": [
+        { "name": "onClick", "signature": "() => void", "required": true }
+      ],
+      "invariants": [
+        "Callback signature and invocation order remain unchanged from baseline.",
+        "Disabled-state gating remains unchanged from baseline."
+      ],
+      "rollback": {
+        "mode": "patternfly",
+        "expectedOutcome": "Buttons render with baseline component implementation and original behavior."
+      }
+    },
+    {
+      "adapterId": "progress-affordance-adapter",
+      "surface": "progress_navigation_affordance",
+      "inputs": [
+        { "name": "currentStep", "type": "step_identifier", "required": true },
+        { "name": "availableSteps", "type": "array", "required": true }
+      ],
+      "events": [
+        { "name": "onNavigateStep1", "signature": "() => void", "required": true },
+        { "name": "onNavigateStep2", "signature": "() => void", "required": true },
+        { "name": "onNavigateStep3", "signature": "() => void", "required": true }
+      ],
+      "invariants": [
+        "Step gating semantics are unchanged.",
+        "Navigation actions call existing callbacks without transformed payloads."
+      ],
+      "rollback": {
+        "mode": "patternfly",
+        "expectedOutcome": "Baseline wizard/progress presentation restored with no behavior changes."
+      }
+    }
+  ]
+}
