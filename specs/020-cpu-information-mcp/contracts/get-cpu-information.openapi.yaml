@@ -1,0 +1,152 @@
+openapi: 3.1.0
+info:
+  title: Get CPU Information MCP Planning Contract
+  version: 1.0.0
+  description: >
+    Planning-level contract that documents MCP discovery and invocation behavior for
+    the local-only get_cpu_information tool.
+servers:
+  - url: https://planning.local
+    description: Documentation-only server
+paths:
+  /mcp/tools/list:
+    post:
+      summary: List MCP tools including get_cpu_information
+      operationId: listMcpToolsForCpuInfo
+      responses:
+        '200':
+          description: Tools listed successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ToolsListResponse'
+  /mcp/tools/call/get_cpu_information:
+    post:
+      summary: Invoke local CPU information tool
+      operationId: callGetCpuInformation
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/GetCpuInformationRequest'
+      responses:
+        '200':
+          description: CPU information returned
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GetCpuInformationResponse'
+        '422':
+          description: Validation or parsing-related execution error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GetCpuInformationError'
+components:
+  schemas:
+    ToolsListResponse:
+      type: object
+      required: [tools]
+      properties:
+        tools:
+          type: array
+          items:
+            $ref: '#/components/schemas/ToolDescriptor'
+    ToolDescriptor:
+      type: object
+      required: [name, inputSchema, annotations]
+      properties:
+        name:
+          type: string
+          enum: [get_cpu_information]
+        inputSchema:
+          type: object
+          description: Must not contain host argument for this phase
+        annotations:
+          type: object
+          required: [readOnlyHint, openWorldHint, destructiveHint]
+          properties:
+            readOnlyHint:
+              type: boolean
+            openWorldHint:
+              type: boolean
+            destructiveHint:
+              type: boolean
+        _meta:
+          type: object
+          additionalProperties: true
+    GetCpuInformationRequest:
+      type: object
+      description: Local-only invocation with no host selector arguments
+      additionalProperties: false
+      properties: {}
+    GetCpuInformationResponse:
+      type: object
+      required: [content]
+      properties:
+        content:
+          type: array
+          minItems: 1
+          items:
+            $ref: '#/components/schemas/TextContent'
+        structuredContent:
+          $ref: '#/components/schemas/CpuInfo'
+        isError:
+          type: boolean
+    TextContent:
+      type: object
+      required: [type, text]
+      properties:
+        type:
+          type: string
+          enum: [text]
+        text:
+          type: string
+    CpuInfo:
+      type: object
+      required:
+        - model
+        - logical_cores
+        - physical_cores
+        - frequency_mhz
+        - load_avg_1m
+        - load_avg_5m
+        - load_avg_15m
+        - cpu_line
+      properties:
+        model:
+          type: string
+        logical_cores:
+          type: number
+        physical_cores:
+          type: number
+        frequency_mhz:
+          type: number
+        load_avg_1m:
+          type: number
+        load_avg_5m:
+          type: number
+        load_avg_15m:
+          type: number
+        cpu_line:
+          type: string
+    GetCpuInformationError:
+      type: object
+      required: [isError, content]
+      properties:
+        isError:
+          type: boolean
+          enum: [true]
+        content:
+          type: array
+          minItems: 1
+          items:
+            $ref: '#/components/schemas/TextContent'
+        structuredContent:
+          type: object
+          properties:
+            code:
+              type: string
+            text:
+              type: string

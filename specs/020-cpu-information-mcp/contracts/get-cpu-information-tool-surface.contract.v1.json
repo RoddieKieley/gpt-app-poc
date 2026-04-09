@@ -1,0 +1,63 @@
+{
+  "version": "1.0",
+  "scope": "get_cpu_information_local_tool_surface",
+  "objective": "Add local CPU diagnostics tool without regressing existing MCP surface contracts.",
+  "toolDescriptor": {
+    "name": "get_cpu_information",
+    "annotations": {
+      "readOnlyHint": true,
+      "openWorldHint": false,
+      "destructiveHint": false
+    },
+    "inputSchema": {
+      "mustNotExposeProperties": [
+        "host"
+      ],
+      "requiredProperties": []
+    },
+    "metaRequirements": {
+      "mustIncludeKeys": [
+        "openai/outputTemplate"
+      ],
+      "outputTemplate": "ui://engage-red-hat-support/app.html"
+    }
+  },
+  "responseContract": {
+    "contentTextRequired": true,
+    "structuredContentKeys": [
+      "model",
+      "logical_cores",
+      "physical_cores",
+      "frequency_mhz",
+      "load_avg_1m",
+      "load_avg_5m",
+      "load_avg_15m",
+      "cpu_line"
+    ],
+    "fallbackBehavior": {
+      "onPartialParse": "return text fallback with best-available structured values when possible",
+      "onParseFailure": "return safe text fallback and error code without crashing server"
+    }
+  },
+  "regressionGuardrails": {
+    "existingToolsMustRemain": [
+      "list_skills",
+      "get_skill",
+      "mint_engage_consent_token",
+      "generate_sosreport",
+      "fetch_sosreport",
+      "jira_connect_secure",
+      "jira_connection_status",
+      "jira_list_attachments",
+      "jira_attach_artifact",
+      "jira_disconnect"
+    ],
+    "requiredNewTool": "get_cpu_information"
+  },
+  "testObligations": [
+    "unit parser tests for complete and partial CPU source text",
+    "unit handler tests for structured success and fallback output",
+    "contract test asserting tools/list descriptor and metadata",
+    "regression test asserting global tool surface now includes get_cpu_information"
+  ]
+}

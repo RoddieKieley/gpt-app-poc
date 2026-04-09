@@ -35,6 +35,8 @@ Auto-generated from all feature plans. Last updated: 2026-02-02
 - N/A (UI migration only; no data model persistence change) (018-rhds-hybrid-migration)
 - TypeScript (ESM) + React 19 in existing Vite build pipeline + `react`, `react-dom`, `@modelcontextprotocol/ext-apps`, `@modelcontextprotocol/sdk`, current `@patternfly/react-core` and `@patternfly/react-icons` targeted for retirement (019-rhds-final-migration)
 - N/A (UI migration only) (019-rhds-final-migration)
+- TypeScript 5.x (ESM) on Node runtime + `@modelcontextprotocol/sdk`, `@modelcontextprotocol/ext-apps`, `zod`, `express` (020-cpu-information-mcp)
+- N/A (ephemeral local diagnostics read at call time) (020-cpu-information-mcp)
 
 - TypeScript (Node.js 18+) + @modelcontextprotocol/sdk, @modelcontextprotocol/ext-apps, Express, cors, Vite, vite-plugin-singlefile, tsx (001-mcp-apps-hello-world)
 
@@ -54,9 +56,9 @@ npm test && npm run lint
 TypeScript (Node.js 18+): Follow standard conventions
 
 ## Recent Changes
+- 020-cpu-information-mcp: Added TypeScript 5.x (ESM) on Node runtime + `@modelcontextprotocol/sdk`, `@modelcontextprotocol/ext-apps`, `zod`, `express`
 - 019-rhds-final-migration: Added TypeScript (ESM) + React 19 in existing Vite build pipeline + `react`, `react-dom`, `@modelcontextprotocol/ext-apps`, `@modelcontextprotocol/sdk`, current `@patternfly/react-core` and `@patternfly/react-icons` targeted for retirement
 - 018-rhds-hybrid-migration: Added TypeScript + React (existing project baseline) + `@patternfly/react-core`, RHDS component library (incremental hybrid usage), existing app state/types in `src/mcp-app`
-- 017-rhds-visual-alignment: Added TypeScript 5.9 + React 19 + `@patternfly/react-core`, `@patternfly/react-icons`, `@modelcontextprotocol/ext-apps`, `vite`
 
 
 <!-- MANUAL ADDITIONS START -->
