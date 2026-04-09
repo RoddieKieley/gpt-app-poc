@@ -1,0 +1,66 @@
+{
+  "workflow": "engage_red_hat_support",
+  "version": "2.1",
+  "mode": "four_step_multi_resource_ui",
+  "compatibility": {
+    "entryUri": "ui://engage-red-hat-support/app.html",
+    "entryUriMustRemainStable": true,
+    "existingToolNamesAndSchemasUnchanged": true
+  },
+  "resources": {
+    "stepUris": [
+      "ui://engage-red-hat-support/steps/select-product.html",
+      "ui://engage-red-hat-support/steps/troubleshooting.html",
+      "ui://engage-red-hat-support/steps/sos-report.html",
+      "ui://engage-red-hat-support/steps/jira-attach.html"
+    ],
+    "nonUiFallbackRequired": true
+  },
+  "sequence": [
+    {
+      "step": 1,
+      "name": "select_product",
+      "allowedValues": ["linux"],
+      "requiredOutputs": ["selected_product"],
+      "stopOnFailure": true
+    },
+    {
+      "step": 2,
+      "name": "troubleshooting_cpu_review",
+      "requiredCalls": ["get_cpu_information (display-only static row in this phase)"],
+      "requiredOutputs": ["troubleshooting_reviewed=true"],
+      "stopOnFailure": true
+    },
+    {
+      "step": 3,
+      "name": "generate_and_fetch_sos",
+      "requiredCalls": ["mint_engage_consent_token", "generate_sosreport", "fetch_sosreport"],
+      "requiredOutputs": ["fetch_reference", "artifact_ref"],
+      "stopOnFailure": true
+    },
+    {
+      "step": 4,
+      "name": "connect_verify_and_attach",
+      "requiredOperations": [
+        "POST /api/jira/connections",
+        "jira_connection_status or GET /api/jira/connections/{connection_id}",
+        "jira_list_attachments(connection_id, issue_key)",
+        "jira_attach_artifact"
+      ],
+      "requiredInputs": ["connection_id", "issue_key", "artifact_ref"],
+      "stopOnFailure": true
+    }
+  ],
+  "stateHandoff": {
+    "requiredFields": [
+      "selected_product",
+      "troubleshooting_reviewed",
+      "fetch_reference",
+      "artifact_ref",
+      "connection_id",
+      "issue_key",
+      "issue_access_verified"
+    ],
+    "failClosed": true
+  }
+}

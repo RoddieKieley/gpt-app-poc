@@ -1,0 +1,136 @@
+openapi: 3.1.0
+info:
+  title: Engage Troubleshooting Step Planning Contract
+  version: 1.0.0
+  description: >
+    Planning-level contract documenting workflow state transitions with a dedicated
+    troubleshooting step inserted between product selection and sos generation.
+servers:
+  - url: https://planning.local
+    description: Documentation-only server
+paths:
+  /api/engage/workflow/start:
+    post:
+      summary: Start engage workflow
+      operationId: startEngageWorkflow
+      responses:
+        "200":
+          description: Workflow session started at step 1
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/WorkflowStateResponse"
+  /api/engage/workflow/select-product:
+    post:
+      summary: Complete product selection and advance to troubleshooting
+      operationId: selectEngageProduct
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/SelectProductRequest"
+      responses:
+        "200":
+          description: Product selected, troubleshooting is next
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/WorkflowStateResponse"
+  /mcp/tools/call/get_cpu_information:
+    post:
+      summary: Retrieve CPU information for troubleshooting display
+      operationId: callGetCpuInformation
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: false
+              properties: {}
+      responses:
+        "200":
+          description: CPU information payload for troubleshooting table and fallback text
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CpuInformationToolResponse"
+components:
+  schemas:
+    SelectProductRequest:
+      type: object
+      required: [product]
+      properties:
+        product:
+          type: string
+          enum: [linux]
+        session_id:
+          type: string
+        workflow_session_id:
+          type: string
+    WorkflowStateResponse:
+      type: object
+      required: [workflow, workflow_session_id, current_step, text]
+      properties:
+        workflow:
+          type: string
+          enum: [engage_red_hat_support]
+        workflow_session_id:
+          type: string
+        selected_product:
+          type: string
+          enum: [linux]
+        current_step:
+          type: string
+          enum: [select_product, troubleshooting, sos_report, jira_attach]
+        text:
+          type: string
+    CpuInformationToolResponse:
+      type: object
+      required: [content]
+      properties:
+        content:
+          type: array
+          minItems: 1
+          items:
+            $ref: "#/components/schemas/TextContent"
+        structuredContent:
+          $ref: "#/components/schemas/CpuInfo"
+    TextContent:
+      type: object
+      required: [type, text]
+      properties:
+        type:
+          type: string
+          enum: [text]
+        text:
+          type: string
+    CpuInfo:
+      type: object
+      required:
+        - model
+        - logical_cores
+        - physical_cores
+        - frequency_mhz
+        - load_avg_1m
+        - load_avg_5m
+        - load_avg_15m
+        - cpu_line
+      properties:
+        model:
+          type: string
+        logical_cores:
+          type: number
+        physical_cores:
+          type: number
+        frequency_mhz:
+          type: number
+        load_avg_1m:
+          type: number
+        load_avg_5m:
+          type: number
+        load_avg_15m:
+          type: number
+        cpu_line:
+          type: string

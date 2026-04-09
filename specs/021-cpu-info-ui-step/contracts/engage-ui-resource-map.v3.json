@@ -1,0 +1,50 @@
+{
+  "resourceNamespace": "ui://engage-red-hat-support",
+  "entryResource": "ui://engage-red-hat-support/app.html",
+  "registeredResourceUris": [
+    "ui://engage-red-hat-support/app.html",
+    "ui://engage-red-hat-support/steps/select-product.html",
+    "ui://engage-red-hat-support/steps/troubleshooting.html",
+    "ui://engage-red-hat-support/steps/sos-report.html",
+    "ui://engage-red-hat-support/steps/jira-attach.html"
+  ],
+  "stepResources": [
+    {
+      "uri": "ui://engage-red-hat-support/steps/select-product.html",
+      "step": 1,
+      "title": "Select Product",
+      "requiredStateBeforeEnter": [],
+      "requiredStateAfterExit": ["selected_product=linux"]
+    },
+    {
+      "uri": "ui://engage-red-hat-support/steps/troubleshooting.html",
+      "step": 2,
+      "title": "Troubleshooting: CPU Information",
+      "requiredStateBeforeEnter": ["selected_product=linux"],
+      "requiredStateAfterExit": ["troubleshooting_reviewed=true"]
+    },
+    {
+      "uri": "ui://engage-red-hat-support/steps/sos-report.html",
+      "step": 3,
+      "title": "Generate and Fetch sos Report",
+      "requiredStateBeforeEnter": ["selected_product=linux", "troubleshooting_reviewed=true"],
+      "requiredStateAfterExit": ["fetch_reference", "artifact_ref"]
+    },
+    {
+      "uri": "ui://engage-red-hat-support/steps/jira-attach.html",
+      "step": 4,
+      "title": "Connect Jira and Attach Artifact",
+      "requiredStateBeforeEnter": ["artifact_ref"],
+      "requiredStateAfterExit": ["connection_id", "issue_access_verified=true", "attachment_status=succeeded"]
+    }
+  ],
+  "metadataRequirements": {
+    "toolMetaKeysRequired": ["ui.resourceUri", "openai/outputTemplate", "openai/widgetAccessible"],
+    "resourceMetaKeysRequired": ["openai/widgetDomain", "openai/widgetCSP"],
+    "textFallbackRequired": true
+  },
+  "backwardCompatibility": {
+    "appHtmlMustRemainEntryPoint": true,
+    "legacyHostsMustContinueToFunction": true
+  }
+}
