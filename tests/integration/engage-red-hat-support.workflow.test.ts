@@ -227,8 +227,10 @@ test("UI source preserves hash routing and PAT clear boundaries", async () => {
   assert.ok(uiSource.includes('window.location.hash = "step-1"'));
   assert.ok(uiSource.includes('window.location.hash = "step-2"'));
   assert.ok(uiSource.includes('window.location.hash = "step-3"'));
+  assert.ok(uiSource.includes('window.location.hash = "step-4"'));
   assert.ok(uiSource.includes('if (hash === "step-2")'));
   assert.ok(uiSource.includes('if (hash === "step-3")'));
+  assert.ok(uiSource.includes('if (hash === "step-4")'));
 
   assert.ok(
     uiSource.includes("formState.jiraPat = \"\";"),
@@ -238,6 +240,39 @@ test("UI source preserves hash routing and PAT clear boundaries", async () => {
     uiSource.includes('callTool("jira_connect_secure"'),
     "PAT should still be sent only to jira_connect_secure secure intake flow",
   );
+});
+
+test("select-product endpoint advances workflow to troubleshooting step", async () => {
+  const { srv, base } = await startServer("step2-troubleshooting");
+  try {
+    const sessionId = `troubleshooting-session-${randomUUID()}`;
+    const start = await fetch(`${base}/api/engage/workflow/start`, {
+      method: "POST",
+      headers: {
+        "content-type": "application/json",
+        "x-user-id": "step2-user",
+        "x-session-id": sessionId,
+      },
+      body: JSON.stringify({ session_id: sessionId }),
+    });
+    assert.equal(start.status, 200);
+
+    const select = await fetch(`${base}/api/engage/workflow/select-product`, {
+      method: "POST",
+      headers: {
+        "content-type": "application/json",
+        "x-user-id": "step2-user",
+        "x-session-id": sessionId,
+      },
+      body: JSON.stringify({ session_id: sessionId, product: "linux" }),
+    });
+    assert.equal(select.status, 200);
+    const payload = await select.json() as { current_step?: string; text?: string };
+    assert.equal(payload.current_step, "troubleshooting");
+    assert.ok(String(payload.text ?? "").toLowerCase().includes("troubleshooting"));
+  } finally {
+    srv.close();
+  }
 });
 
 test("end-to-end connect -> connection_id -> generate -> fetch -> attach succeeds", async () => {

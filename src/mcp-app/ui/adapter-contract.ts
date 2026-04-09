@@ -15,8 +15,10 @@ export const resolveStepNavigation = (
   onNavigateStep1: () => void,
   onNavigateStep2: () => void,
   onNavigateStep3: () => void,
+  onNavigateStep4: () => void,
 ): void => {
   if (stepId === 1) onNavigateStep1();
   if (stepId === 2) onNavigateStep2();
   if (stepId === 3) onNavigateStep3();
+  if (stepId === 4) onNavigateStep4();
 };

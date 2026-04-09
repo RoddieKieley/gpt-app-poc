@@ -59,6 +59,13 @@ npm run test:unit && npm run test:contract && npm run test:integration && npm ru
 - [ ] Updated contracts in `specs/021-cpu-info-ui-step/contracts/` reflect new sequence and resources.
 - [ ] Contract/integration/regression suites pass with updated expectations.
 
+## Validation Status (2026-04-09)
+
+- `npm run test:contract` passed.
+- `npm run test:integration` passed.
+- `npm run test:regression` passed.
+- `npm run test:unit` passed.
+
 ## Rollback Guidance
 
 If regressions occur:

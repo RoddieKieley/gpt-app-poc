@@ -9,6 +9,7 @@ type JsonRpcResponse =
 
 const ENGAGE_UI_URI = "ui://engage-red-hat-support/app.html";
 const ENGAGE_STEP_SELECT_URI = "ui://engage-red-hat-support/steps/select-product.html";
+const ENGAGE_STEP_TROUBLESHOOT_URI = "ui://engage-red-hat-support/steps/troubleshooting.html";
 const ENGAGE_STEP_SOS_URI = "ui://engage-red-hat-support/steps/sos-report.html";
 const ENGAGE_STEP_JIRA_URI = "ui://engage-red-hat-support/steps/jira-attach.html";
 const ENGAGE_SKILL_URI = "skill://engage-red-hat-support/SKILL.md";
@@ -66,8 +67,9 @@ test("engage resources are discoverable with required metadata", async () => {
     const uris = new Set((resources.resources ?? []).map((entry) => entry.uri));
     assert.ok(uris.has(ENGAGE_UI_URI), "missing engage ui resource");
     assert.ok(uris.has(ENGAGE_STEP_SELECT_URI), "missing engage step 1 resource");
-    assert.ok(uris.has(ENGAGE_STEP_SOS_URI), "missing engage step 2 resource");
-    assert.ok(uris.has(ENGAGE_STEP_JIRA_URI), "missing engage step 3 resource");
+    assert.ok(uris.has(ENGAGE_STEP_TROUBLESHOOT_URI), "missing engage step 2 resource");
+    assert.ok(uris.has(ENGAGE_STEP_SOS_URI), "missing engage step 3 resource");
+    assert.ok(uris.has(ENGAGE_STEP_JIRA_URI), "missing engage step 4 resource");
     assert.ok(uris.has(ENGAGE_SKILL_URI), "missing engage skill resource");
 
     const uiRead = (await jsonRpc("resources/read", { uri: ENGAGE_UI_URI })) as {
@@ -88,6 +90,11 @@ test("engage resources are discoverable with required metadata", async () => {
       (skillRead.contents?.[0]?.text ?? "").includes("Engage Red Hat Support"),
       "engage skill markdown content mismatch",
     );
+    const skillMarkdown = skillRead.contents?.[0]?.text ?? "";
+    const troubleshootingPos = skillMarkdown.indexOf("Step 2 - Troubleshooting CPU review");
+    const sosPos = skillMarkdown.indexOf("Step 3 - Generate and fetch sos report");
+    assert.ok(troubleshootingPos >= 0, "skill must include troubleshooting step guidance");
+    assert.ok(sosPos > troubleshootingPos, "skill troubleshooting guidance must appear before sos guidance");
 
     const listedSkills = (await jsonRpc("tools/call", {
       name: "list_skills",
@@ -411,4 +418,46 @@ test("015 contracts enforce split-readiness routing, deterministic fallback keys
     "ui://engage-red-hat-support/app.html",
   );
   assert.equal(regressionContract.historicalBaselineReferences?.historicalContractsModified, false);
+});
+
+test("021 workflow/resource/skill contracts include troubleshooting as step 2", async () => {
+  const base = path.join(process.cwd(), "specs", "021-cpu-info-ui-step", "contracts");
+
+  const workflowRaw = await fs.readFile(
+    path.join(base, "engage-workflow-troubleshooting.contract.v1.json"),
+    "utf8",
+  );
+  const workflowContract = JSON.parse(workflowRaw) as {
+    compatibility?: { entryUri?: string };
+    resources?: { stepUris?: string[] };
+    sequence?: Array<{ step: number; name: string }>;
+  };
+  assert.equal(workflowContract.compatibility?.entryUri, ENGAGE_UI_URI);
+  assert.deepEqual(workflowContract.resources?.stepUris, [
+    ENGAGE_STEP_SELECT_URI,
+    ENGAGE_STEP_TROUBLESHOOT_URI,
+    ENGAGE_STEP_SOS_URI,
+    ENGAGE_STEP_JIRA_URI,
+  ]);
+  assert.deepEqual((workflowContract.sequence ?? []).map((step) => step.name), [
+    "select_product",
+    "troubleshooting_cpu_review",
+    "generate_and_fetch_sos",
+    "connect_verify_and_attach",
+  ]);
+
+  const resourceMapRaw = await fs.readFile(path.join(base, "engage-ui-resource-map.v3.json"), "utf8");
+  const resourceMap = JSON.parse(resourceMapRaw) as {
+    entryResource?: string;
+    registeredResourceUris?: string[];
+  };
+  assert.equal(resourceMap.entryResource, ENGAGE_UI_URI);
+  assert.ok(resourceMap.registeredResourceUris?.includes(ENGAGE_STEP_TROUBLESHOOT_URI));
+
+  const skillRaw = await fs.readFile(path.join(base, "engage-skill-sequence.contract.v1.json"), "utf8");
+  const skillContract = JSON.parse(skillRaw) as {
+    requiredSequence?: Array<{ step: number; name: string }>;
+  };
+  const step2 = skillContract.requiredSequence?.find((step) => step.step === 2);
+  assert.equal(step2?.name, "troubleshooting_cpu_review");
 });

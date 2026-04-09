@@ -184,3 +184,32 @@
 .rhds-input-hint {
   color: var(--rhds-text-muted);
 }
+
+.rhds-step-heading {
+  margin: 0;
+  font-family: var(--rhds-font-family-heading);
+  font-size: 1.1rem;
+}
+
+.rhds-table-wrap {
+  overflow-x: auto;
+}
+
+.rhds-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.9rem;
+}
+
+.rhds-table th,
+.rhds-table td {
+  border: 1px solid var(--rhds-border-subtle);
+  text-align: left;
+  vertical-align: top;
+  padding: 0.45rem 0.55rem;
+}
+
+.rhds-table thead th {
+  background: #f3f3f3;
+  font-weight: 600;
+}

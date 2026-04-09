@@ -1,9 +1,16 @@
-export type WorkflowStep = "select_product" | "sos_report" | "jira_attach" | "completed" | "failed";
+export type WorkflowStep =
+  | "select_product"
+  | "troubleshooting"
+  | "sos_report"
+  | "jira_attach"
+  | "completed"
+  | "failed";
 export type JiraAuthMode = "basic_cloud" | "bearer_pat";
 
 export type WorkflowState = {
   current_step: WorkflowStep;
   selected_product?: string;
+  troubleshooting_reviewed: boolean;
   fetch_reference?: string;
   artifact_ref?: string;
   connection_id?: string;

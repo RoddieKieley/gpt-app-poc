@@ -8,6 +8,10 @@ type Step1Props = {
 };
 
 type Step2Props = {
+  onContinue: () => void;
+};
+
+type Step3Props = {
   fetchReference: string;
   artifactRef: string;
   canFetch: boolean;
@@ -19,7 +23,7 @@ type Step2Props = {
   onContinue: () => void;
 };
 
-type Step3Props = {
+type Step4Props = {
   jiraUrl: string;
   jiraAuthMode: JiraAuthMode;
   jiraEmail: string;
@@ -42,6 +46,17 @@ type Step3Props = {
   onAttach: () => void;
   onDisconnect: () => void;
 };
+
+const TROUBLESHOOTING_CPU_ROW = {
+  model: "Intel(R) Xeon(R) CPU E5-2670 v3 @ 2.30GHz",
+  logical_cores: 24,
+  physical_cores: 12,
+  frequency_mhz: 2294.68,
+  load_avg_1m: 0.18,
+  load_avg_5m: 0.22,
+  load_avg_15m: 0.25,
+  cpu_line: "model name\t: Intel(R) Xeon(R) CPU E5-2670 v3 @ 2.30GHz",
+} as const;
 
 export function Step1Content(props: Step1Props) {
   const { product, onProductChange, onContinue } = props;
@@ -71,6 +86,54 @@ export function Step1Content(props: Step1Props) {
 }
 
 export function Step2Content(props: Step2Props) {
+  const { onContinue } = props;
+
+  return (
+    <section className="rhds-step-form rhds-step-form--step2">
+      <div className="rhds-field-group">
+        <h2 className="rhds-step-heading">Troubleshooting: CPU information</h2>
+        <p className="rhds-input-hint">
+          Review this local CPU snapshot before generating sosreport.
+        </p>
+      </div>
+      <div className="rhds-table-wrap">
+        <table className="rhds-table" aria-label="CPU information snapshot">
+          <thead>
+            <tr>
+              <th scope="col">Model</th>
+              <th scope="col">Logical cores</th>
+              <th scope="col">Physical cores</th>
+              <th scope="col">Frequency (MHz)</th>
+              <th scope="col">Load avg (1m)</th>
+              <th scope="col">Load avg (5m)</th>
+              <th scope="col">Load avg (15m)</th>
+              <th scope="col">CPU line</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>{TROUBLESHOOTING_CPU_ROW.model}</td>
+              <td>{TROUBLESHOOTING_CPU_ROW.logical_cores}</td>
+              <td>{TROUBLESHOOTING_CPU_ROW.physical_cores}</td>
+              <td>{TROUBLESHOOTING_CPU_ROW.frequency_mhz}</td>
+              <td>{TROUBLESHOOTING_CPU_ROW.load_avg_1m}</td>
+              <td>{TROUBLESHOOTING_CPU_ROW.load_avg_5m}</td>
+              <td>{TROUBLESHOOTING_CPU_ROW.load_avg_15m}</td>
+              <td>{TROUBLESHOOTING_CPU_ROW.cpu_line}</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+      <div className="rhds-step-action-group">
+        <ActionButtonAdapter id="step-2-continue-btn" onClick={onContinue}>
+          Next: Step 3
+        </ActionButtonAdapter>
+      </div>
+    </section>
+  );
+}
+
+export function Step3Content(props: Step3Props) {
   const {
     fetchReference,
     artifactRef,
@@ -84,7 +147,7 @@ export function Step2Content(props: Step2Props) {
   } = props;
 
   return (
-    <form className="rhds-step-form rhds-step-form--step2">
+    <form className="rhds-step-form rhds-step-form--step3">
       <div className="rhds-field-group">
         <label htmlFor="generate-btn" className="rhds-field-label">Generate and fetch sosreport</label>
         <div className="rhds-step-action-group">
@@ -116,15 +179,15 @@ export function Step2Content(props: Step2Props) {
         />
       </div>
       <div className="rhds-step-action-group">
-        <ActionButtonAdapter id="step-2-continue-btn" onClick={onContinue}>
-          Continue to Step 3
+        <ActionButtonAdapter id="step-3-continue-btn" onClick={onContinue}>
+          Continue to Step 4
         </ActionButtonAdapter>
       </div>
     </form>
   );
 }
 
-export function Step3Content(props: Step3Props) {
+export function Step4Content(props: Step4Props) {
   const {
     jiraUrl,
     jiraAuthMode,
@@ -150,7 +213,7 @@ export function Step3Content(props: Step3Props) {
   } = props;
 
   return (
-    <form className="rhds-step-form rhds-step-form--step3">
+    <form className="rhds-step-form rhds-step-form--step4">
       <div className="rhds-field-group">
         <label htmlFor="jira-url" className="rhds-field-label">Jira base URL</label>
         <input

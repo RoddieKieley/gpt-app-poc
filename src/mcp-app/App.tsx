@@ -1,4 +1,4 @@
-import { Step1Content, Step2Content, Step3Content } from "./step-content";
+import { Step1Content, Step2Content, Step3Content, Step4Content } from "./step-content";
 import type { FormState, JiraAuthMode, UiState, WorkflowStep } from "./state";
 import { ProgressAffordanceAdapter } from "./ui/progress-affordance-adapter";
 import { StatusDisplayAdapter } from "./ui/status-display-adapter";
@@ -10,6 +10,7 @@ type AppProps = {
   onNavigateStep1: () => void;
   onNavigateStep2: () => void;
   onNavigateStep3: () => void;
+  onNavigateStep4: () => void;
   onProductChange: (value: string) => void;
   onFetchReferenceChange: (value: string) => void;
   onArtifactRefChange: (value: string) => void;
@@ -24,6 +25,7 @@ type AppProps = {
   onGenerate: () => void;
   onFetch: () => void;
   onStep2Continue: () => void;
+  onStep3Continue: () => void;
   onConnect: () => void;
   onVerify: () => void;
   onStatus: () => void;
@@ -33,8 +35,9 @@ type AppProps = {
 };
 
 const toStepIndex = (step: WorkflowStep): number => {
-  if (step === "sos_report") return 2;
-  if (step === "jira_attach") return 3;
+  if (step === "troubleshooting") return 2;
+  if (step === "sos_report") return 3;
+  if (step === "jira_attach") return 4;
   return 1;
 };
 
@@ -46,6 +49,7 @@ export function EngageWorkflowApp(props: AppProps) {
     onNavigateStep1,
     onNavigateStep2,
     onNavigateStep3,
+    onNavigateStep4,
     onProductChange,
     onFetchReferenceChange,
     onArtifactRefChange,
@@ -60,6 +64,7 @@ export function EngageWorkflowApp(props: AppProps) {
     onGenerate,
     onFetch,
     onStep2Continue,
+    onStep3Continue,
     onConnect,
     onVerify,
     onStatus,
@@ -82,6 +87,7 @@ export function EngageWorkflowApp(props: AppProps) {
         onNavigateStep1={onNavigateStep1}
         onNavigateStep2={onNavigateStep2}
         onNavigateStep3={onNavigateStep3}
+        onNavigateStep4={onNavigateStep4}
         step1Content={(
           <Step1Content
             product={formState.product}
@@ -91,6 +97,11 @@ export function EngageWorkflowApp(props: AppProps) {
         )}
         step2Content={(
           <Step2Content
+            onContinue={onStep2Continue}
+          />
+        )}
+        step3Content={(
+          <Step3Content
             fetchReference={formState.fetchReference}
             artifactRef={formState.artifactRef}
             canFetch={formState.fetchReference.trim().length > 0}
@@ -99,11 +110,11 @@ export function EngageWorkflowApp(props: AppProps) {
             onArtifactRefChange={onArtifactRefChange}
             onGenerate={onGenerate}
             onFetch={onFetch}
-            onContinue={onStep2Continue}
+            onContinue={onStep3Continue}
           />
         )}
-        step3Content={(
-          <Step3Content
+        step4Content={(
+          <Step4Content
             jiraUrl={formState.jiraUrl}
             jiraAuthMode={formState.jiraAuthMode}
             jiraEmail={formState.jiraEmail}

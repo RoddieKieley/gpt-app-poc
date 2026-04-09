@@ -17,9 +17,9 @@
 
 **Purpose**: Create shared test and UI scaffolding needed before step-flow implementation.
 
-- [ ] T001 Create 4-step navigation regression test scaffold in `tests/regression/engage-four-step-navigation.test.ts`
-- [ ] T002 [P] Add troubleshooting-step style scaffold blocks in `src/mcp-app/rhds-step0.css`
-- [ ] T003 [P] Add troubleshooting static CPU-row constants scaffold in `src/mcp-app/step-content.tsx`
+- [X] T001 Create 4-step navigation regression test scaffold in `tests/regression/engage-four-step-navigation.test.ts`
+- [X] T002 [P] Add troubleshooting-step style scaffold blocks in `src/mcp-app/rhds-step0.css`
+- [X] T003 [P] Add troubleshooting static CPU-row constants scaffold in `src/mcp-app/step-content.tsx`
 
 ---
 
@@ -29,11 +29,11 @@
 
 **⚠️ CRITICAL**: No user story work should begin until this phase is complete.
 
-- [ ] T004 Update workflow step union and troubleshooting state fields in `src/mcp-app/state.ts`
-- [ ] T005 Update step-id navigation resolver for 4-step routing in `src/mcp-app/ui/adapter-contract.ts`
-- [ ] T006 Update progress adapter props/content map for four step panels in `src/mcp-app/ui/progress-affordance-adapter.tsx`
-- [ ] T007 Update step index mapping and navigation callback shape for four steps in `src/mcp-app/App.tsx`
-- [ ] T008 Update hash bootstrap and `setCurrentStep` mapping to `step-1`..`step-4` in `src/mcp-app.ts`
+- [X] T004 Update workflow step union and troubleshooting state fields in `src/mcp-app/state.ts`
+- [X] T005 Update step-id navigation resolver for 4-step routing in `src/mcp-app/ui/adapter-contract.ts`
+- [X] T006 Update progress adapter props/content map for four step panels in `src/mcp-app/ui/progress-affordance-adapter.tsx`
+- [X] T007 Update step index mapping and navigation callback shape for four steps in `src/mcp-app/App.tsx`
+- [X] T008 Update hash bootstrap and `setCurrentStep` mapping to `step-1`..`step-4` in `src/mcp-app.ts`
 
 **Checkpoint**: 4-step workflow primitives are in place and user-story implementation can proceed.
 
@@ -47,15 +47,15 @@
 
 ### Tests for User Story 1
 
-- [ ] T009 [P] [US1] Add integration assertion for troubleshooting as post-select step in `tests/integration/engage-red-hat-support.workflow.test.ts`
-- [ ] T010 [P] [US1] Add regression assertion for `#step-2` troubleshooting route and active nav state in `tests/regression/engage-four-step-navigation.test.ts`
+- [X] T009 [P] [US1] Add integration assertion for troubleshooting as post-select step in `tests/integration/engage-red-hat-support.workflow.test.ts`
+- [X] T010 [P] [US1] Add regression assertion for `#step-2` troubleshooting route and active nav state in `tests/regression/engage-four-step-navigation.test.ts`
 
 ### Implementation for User Story 1
 
-- [ ] T011 [US1] Implement troubleshooting step component with one static CPU row in `src/mcp-app/step-content.tsx`
-- [ ] T012 [US1] Apply RHDS-consistent table layout and spacing styles for troubleshooting content in `src/mcp-app/rhds-step0.css`
-- [ ] T013 [US1] Wire troubleshooting as rendered step-2 content and shift sos/jira content slots in `src/mcp-app/App.tsx`
-- [ ] T014 [US1] Update progress navigation labels to include troubleshooting as step 2 in `src/mcp-app/ui/progress-affordance-adapter.tsx`
+- [X] T011 [US1] Implement troubleshooting step component with one static CPU row in `src/mcp-app/step-content.tsx`
+- [X] T012 [US1] Apply RHDS-consistent table layout and spacing styles for troubleshooting content in `src/mcp-app/rhds-step0.css`
+- [X] T013 [US1] Wire troubleshooting as rendered step-2 content and shift sos/jira content slots in `src/mcp-app/App.tsx`
+- [X] T014 [US1] Update progress navigation labels to include troubleshooting as step 2 in `src/mcp-app/ui/progress-affordance-adapter.tsx`
 
 **Checkpoint**: User Story 1 is independently functional and testable as MVP.
 
@@ -69,15 +69,15 @@
 
 ### Tests for User Story 2
 
-- [ ] T015 [P] [US2] Add integration test coverage for troubleshooting Next -> sos transition and step-gate messaging in `tests/integration/engage-red-hat-support.workflow.test.ts`
-- [ ] T016 [P] [US2] Add contract assertions for troubleshooting URI discoverability and step ordering in `tests/contract/engage-red-hat-support.contract.test.ts`
+- [X] T015 [P] [US2] Add integration test coverage for troubleshooting Next -> sos transition and step-gate messaging in `tests/integration/engage-red-hat-support.workflow.test.ts`
+- [X] T016 [P] [US2] Add contract assertions for troubleshooting URI discoverability and step ordering in `tests/contract/engage-red-hat-support.contract.test.ts`
 
 ### Implementation for User Story 2
 
-- [ ] T017 [US2] Implement troubleshooting completion gating and updated step transitions in `src/mcp-app.ts`
-- [ ] T018 [US2] Register troubleshooting step resource URI with existing registration pattern in `server.ts`
-- [ ] T019 [US2] Update troubleshooting workflow contract mapping in `specs/021-cpu-info-ui-step/contracts/engage-workflow-troubleshooting.contract.v1.json`
-- [ ] T020 [US2] Update UI resource map contract for 4-step resource registration in `specs/021-cpu-info-ui-step/contracts/engage-ui-resource-map.v3.json`
+- [X] T017 [US2] Implement troubleshooting completion gating and updated step transitions in `src/mcp-app.ts`
+- [X] T018 [US2] Register troubleshooting step resource URI with existing registration pattern in `server.ts`
+- [X] T019 [US2] Update troubleshooting workflow contract mapping in `specs/021-cpu-info-ui-step/contracts/engage-workflow-troubleshooting.contract.v1.json`
+- [X] T020 [US2] Update UI resource map contract for 4-step resource registration in `specs/021-cpu-info-ui-step/contracts/engage-ui-resource-map.v3.json`
 
 **Checkpoint**: User Stories 1 and 2 are independently testable with step sequencing and compatibility requirements satisfied.
 
@@ -91,15 +91,15 @@
 
 ### Tests for User Story 3
 
-- [ ] T021 [P] [US3] Add contract assertions that skill instructions include troubleshooting before sos generation in `tests/contract/engage-red-hat-support.contract.test.ts`
-- [ ] T022 [P] [US3] Extend regression surface assertions for 4-step navigation compatibility in `tests/regression/engage-four-step-navigation.test.ts`
+- [X] T021 [P] [US3] Add contract assertions that skill instructions include troubleshooting before sos generation in `tests/contract/engage-red-hat-support.contract.test.ts`
+- [X] T022 [P] [US3] Extend regression surface assertions for 4-step navigation compatibility in `tests/regression/engage-four-step-navigation.test.ts`
 
 ### Implementation for User Story 3
 
-- [ ] T023 [US3] Update skill workflow sequence to insert troubleshooting before sos generation in `skills/engage-red-hat-support/SKILL.md`
-- [ ] T024 [US3] Update skill-sequence contract mapping for troubleshooting-before-sos ordering in `specs/021-cpu-info-ui-step/contracts/engage-skill-sequence.contract.v1.json`
-- [ ] T025 [US3] Update troubleshooting-step OpenAPI mapping for current-step and CPU response shape in `specs/021-cpu-info-ui-step/contracts/engage-troubleshooting-step.openapi.yaml`
-- [ ] T026 [US3] Update fallback `current_step` progression text from product-selection responses to troubleshooting in `server.ts`
+- [X] T023 [US3] Update skill workflow sequence to insert troubleshooting before sos generation in `skills/engage-red-hat-support/SKILL.md`
+- [X] T024 [US3] Update skill-sequence contract mapping for troubleshooting-before-sos ordering in `specs/021-cpu-info-ui-step/contracts/engage-skill-sequence.contract.v1.json`
+- [X] T025 [US3] Update troubleshooting-step OpenAPI mapping for current-step and CPU response shape in `specs/021-cpu-info-ui-step/contracts/engage-troubleshooting-step.openapi.yaml`
+- [X] T026 [US3] Update fallback `current_step` progression text from product-selection responses to troubleshooting in `server.ts`
 
 **Checkpoint**: All user stories are independently functional, including non-UI fallback guidance.
 
@@ -109,9 +109,9 @@
 
 **Purpose**: Final validation, consistency, and release readiness checks across all stories.
 
-- [ ] T027 [P] Run targeted validation suite (`npm run test:contract && npm run test:integration && npm run test:regression`) and fix failures in `tests/contract/engage-red-hat-support.contract.test.ts`, `tests/integration/engage-red-hat-support.workflow.test.ts`, and `tests/regression/engage-four-step-navigation.test.ts`
-- [ ] T028 Validate contract/spec consistency notes in `specs/021-cpu-info-ui-step/quickstart.md`
-- [ ] T029 Run full confidence suite (`npm run test:unit && npm run test:contract && npm run test:integration && npm run test:regression`) and record readiness updates in `specs/021-cpu-info-ui-step/plan.md`
+- [X] T027 [P] Run targeted validation suite (`npm run test:contract && npm run test:integration && npm run test:regression`) and fix failures in `tests/contract/engage-red-hat-support.contract.test.ts`, `tests/integration/engage-red-hat-support.workflow.test.ts`, and `tests/regression/engage-four-step-navigation.test.ts`
+- [X] T028 Validate contract/spec consistency notes in `specs/021-cpu-info-ui-step/quickstart.md`
+- [X] T029 Run full confidence suite (`npm run test:unit && npm run test:contract && npm run test:integration && npm run test:regression`) and record readiness updates in `specs/021-cpu-info-ui-step/plan.md`
 
 ---
 

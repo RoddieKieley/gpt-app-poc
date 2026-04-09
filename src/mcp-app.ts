@@ -31,6 +31,7 @@ type VerifyResponse = {
 
 const workflowState: WorkflowState = {
   current_step: "select_product",
+  troubleshooting_reviewed: false,
   issue_access_verified: false,
 };
 const formState: FormState = {
@@ -111,10 +112,12 @@ const setCurrentStep = (step: WorkflowStep) => {
   workflowState.current_step = step;
   if (step === "select_product") {
     window.location.hash = "step-1";
-  } else if (step === "sos_report") {
+  } else if (step === "troubleshooting") {
     window.location.hash = "step-2";
-  } else if (step === "jira_attach") {
+  } else if (step === "sos_report") {
     window.location.hash = "step-3";
+  } else if (step === "jira_attach") {
+    window.location.hash = "step-4";
   }
   render();
 };
@@ -138,18 +141,25 @@ const ensureLinuxSelection = (): boolean => {
   return true;
 };
 
-const canEnterSosStep = (): boolean => workflowState.selected_product === "linux";
+const canEnterTroubleshootingStep = (): boolean => workflowState.selected_product === "linux";
+const canEnterSosStep = (): boolean =>
+  workflowState.selected_product === "linux" && workflowState.troubleshooting_reviewed;
 const canEnterJiraStep = (): boolean =>
   Boolean(workflowState.artifact_ref && workflowState.artifact_ref.trim().length > 0);
 
 const navigateToStep = (step: WorkflowStep): boolean => {
-  if (step === "sos_report" && !canEnterSosStep()) {
+  if (step === "troubleshooting" && !canEnterTroubleshootingStep()) {
     setStatus("Complete step 1 with linux selection before step 2.", "warning");
     workflowState.last_error_code = "step_gate_select_product";
     return false;
   }
+  if (step === "sos_report" && !canEnterSosStep()) {
+    setStatus("Complete step 2 troubleshooting review before step 3.", "warning");
+    workflowState.last_error_code = "step_gate_troubleshooting";
+    return false;
+  }
   if (step === "jira_attach" && !canEnterJiraStep()) {
-    setStatus("Complete step 2 (generate + fetch) before step 3.", "warning");
+    setStatus("Complete step 3 (generate + fetch) before step 4.", "warning");
     workflowState.last_error_code = "step_gate_sos_report";
     return false;
   }
@@ -353,7 +363,7 @@ const mintGenerateConsentToken = async (): Promise<string | null> => {
     });
     const body = await response.json() as { consent_token?: string; text?: string };
     if (!response.ok || !body.consent_token) {
-      setStatus(body.text ?? "Consent mint failed. Retry Step 2 Generate.", "danger");
+      setStatus(body.text ?? "Consent mint failed. Retry Step 3 Generate.", "danger");
       return null;
     }
     return body.consent_token;
@@ -449,7 +459,7 @@ const onGenerate = async () => {
   // Prevent stale fetch actions while a new generate is in-flight.
   formState.fetchReference = "";
   workflowState.fetch_reference = undefined;
-  // Diagnostic collection must only occur on explicit user action in Step 2.
+  // Diagnostic collection must only occur on explicit user action in Step 3.
   const consentToken = await mintGenerateConsentToken();
   if (!consentToken) {
     workflowState.last_error_code = "consent_mint_failed";
@@ -502,7 +512,7 @@ const onGenerate = async () => {
   if (String(finalState.status ?? "") === "failed") {
     workflowState.last_error_code = String(finalState.error_code ?? "generate_failed");
     workflowState.current_step = "failed";
-    setStatus(finalState.text ?? "Generate failed. Retry Step 2 Generate.", "danger");
+    setStatus(finalState.text ?? "Generate failed. Retry Step 3 Generate.", "danger");
     uiState.isGenerating = false;
     render();
     return;
@@ -610,25 +620,39 @@ const onStep1Continue = async () => {
     workflowState.last_error_code = "product_selection_submit_failed";
     return;
   }
-  navigateToStep("sos_report");
-  setStatus("Step 1 complete. Continue with generate + fetch.", "success");
+  workflowState.troubleshooting_reviewed = false;
+  navigateToStep("troubleshooting");
+  setStatus("Step 1 complete. Review troubleshooting CPU details in step 2.", "success");
 };
 
 const onStep2Continue = () => {
+  if (!canEnterTroubleshootingStep()) {
+    setStatus("Select linux in step 1 before continuing.", "warning");
+    workflowState.last_error_code = "missing_linux_selection_for_step2";
+    return;
+  }
+  workflowState.troubleshooting_reviewed = true;
+  navigateToStep("sos_report");
+  setStatus("Step 2 complete. Continue with generate + fetch in step 3.", "success");
+};
+
+const onStep3Continue = () => {
   if (!workflowState.artifact_ref) {
-    setStatus("Complete generate + fetch to continue to step 3.", "warning");
-    workflowState.last_error_code = "missing_artifact_ref_for_step3";
+    setStatus("Complete generate + fetch to continue to step 4.", "warning");
+    workflowState.last_error_code = "missing_artifact_ref_for_step4";
     return;
   }
   navigateToStep("jira_attach");
-  setStatus("Step 2 complete. Continue with connect, verify, and attach.", "success");
+  setStatus("Step 3 complete. Continue with connect, verify, and attach.", "success");
 };
 
 const bootstrapRoute = () => {
   const hash = window.location.hash.replace("#", "");
   if (hash === "step-2") {
-    navigateToStep("sos_report");
+    navigateToStep("troubleshooting");
   } else if (hash === "step-3") {
+    navigateToStep("sos_report");
+  } else if (hash === "step-4") {
     navigateToStep("jira_attach");
   } else {
     navigateToStep("select_product");
@@ -642,8 +666,9 @@ render = () => {
       formState,
       uiState,
       onNavigateStep1: () => navigateToStep("select_product"),
-      onNavigateStep2: () => navigateToStep("sos_report"),
-      onNavigateStep3: () => navigateToStep("jira_attach"),
+      onNavigateStep2: () => navigateToStep("troubleshooting"),
+      onNavigateStep3: () => navigateToStep("sos_report"),
+      onNavigateStep4: () => navigateToStep("jira_attach"),
       onProductChange: (value: string) => {
         formState.product = value;
         render();
@@ -692,6 +717,7 @@ render = () => {
       onGenerate,
       onFetch,
       onStep2Continue,
+      onStep3Continue,
       onConnect: async () => { await connectJira(); },
       onVerify: async () => { await verifyConnection(); },
       onStatus: async () => {

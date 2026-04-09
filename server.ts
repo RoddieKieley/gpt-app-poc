@@ -572,6 +572,7 @@ const engageResourceUri = widgetResourceVersion
   ? `ui://engage-red-hat-support/app.html?v=${encodeURIComponent(widgetResourceVersion)}`
   : "ui://engage-red-hat-support/app.html";
 const engageStepSelectUri = "ui://engage-red-hat-support/steps/select-product.html";
+const engageStepTroubleshootingUri = "ui://engage-red-hat-support/steps/troubleshooting.html";
 const engageStepSosUri = "ui://engage-red-hat-support/steps/sos-report.html";
 const engageStepJiraUri = "ui://engage-red-hat-support/steps/jira-attach.html";
 const widgetBuildId = widgetResourceVersion || `build-${Date.now()}`;
@@ -651,6 +652,7 @@ const loadEngageWidgetHtml = async (): Promise<string> => {
       <p>UI bundle unavailable. Follow text fallback steps:</p>
       <ol>
         <li>Start workflow and select supported product (linux only).</li>
+        <li>Review troubleshooting CPU information before diagnostics generation.</li>
         <li>Request explicit consent token, then run generate_sosreport and fetch_sosreport to produce artifact_ref.</li>
         <li>Use secure Jira intake to obtain connection_id, verify issue access, then attach artifact.</li>
       </ol>
@@ -725,7 +727,7 @@ registerAppTool(
           type: "text",
           text: [
             "Engage workflow started.",
-            "Step 1: select product linux before requesting consent or generating diagnostics.",
+            "Step 1: select product linux before troubleshooting and diagnostics generation.",
             `UI entrypoint: ${engageResourceUri}`,
           ].join("\n"),
         },
@@ -765,13 +767,13 @@ registerAppTool(
     return {
       content: [{
         type: "text",
-        text: "Step 1 complete: linux selected. You can now request consent and run generate_sosreport.",
+        text: "Step 1 complete: linux selected. Continue to troubleshooting CPU review before sos generation.",
       }],
       structuredContent: {
         workflow: "engage_red_hat_support",
         workflow_session_id: state.workflowSessionId,
         selected_product: "linux",
-        current_step: "sos_report",
+        current_step: "troubleshooting",
       },
     };
   },
@@ -1409,6 +1411,7 @@ const registerEngageUiResource = (uri: string) => registerAppResource(
 
 registerEngageUiResource(engageResourceUri);
 registerEngageUiResource(engageStepSelectUri);
+registerEngageUiResource(engageStepTroubleshootingUri);
 registerEngageUiResource(engageStepSosUri);
 registerEngageUiResource(engageStepJiraUri);
 
@@ -1544,8 +1547,8 @@ export const createApp = () => {
       workflow: "engage_red_hat_support",
       workflow_session_id: state.workflowSessionId,
       selected_product: "linux",
-      current_step: "sos_report",
-      text: "Step 1 complete. You can now request consent and run generate_sosreport.",
+      current_step: "troubleshooting",
+      text: "Step 1 complete. Continue to troubleshooting CPU review before generating sosreport.",
     });
   });
 

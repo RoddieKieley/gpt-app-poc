@@ -26,7 +26,12 @@ This is the primary UI-first skill for engage support workflows.
    - Run `select_engage_product` with `product=linux`.
    - Select `linux` to proceed.
    - Stop if product is non-Linux; this workflow is Linux-only.
-2. Step 2 - Generate and fetch sos report:
+2. Step 2 - Troubleshooting CPU review:
+   - Run `get_cpu_information` and review these fields before diagnostics generation:
+     `model`, `logical_cores`, `physical_cores`, `frequency_mhz`, `load_avg_1m`,
+     `load_avg_5m`, `load_avg_15m`, and `cpu_line`.
+   - In UI contexts, confirm the troubleshooting table step is complete, then continue.
+3. Step 3 - Generate and fetch sos report:
    - For text/headless clients, first ask the user to explicitly approve invasive diagnostics.
    - Only after an affirmative user response, mint consent via
      `mint_engage_consent_token(permission_granted=true)` (optionally include
@@ -56,7 +61,7 @@ This is the primary UI-first skill for engage support workflows.
    - Run `fetch_sosreport` with the returned `fetch_reference` after status is
      `succeeded`.
    - Keep `artifact_ref` for step 3.
-3. Step 3 - Connect Jira and attach:
+4. Step 4 - Connect Jira and attach:
    - Connect Jira through secure backend intake (`POST /api/jira/connections`) with
      Cloud or legacy-compatible credentials, then store returned `connection_id`.
    - Atlassian Cloud input: `jira_base_url` (`https://<tenant>.atlassian.net`), `auth_mode=basic_cloud`, `account_email`, `api_token`.
@@ -79,7 +84,7 @@ This is the primary UI-first skill for engage support workflows.
 
 ## Expected Outcome
 
-You can complete select product -> generate/fetch sos -> connect/verify/attach with
+You can complete select product -> troubleshooting CPU review -> generate/fetch sos -> connect/verify/attach with
 text fallback guidance for non-UI hosts and without exposing PAT/API token in MCP-visible surfaces.
 
 ## Out of Scope
