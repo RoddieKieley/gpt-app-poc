@@ -1,0 +1,56 @@
+{
+  "workflow": "engage_red_hat_support",
+  "version": "1.0",
+  "resource": {
+    "name": "engage-troubleshooting-cpu-telemetry",
+    "uriTemplate": "resource://engage/troubleshooting/cpu/{workflow_session_id}",
+    "scope": "session",
+    "updateIntervalSeconds": 1,
+    "maxRows": 10
+  },
+  "payload": {
+    "requiredFields": [
+      "workflow_session_id",
+      "sample_count",
+      "samples",
+      "text"
+    ],
+    "sampleFields": [
+      "sampled_at",
+      "model",
+      "logical_cores",
+      "physical_cores",
+      "frequency_mhz",
+      "load_avg_1m",
+      "load_avg_5m",
+      "load_avg_15m",
+      "cpu_line"
+    ],
+    "ordering": "oldest_to_newest",
+    "rollingWindow": {
+      "dropPolicy": "drop_oldest",
+      "maxRows": 10
+    },
+    "source": {
+      "tool": "get_cpu_information",
+      "appendRule": "one_successful_tick_adds_one_row"
+    }
+  },
+  "subscriptionSemantics": {
+    "subscribeMethod": "resources/subscribe",
+    "unsubscribeMethod": "resources/unsubscribe",
+    "notifyMethod": "notifications/resources/updated",
+    "sendResourceUpdatedRequired": true,
+    "jobStartCondition": "first_active_subscriber_for_session",
+    "jobStopCondition": "no_active_subscribers_for_session"
+  },
+  "compatibility": {
+    "uiEntryUriUnchanged": "ui://engage-red-hat-support/app.html",
+    "stepResourceRegistrationPatternPreserved": true,
+    "nonUiTextFallbackRequired": true
+  },
+  "isolation": {
+    "crossSessionDataLeakageAllowed": false,
+    "sessionOwnershipEnforced": true
+  }
+}

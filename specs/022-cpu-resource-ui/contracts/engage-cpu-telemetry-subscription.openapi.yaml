@@ -1,0 +1,150 @@
+openapi: 3.1.0
+info:
+  title: Engage CPU Telemetry Resource Subscription Contract
+  version: 1.0.0
+  description: >
+    Planning-level MCP contract for troubleshooting CPU telemetry resource
+    subscribe/read/unsubscribe flow and rolling payload semantics.
+servers:
+  - url: https://planning.local
+    description: Documentation-only server
+paths:
+  /mcp/resources/subscribe:
+    post:
+      summary: Subscribe to session CPU telemetry resource updates
+      operationId: subscribeCpuTelemetryResource
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/SubscribeRequest"
+      responses:
+        "200":
+          description: Subscription accepted
+  /mcp/resources/read:
+    post:
+      summary: Read current rolling CPU telemetry payload
+      operationId: readCpuTelemetryResource
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ReadRequest"
+      responses:
+        "200":
+          description: Current telemetry window
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ResourceReadResponse"
+  /mcp/resources/unsubscribe:
+    post:
+      summary: Unsubscribe from session CPU telemetry resource updates
+      operationId: unsubscribeCpuTelemetryResource
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UnsubscribeRequest"
+      responses:
+        "200":
+          description: Unsubscribe accepted
+components:
+  schemas:
+    ResourceUri:
+      type: string
+      pattern: "^resource://engage/troubleshooting/cpu/[A-Za-z0-9._:-]+$"
+      examples:
+        - resource://engage/troubleshooting/cpu/2cf8c8fe-2f95-4c7d-a117-68e1e7db0bd1
+    SubscribeRequest:
+      type: object
+      required: [uri]
+      properties:
+        uri:
+          $ref: "#/components/schemas/ResourceUri"
+    ReadRequest:
+      type: object
+      required: [uri]
+      properties:
+        uri:
+          $ref: "#/components/schemas/ResourceUri"
+    UnsubscribeRequest:
+      type: object
+      required: [uri]
+      properties:
+        uri:
+          $ref: "#/components/schemas/ResourceUri"
+    ResourceReadResponse:
+      type: object
+      required: [contents]
+      properties:
+        contents:
+          type: array
+          minItems: 1
+          maxItems: 1
+          items:
+            $ref: "#/components/schemas/ResourceContent"
+    ResourceContent:
+      type: object
+      required: [uri, mimeType, text]
+      properties:
+        uri:
+          $ref: "#/components/schemas/ResourceUri"
+        mimeType:
+          type: string
+          enum: [application/json]
+        text:
+          type: string
+          description: JSON string that validates against CpuTelemetryPayload
+    CpuTelemetryPayload:
+      type: object
+      required: [workflow_session_id, sample_count, samples, text]
+      properties:
+        workflow_session_id:
+          type: string
+        sample_count:
+          type: integer
+          minimum: 0
+          maximum: 10
+        samples:
+          type: array
+          maxItems: 10
+          items:
+            $ref: "#/components/schemas/CpuTelemetrySample"
+        text:
+          type: string
+    CpuTelemetrySample:
+      type: object
+      required:
+        - sampled_at
+        - model
+        - logical_cores
+        - physical_cores
+        - frequency_mhz
+        - load_avg_1m
+        - load_avg_5m
+        - load_avg_15m
+        - cpu_line
+      properties:
+        sampled_at:
+          type: string
+          format: date-time
+        model:
+          type: string
+        logical_cores:
+          type: number
+        physical_cores:
+          type: number
+        frequency_mhz:
+          type: number
+        load_avg_1m:
+          type: number
+        load_avg_5m:
+          type: number
+        load_avg_15m:
+          type: number
+        cpu_line:
+          type: string

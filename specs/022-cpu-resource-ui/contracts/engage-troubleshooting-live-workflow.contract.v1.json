@@ -1,0 +1,60 @@
+{
+  "workflow": "engage_red_hat_support",
+  "version": "2.2",
+  "mode": "four_step_live_troubleshooting",
+  "sequence": [
+    {
+      "step": 1,
+      "name": "select_product",
+      "requiredOutputs": ["selected_product=linux"],
+      "stopOnFailure": true
+    },
+    {
+      "step": 2,
+      "name": "troubleshooting_live_cpu_review",
+      "requiredBeforeEnter": ["selected_product=linux"],
+      "requiredResource": "resource://engage/troubleshooting/cpu/{workflow_session_id}",
+      "requiredLifecycle": [
+        "subscribe_on_mount",
+        "read_initial_state",
+        "render_rolling_rows",
+        "unsubscribe_on_unmount"
+      ],
+      "requiredOutputs": ["troubleshooting_reviewed=true"],
+      "stopOnFailure": true
+    },
+    {
+      "step": 3,
+      "name": "generate_and_fetch_sos",
+      "requiredCalls": ["mint_engage_consent_token", "generate_sosreport", "fetch_sosreport"],
+      "requiredOutputs": ["fetch_reference", "artifact_ref"],
+      "stopOnFailure": true
+    },
+    {
+      "step": 4,
+      "name": "connect_verify_and_attach",
+      "requiredCalls": [
+        "jira_connect_secure",
+        "jira_connection_status",
+        "jira_list_attachments",
+        "jira_attach_artifact"
+      ],
+      "requiredOutputs": ["connection_id", "issue_access_verified=true"],
+      "stopOnFailure": true
+    }
+  ],
+  "telemetryRules": {
+    "tickIntervalSeconds": 1,
+    "appendPerTick": 1,
+    "maxRows": 10,
+    "overflowPolicy": "drop_oldest",
+    "crossSessionIsolation": true,
+    "transientTickFailureDoesNotStopFutureTicks": true
+  },
+  "compatibility": {
+    "entryUri": "ui://engage-red-hat-support/app.html",
+    "entryUriMustRemainStable": true,
+    "existingStepUiResourceRegistrationPatternPreserved": true,
+    "textFallbackRequired": true
+  }
+}
