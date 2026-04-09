@@ -17,9 +17,9 @@
 
 **Purpose**: Prepare feature scaffolding and test placeholders without changing runtime behavior.
 
-- [ ] T001 Create Linux system-info module directory scaffolding in `src/linux/system-info/` (`cpu-info-model.ts`, `cpu-info-tool-schema.ts`, `cpu-info-parser.ts`, `cpu-info-tool-handler.ts`)
-- [ ] T002 [P] Create unit test files for CPU parser/handler in `tests/unit/cpu-info-parser.test.ts` and `tests/unit/cpu-info-tool-handler.test.ts`
-- [ ] T003 [P] Create contract and regression test placeholders in `tests/contract/cpu-information-tools.contract.test.ts` and `tests/regression/mcp-tool-surface-preservation.test.ts`
+- [X] T001 Create Linux system-info module directory scaffolding in `src/linux/system-info/` (`cpu-info-model.ts`, `cpu-info-tool-schema.ts`, `cpu-info-parser.ts`, `cpu-info-tool-handler.ts`)
+- [X] T002 [P] Create unit test files for CPU parser/handler in `tests/unit/cpu-info-parser.test.ts` and `tests/unit/cpu-info-tool-handler.test.ts`
+- [X] T003 [P] Create contract and regression test placeholders in `tests/contract/cpu-information-tools.contract.test.ts` and `tests/regression/mcp-tool-surface-preservation.test.ts`
 
 ---
 
@@ -29,11 +29,11 @@
 
 **⚠️ CRITICAL**: No user story work should begin until this phase is complete.
 
-- [ ] T004 Implement `CpuInfo` and parser result types in `src/linux/system-info/cpu-info-model.ts`
-- [ ] T005 Implement local-only tool input schema and exported types in `src/linux/system-info/cpu-info-tool-schema.ts`
-- [ ] T006 Implement raw CPU text normalization helpers and field extractors in `src/linux/system-info/cpu-info-parser.ts`
-- [ ] T007 [P] Add unit tests for complete parse success cases in `tests/unit/cpu-info-parser.test.ts`
-- [ ] T008 [P] Add unit tests for parse edge cases (missing physical cores, missing frequency, malformed load avg line) in `tests/unit/cpu-info-parser.test.ts`
+- [X] T004 Implement `CpuInfo` and parser result types in `src/linux/system-info/cpu-info-model.ts`
+- [X] T005 Implement local-only tool input schema and exported types in `src/linux/system-info/cpu-info-tool-schema.ts`
+- [X] T006 Implement raw CPU text normalization helpers and field extractors in `src/linux/system-info/cpu-info-parser.ts`
+- [X] T007 [P] Add unit tests for complete parse success cases in `tests/unit/cpu-info-parser.test.ts`
+- [X] T008 [P] Add unit tests for parse edge cases (missing physical cores, missing frequency, malformed load avg line) in `tests/unit/cpu-info-parser.test.ts`
 
 **Checkpoint**: CPU model/schema/parser foundation is ready for handler and registration work.
 
@@ -47,14 +47,14 @@
 
 ### Tests for User Story 1
 
-- [ ] T009 [P] [US1] Add handler unit test for fully-parseable local CPU output in `tests/unit/cpu-info-tool-handler.test.ts`
-- [ ] T010 [P] [US1] Add contract test asserting `get_cpu_information` appears in `tools/list` with expected annotations and metadata in `tests/contract/cpu-information-tools.contract.test.ts`
+- [X] T009 [P] [US1] Add handler unit test for fully-parseable local CPU output in `tests/unit/cpu-info-tool-handler.test.ts`
+- [X] T010 [P] [US1] Add contract test asserting `get_cpu_information` appears in `tools/list` with expected annotations and metadata in `tests/contract/cpu-information-tools.contract.test.ts`
 
 ### Implementation for User Story 1
 
-- [ ] T011 [US1] Implement CPU handler success path with `structuredContent` + text summary in `src/linux/system-info/cpu-info-tool-handler.ts`
-- [ ] T012 [US1] Register `get_cpu_information` tool in `server.ts` with engage-compatible `_meta` and read-only annotations
-- [ ] T013 [US1] Wire schema/handler exports and imports in `server.ts` and `src/linux/system-info/*.ts` to compile cleanly
+- [X] T011 [US1] Implement CPU handler success path with `structuredContent` + text summary in `src/linux/system-info/cpu-info-tool-handler.ts`
+- [X] T012 [US1] Register `get_cpu_information` tool in `server.ts` with engage-compatible `_meta` and read-only annotations
+- [X] T013 [US1] Wire schema/handler exports and imports in `server.ts` and `src/linux/system-info/*.ts` to compile cleanly
 
 **Checkpoint**: User Story 1 is independently functional and testable as MVP.
 
@@ -68,14 +68,14 @@
 
 ### Tests for User Story 2
 
-- [ ] T014 [P] [US2] Add unit tests for partial parse fallback behavior in `tests/unit/cpu-info-tool-handler.test.ts`
-- [ ] T015 [P] [US2] Add unit tests for parser warning/missing-field reporting in `tests/unit/cpu-info-parser.test.ts`
+- [X] T014 [P] [US2] Add unit tests for partial parse fallback behavior in `tests/unit/cpu-info-tool-handler.test.ts`
+- [X] T015 [P] [US2] Add unit tests for parser warning/missing-field reporting in `tests/unit/cpu-info-parser.test.ts`
 
 ### Implementation for User Story 2
 
-- [ ] T016 [US2] Implement fallback text assembly for partial parse paths in `src/linux/system-info/cpu-info-tool-handler.ts`
-- [ ] T017 [US2] Ensure parser preserves `cpu_line` and best-available values for degraded input in `src/linux/system-info/cpu-info-parser.ts`
-- [ ] T018 [US2] Implement safe error mapping for terminal parse/collection failures in `src/linux/system-info/cpu-info-tool-handler.ts`
+- [X] T016 [US2] Implement fallback text assembly for partial parse paths in `src/linux/system-info/cpu-info-tool-handler.ts`
+- [X] T017 [US2] Ensure parser preserves `cpu_line` and best-available values for degraded input in `src/linux/system-info/cpu-info-parser.ts`
+- [X] T018 [US2] Implement safe error mapping for terminal parse/collection failures in `src/linux/system-info/cpu-info-tool-handler.ts`
 
 **Checkpoint**: User Stories 1 and 2 are independently testable with normal and degraded parsing scenarios.
 
@@ -89,12 +89,12 @@
 
 ### Tests for User Story 3
 
-- [ ] T019 [P] [US3] Extend MCP surface regression required-tools list to include `get_cpu_information` in `tests/regression/mcp-tool-surface-preservation.test.ts`
-- [ ] T020 [P] [US3] Add contract assertion for local-only schema shape (no `host` property) in `tests/contract/cpu-information-tools.contract.test.ts`
+- [X] T019 [P] [US3] Extend MCP surface regression required-tools list to include `get_cpu_information` in `tests/regression/mcp-tool-surface-preservation.test.ts`
+- [X] T020 [P] [US3] Add contract assertion for local-only schema shape (no `host` property) in `tests/contract/cpu-information-tools.contract.test.ts`
 
 ### Implementation for User Story 3
 
-- [ ] T021 [US3] Align tool description/title text and metadata conventions with existing engage patterns in `server.ts`
+- [X] T021 [US3] Align tool description/title text and metadata conventions with existing engage patterns in `server.ts`
 - [ ] T022 [US3] Verify and adjust contract fixture expectations in `specs/020-cpu-information-mcp/contracts/get-cpu-information-tool-surface.contract.v1.json`
 
 **Checkpoint**: User Stories 1-3 are complete with compatibility-guarded discovery behavior.

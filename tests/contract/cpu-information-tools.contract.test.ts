@@ -5,28 +5,7 @@ type JsonRpcResponse =
   | { jsonrpc: "2.0"; id: number; result: unknown }
   | { jsonrpc: "2.0"; id: number; error: { code: number; message: string } };
 
-const REQUIRED_TOOLS = [
-  "list_skills",
-  "get_skill",
-  "get_cpu_information",
-  "mint_engage_consent_token",
-  "generate_sosreport",
-  "fetch_sosreport",
-  "jira_connect_secure",
-  "jira_connection_status",
-  "jira_list_attachments",
-  "jira_attach_artifact",
-  "jira_disconnect",
-] as const;
-const REQUIRED_RESOURCES = [
-  "ui://engage-red-hat-support/app.html",
-  "ui://engage-red-hat-support/steps/select-product.html",
-  "ui://engage-red-hat-support/steps/sos-report.html",
-  "ui://engage-red-hat-support/steps/jira-attach.html",
-  "skill://engage-red-hat-support/SKILL.md",
-] as const;
-
-test("MCP tool surface includes existing and new tools", async () => {
+test("get_cpu_information is registered with local-only schema and metadata", async () => {
   process.env.NODE_ENV = "test";
   const { createApp } = await import("../../server.js");
   const app = createApp();
@@ -61,7 +40,7 @@ test("MCP tool surface includes existing and new tools", async () => {
     await jsonRpc("initialize", {
       protocolVersion: "2024-11-05",
       capabilities: {},
-      clientInfo: { name: "mcp-surface-regression", version: "1.0.0" },
+      clientInfo: { name: "cpu-info-contract", version: "1.0.0" },
     });
     await fetch(mcpUrl, {
       method: "POST",
@@ -72,31 +51,25 @@ test("MCP tool surface includes existing and new tools", async () => {
       },
       body: JSON.stringify({ jsonrpc: "2.0", method: "initialized" }),
     });
+
     const listed = (await jsonRpc("tools/list")) as {
-      tools?: Array<{ name: string; _meta?: Record<string, unknown> }>;
+      tools?: Array<{
+        name: string;
+        inputSchema?: { properties?: Record<string, unknown>; required?: string[] };
+        annotations?: { readOnlyHint?: boolean; destructiveHint?: boolean; openWorldHint?: boolean };
+        _meta?: Record<string, unknown>;
+      }>;
     };
-    const names = new Set((listed.tools ?? []).map((tool) => tool.name));
-    for (const required of REQUIRED_TOOLS) {
-      assert.ok(names.has(required), `missing tool ${required}`);
-    }
 
-    const incompatibleTemplateTool = (listed.tools ?? []).find((tool) => {
-      if (!REQUIRED_TOOLS.includes(tool.name as (typeof REQUIRED_TOOLS)[number])) {
-        return false;
-      }
-      return tool._meta?.["openai/outputTemplate"] !== "ui://engage-red-hat-support/app.html";
-    });
-    assert.equal(
-      incompatibleTemplateTool === undefined,
-      true,
-      "required tools must keep openai/outputTemplate bound to engage app URI",
-    );
-
-    const resources = (await jsonRpc("resources/list")) as { resources?: Array<{ uri?: string }> };
-    const uris = new Set((resources.resources ?? []).map((entry) => entry.uri));
-    for (const required of REQUIRED_RESOURCES) {
-      assert.ok(uris.has(required), `missing resource ${required}`);
-    }
+    const cpuInfoTool = listed.tools?.find((tool) => tool.name === "get_cpu_information");
+    assert.ok(cpuInfoTool, "get_cpu_information tool missing");
+    assert.equal(cpuInfoTool?.annotations?.readOnlyHint, true);
+    assert.equal(cpuInfoTool?.annotations?.destructiveHint, false);
+    assert.equal(cpuInfoTool?.annotations?.openWorldHint, false);
+    assert.equal(cpuInfoTool?._meta?.["openai/outputTemplate"], "ui://engage-red-hat-support/app.html");
+    const inputProps = Object.keys(cpuInfoTool?.inputSchema?.properties ?? {});
+    assert.equal(inputProps.includes("host"), false, "get_cpu_information must not expose host parameter");
+    assert.deepEqual(cpuInfoTool?.inputSchema?.required ?? [], []);
   } finally {
     srv.close();
   }

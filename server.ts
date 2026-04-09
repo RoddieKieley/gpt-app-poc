@@ -41,6 +41,8 @@ import {
   type GenerateSosreportInput,
 } from "./src/sosreport/sosreport-tool-schemas.js";
 import { handleFetchSosreport, handleGenerateSosreport } from "./src/sosreport/sosreport-tool-handlers.js";
+import { getCpuInformationSchema } from "./src/linux/system-info/cpu-info-tool-schema.js";
+import { handleGetCpuInformation } from "./src/linux/system-info/cpu-info-tool-handler.js";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const jiraClient = new JiraClient();
@@ -945,6 +947,27 @@ registerAppTool(
       },
     };
   },
+);
+
+registerAppTool(
+  server,
+  "get_cpu_information",
+  {
+    title: "Get Local CPU Information",
+    description: "Returns local CPU model, core counts, frequency, and load averages.",
+    inputSchema: getCpuInformationSchema,
+    annotations: {
+      readOnlyHint: true,
+      openWorldHint: false,
+      destructiveHint: false,
+    },
+    _meta: {
+      ui: { resourceUri: engageResourceUri },
+      "openai/outputTemplate": engageResourceUri,
+      "openai/widgetAccessible": true,
+    },
+  },
+  async (args) => handleGetCpuInformation(args),
 );
 
 registerAppTool(
