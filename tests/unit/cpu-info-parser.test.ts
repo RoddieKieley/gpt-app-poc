@@ -66,3 +66,18 @@ test("parser supports proc-loadavg format without label", () => {
   assert.equal(parsed.cpuInfo.load_avg_5m, 0.66);
   assert.equal(parsed.cpuInfo.load_avg_15m, 0.77);
 });
+
+test("parser prefers model name over generic model id lines", () => {
+  const raw = [
+    "processor\t: 0",
+    "model\t\t: 116",
+    "model name\t: AMD Ryzen 7 PRO 7840U w/ Radeon 780M Graphics",
+    "siblings\t: 16",
+    "cpu cores\t: 8",
+    "cpu MHz\t\t: 2300.0",
+    "load average: 0.10 0.20 0.30",
+  ].join("\n");
+  const parsed = parseCpuInfoFromRaw(raw);
+  assert.equal(parsed.cpuInfo.model, "AMD Ryzen 7 PRO 7840U w/ Radeon 780M Graphics");
+  assert.equal(parsed.cpuInfo.cpu_line, "model name\t: AMD Ryzen 7 PRO 7840U w/ Radeon 780M Graphics");
+});

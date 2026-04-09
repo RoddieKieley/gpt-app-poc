@@ -97,6 +97,7 @@ export function EngageWorkflowApp(props: AppProps) {
         )}
         step2Content={(
           <Step2Content
+            rows={uiState.telemetry_rows}
             onContinue={onStep2Continue}
           />
         )}

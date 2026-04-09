@@ -1,9 +1,11 @@
 import { App } from "@modelcontextprotocol/ext-apps";
+import { ReadResourceResultSchema, ResourceUpdatedNotificationSchema } from "@modelcontextprotocol/sdk/types.js";
 import { createElement } from "react";
 import { createRoot } from "react-dom/client";
+import { z } from "zod";
 import "./mcp-app/rhds-step0.css";
 import { EngageWorkflowApp } from "./mcp-app/App";
-import type { FormState, StatusVariant, UiState, WorkflowState, WorkflowStep } from "./mcp-app/state";
+import type { CpuTelemetryRow, FormState, StatusVariant, UiState, WorkflowState, WorkflowStep } from "./mcp-app/state";
 
 type ToolTextContent = { type: string; text?: string };
 type ToolResult = {
@@ -29,6 +31,18 @@ type VerifyResponse = {
   text?: string;
 };
 
+type ResourceReadResult = {
+  contents?: Array<{ uri?: string; mimeType?: string; text?: string }>;
+};
+
+type CpuTelemetryPayload = {
+  workflow_session_id?: string;
+  sample_count?: number;
+  samples?: CpuTelemetryRow[];
+  text?: string;
+  error_code?: string;
+};
+
 const workflowState: WorkflowState = {
   current_step: "select_product",
   troubleshooting_reviewed: false,
@@ -50,13 +64,73 @@ const uiState: UiState = {
   statusMessage: "Ready.",
   statusVariant: "info",
   isGenerating: false,
+  telemetry_resource_uri: null,
+  telemetry_subscribed: false,
+  telemetry_rows: [],
+  telemetry_last_read_at: null,
 };
 let render: () => void = () => {};
 const consentSessionId = `ui-${crypto.randomUUID()}`;
 let workflowSessionId: string | null = null;
+const CPU_TELEMETRY_RESOURCE_PREFIX = "resource://engage/troubleshooting/cpu/";
+const MAX_UI_TELEMETRY_ROWS = 5;
+let telemetryPollTimer: ReturnType<typeof setInterval> | null = null;
+let telemetryTransportMode: "resource" | "tool" = "resource";
 const appRoot = document.getElementById("app-root");
 if (!appRoot) throw new Error("Missing app root element.");
 const reactRoot = createRoot(appRoot);
+
+const toCpuTelemetryResourceUri = (candidateWorkflowSessionId: string): string =>
+  `${CPU_TELEMETRY_RESOURCE_PREFIX}${candidateWorkflowSessionId}`;
+
+const parseCpuTelemetryPayload = (raw: string): CpuTelemetryPayload => {
+  try {
+    const parsed = JSON.parse(raw) as CpuTelemetryPayload;
+    const rows = Array.isArray(parsed.samples) ? parsed.samples : [];
+    return {
+      ...parsed,
+      samples: rows.filter((row) => (
+        typeof row?.sampled_at === "string"
+        && typeof row?.model === "string"
+        && typeof row?.logical_cores === "number"
+        && typeof row?.physical_cores === "number"
+        && typeof row?.frequency_mhz === "number"
+        && typeof row?.load_avg_1m === "number"
+        && typeof row?.load_avg_5m === "number"
+        && typeof row?.load_avg_15m === "number"
+        && typeof row?.cpu_line === "string"
+      )),
+    };
+  } catch {
+    return { samples: [], text: "Unable to parse troubleshooting CPU telemetry payload." };
+  }
+};
+
+const toRowFromCpuStructuredContent = (structured: Record<string, unknown>): CpuTelemetryRow | null => {
+  if (
+    typeof structured.model !== "string"
+    || typeof structured.logical_cores !== "number"
+    || typeof structured.physical_cores !== "number"
+    || typeof structured.frequency_mhz !== "number"
+    || typeof structured.load_avg_1m !== "number"
+    || typeof structured.load_avg_5m !== "number"
+    || typeof structured.load_avg_15m !== "number"
+    || typeof structured.cpu_line !== "string"
+  ) {
+    return null;
+  }
+  return {
+    sampled_at: new Date().toISOString(),
+    model: structured.model,
+    logical_cores: structured.logical_cores,
+    physical_cores: structured.physical_cores,
+    frequency_mhz: structured.frequency_mhz,
+    load_avg_1m: structured.load_avg_1m,
+    load_avg_5m: structured.load_avg_5m,
+    load_avg_15m: structured.load_avg_15m,
+    cpu_line: structured.cpu_line,
+  };
+};
 
 const app = new App({ name: "MCP Apps Support Workflows", version: "1.0.0" });
 
@@ -102,13 +176,146 @@ app.ontoolresult = (result) => {
   setStatus(text ?? "Tool executed.");
 };
 
+app.setNotificationHandler(ResourceUpdatedNotificationSchema, (notification) => {
+  if (notification.method !== "notifications/resources/updated") return;
+  const updatedUri = String(notification.params?.uri ?? "");
+  if (!updatedUri || updatedUri !== uiState.telemetry_resource_uri) return;
+  void readTroubleshootingTelemetry({ suppressStatus: true });
+});
+
 const setStatus = (message: string, variant: StatusVariant = "info") => {
   uiState.statusMessage = message;
   uiState.statusVariant = variant;
   render();
 };
 
+const callMcpMethod = async <T>(
+  method: string,
+  params: Record<string, unknown>,
+): Promise<T | null> => {
+  try {
+    if (method === "resources/read") {
+      return (await app.request({ method, params }, ReadResourceResultSchema)) as T;
+    }
+    if (method === "resources/subscribe" || method === "resources/unsubscribe") {
+      return (await app.request({ method, params }, z.any())) as T;
+    }
+    return null;
+  } catch (error) {
+    const message = error instanceof Error ? error.message : String(error);
+    if (message.includes("Method not found")) {
+      if (method.startsWith("resources/")) {
+        telemetryTransportMode = "tool";
+        return null;
+      }
+    }
+    setStatus(`MCP resource operation failed: ${message}`, "danger");
+    return null;
+  }
+};
+
+const syncCpuTelemetryRows = (payload: CpuTelemetryPayload, options: { suppressStatus?: boolean } = {}) => {
+  uiState.telemetry_rows = (payload.samples ?? []).slice(-MAX_UI_TELEMETRY_ROWS);
+  uiState.telemetry_last_read_at = new Date().toISOString();
+  if (payload.error_code && !options.suppressStatus) {
+    setStatus(`Telemetry update warning: ${payload.error_code}`, "warning");
+    return;
+  }
+  render();
+};
+
+const readTroubleshootingTelemetry = async (options: { suppressStatus?: boolean } = {}) => {
+  if (telemetryTransportMode === "tool") {
+    const result = await callTool("get_cpu_information", {}, { suppressStatusUpdate: true });
+    const row = toRowFromCpuStructuredContent(result.structuredContent ?? {});
+    if (!row) return;
+    uiState.telemetry_rows = [...uiState.telemetry_rows, row].slice(-MAX_UI_TELEMETRY_ROWS);
+    uiState.telemetry_last_read_at = new Date().toISOString();
+    render();
+    return;
+  }
+  const uri = uiState.telemetry_resource_uri;
+  if (!uri) return;
+  const result = await callMcpMethod<ResourceReadResult>("resources/read", { uri });
+  if (!result) {
+    if (telemetryTransportMode === "tool") {
+      await readTroubleshootingTelemetry(options);
+    }
+    return;
+  }
+  const text = String(result.contents?.[0]?.text ?? "{}");
+  const payload = parseCpuTelemetryPayload(text);
+  syncCpuTelemetryRows(payload, options);
+};
+
+const stopTelemetryPolling = () => {
+  if (!telemetryPollTimer) return;
+  clearInterval(telemetryPollTimer);
+  telemetryPollTimer = null;
+};
+
+const ensureTelemetryPolling = () => {
+  if (telemetryPollTimer) return;
+  telemetryPollTimer = setInterval(() => {
+    void readTroubleshootingTelemetry({ suppressStatus: true });
+  }, 1000);
+};
+
+const unsubscribeTroubleshootingTelemetry = async () => {
+  stopTelemetryPolling();
+  if (telemetryTransportMode === "tool") {
+    uiState.telemetry_subscribed = false;
+    uiState.telemetry_resource_uri = null;
+    return;
+  }
+  if (!uiState.telemetry_subscribed || !uiState.telemetry_resource_uri) {
+    uiState.telemetry_subscribed = false;
+    uiState.telemetry_resource_uri = null;
+    return;
+  }
+  const uri = uiState.telemetry_resource_uri;
+  await callMcpMethod("resources/unsubscribe", { uri });
+  uiState.telemetry_subscribed = false;
+  uiState.telemetry_resource_uri = null;
+};
+
+const subscribeTroubleshootingTelemetry = async () => {
+  if (!workflowSessionId) return;
+  if (telemetryTransportMode === "tool") {
+    uiState.telemetry_subscribed = true;
+    uiState.telemetry_resource_uri = null;
+    await readTroubleshootingTelemetry({ suppressStatus: true });
+    ensureTelemetryPolling();
+    setStatus("Troubleshooting telemetry is running via tool polling fallback.", "info");
+    return;
+  }
+  const uri = toCpuTelemetryResourceUri(workflowSessionId);
+  if (uiState.telemetry_subscribed && uiState.telemetry_resource_uri === uri) {
+    ensureTelemetryPolling();
+    return;
+  }
+  await unsubscribeTroubleshootingTelemetry();
+  uiState.telemetry_resource_uri = uri;
+  const subscribed = await callMcpMethod("resources/subscribe", { uri });
+  if (subscribed === null) {
+    if (telemetryTransportMode === "tool") {
+      uiState.telemetry_subscribed = true;
+      uiState.telemetry_resource_uri = null;
+      await readTroubleshootingTelemetry({ suppressStatus: true });
+      ensureTelemetryPolling();
+      setStatus("Troubleshooting telemetry is running via tool polling fallback.", "info");
+      return;
+    }
+    uiState.telemetry_subscribed = false;
+    return;
+  }
+  uiState.telemetry_subscribed = true;
+  await readTroubleshootingTelemetry({ suppressStatus: true });
+  ensureTelemetryPolling();
+};
+
 const setCurrentStep = (step: WorkflowStep) => {
+  const previousStep = workflowState.current_step;
   workflowState.current_step = step;
   if (step === "select_product") {
     window.location.hash = "step-1";
@@ -118,6 +325,12 @@ const setCurrentStep = (step: WorkflowStep) => {
     window.location.hash = "step-3";
   } else if (step === "jira_attach") {
     window.location.hash = "step-4";
+  }
+  if (previousStep !== "troubleshooting" && step === "troubleshooting") {
+    void subscribeTroubleshootingTelemetry();
+  }
+  if (previousStep === "troubleshooting" && step !== "troubleshooting") {
+    void unsubscribeTroubleshootingTelemetry();
   }
   render();
 };
@@ -195,7 +408,9 @@ const callTool = async (
       setStatus(generic, "danger");
       return { isError: true, content: [{ type: "text", text: generic }] };
     }
-    setStatus(`Operation failed: ${message}`, "danger");
+    if (!options.suppressStatusUpdate) {
+      setStatus(`Operation failed: ${message}`, "danger");
+    }
     return { isError: true, content: [{ type: "text", text: message }] };
   }
 };
@@ -621,6 +836,8 @@ const onStep1Continue = async () => {
     return;
   }
   workflowState.troubleshooting_reviewed = false;
+  uiState.telemetry_rows = [];
+  uiState.telemetry_last_read_at = null;
   navigateToStep("troubleshooting");
   setStatus("Step 1 complete. Review troubleshooting CPU details in step 2.", "success");
 };
@@ -645,6 +862,10 @@ const onStep3Continue = () => {
   navigateToStep("jira_attach");
   setStatus("Step 3 complete. Continue with connect, verify, and attach.", "success");
 };
+
+window.addEventListener("beforeunload", () => {
+  void unsubscribeTroubleshootingTelemetry();
+});
 
 const bootstrapRoute = () => {
   const hash = window.location.hash.replace("#", "");

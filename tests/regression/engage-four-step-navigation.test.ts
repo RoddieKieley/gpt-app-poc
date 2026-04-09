@@ -25,9 +25,10 @@ test("progress adapter exposes troubleshooting as step 2", async () => {
   assert.ok(source.includes("Step 4: Connect + Verify + Attach"));
 });
 
-test("step content includes static troubleshooting CPU table and next handoff", async () => {
+test("step content includes dynamic troubleshooting CPU table and next handoff", async () => {
   const source = await fs.readFile("src/mcp-app/step-content.tsx", "utf8");
-  assert.ok(source.includes("TROUBLESHOOTING_CPU_ROW"));
-  assert.ok(source.includes('aria-label="CPU information snapshot"'));
+  assert.ok(source.includes("Waiting for telemetry samples"));
+  assert.ok(source.includes('aria-label="CPU information telemetry"'));
+  assert.ok(source.includes("rows.map((row) =>"));
   assert.ok(source.includes("Next: Step 3"));
 });

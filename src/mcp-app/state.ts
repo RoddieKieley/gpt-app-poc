@@ -34,8 +34,24 @@ export type FormState = {
 
 export type StatusVariant = "info" | "success" | "warning" | "danger";
 
+export type CpuTelemetryRow = {
+  sampled_at: string;
+  model: string;
+  logical_cores: number;
+  physical_cores: number;
+  frequency_mhz: number;
+  load_avg_1m: number;
+  load_avg_5m: number;
+  load_avg_15m: number;
+  cpu_line: string;
+};
+
 export type UiState = {
   statusMessage: string;
   statusVariant: StatusVariant;
   isGenerating: boolean;
+  telemetry_resource_uri: string | null;
+  telemetry_subscribed: boolean;
+  telemetry_rows: CpuTelemetryRow[];
+  telemetry_last_read_at: string | null;
 };

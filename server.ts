@@ -43,6 +43,7 @@ import {
 import { handleFetchSosreport, handleGenerateSosreport } from "./src/sosreport/sosreport-tool-handlers.js";
 import { getCpuInformationSchema } from "./src/linux/system-info/cpu-info-tool-schema.js";
 import { handleGetCpuInformation } from "./src/linux/system-info/cpu-info-tool-handler.js";
+import type { CpuInfo } from "./src/linux/system-info/cpu-info-model.js";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const jiraClient = new JiraClient();
@@ -99,6 +100,33 @@ const generateSosreportJobs = new Map<string, GenerateSosreportJob>();
 const GENERATE_JOB_TTL_MS = 30 * 60 * 1000;
 const resourceSubscriptions = new Set<string>();
 const toGenerateJobResourceUri = (jobId: string): string => `resource://engage/sosreport/jobs/${jobId}`;
+const TROUBLESHOOTING_CPU_RESOURCE_PREFIX = "resource://engage/troubleshooting/cpu/";
+const toTroubleshootingCpuResourceUri = (workflowSessionId: string): string =>
+  `${TROUBLESHOOTING_CPU_RESOURCE_PREFIX}${workflowSessionId}`;
+const getWorkflowSessionIdFromCpuResourceUri = (uri: string): string | null => {
+  if (!uri.startsWith(TROUBLESHOOTING_CPU_RESOURCE_PREFIX)) return null;
+  const workflowSessionId = uri.slice(TROUBLESHOOTING_CPU_RESOURCE_PREFIX.length).trim();
+  return workflowSessionId.length > 0 ? workflowSessionId : null;
+};
+
+type CpuTelemetrySample = CpuInfo & { sampled_at: string };
+type CpuTelemetryBuffer = {
+  workflowSessionId: string;
+  userId: string;
+  sessionId: string;
+  samples: CpuTelemetrySample[];
+  lastUpdatedAt: string;
+  lastErrorCode?: string;
+};
+type CpuTelemetryJob = {
+  timer: ReturnType<typeof setInterval>;
+  inFlight: boolean;
+};
+const MAX_CPU_TELEMETRY_ROWS = 5;
+const CPU_TELEMETRY_INTERVAL_MS = 1000;
+const cpuTelemetryBuffers = new Map<string, CpuTelemetryBuffer>();
+const cpuTelemetryJobs = new Map<string, CpuTelemetryJob>();
+const cpuTelemetrySubscriberCounts = new Map<string, number>();
 
 const buildWorkflowKey = (userId: string, sessionId: string): string => `${userId}:${sessionId}`;
 
@@ -315,6 +343,156 @@ const getWorkflowStateByWorkflowSessionId = (
     }
   }
   return null;
+};
+
+const getAnyWorkflowStateByWorkflowSessionId = (
+  workflowSessionId: string,
+): EngageWorkflowState | null => {
+  for (const state of engageWorkflowStates.values()) {
+    if (state.workflowSessionId === workflowSessionId) return state;
+  }
+  return null;
+};
+
+const toCpuTelemetrySample = (structured: unknown): CpuTelemetrySample | null => {
+  const record = structured as Record<string, unknown> | undefined;
+  if (!record) return null;
+  const {
+    model,
+    logical_cores,
+    physical_cores,
+    frequency_mhz,
+    load_avg_1m,
+    load_avg_5m,
+    load_avg_15m,
+    cpu_line,
+  } = record;
+  if (typeof model !== "string" || model.length === 0) return null;
+  if (typeof logical_cores !== "number" || !Number.isFinite(logical_cores)) return null;
+  if (typeof physical_cores !== "number" || !Number.isFinite(physical_cores)) return null;
+  if (typeof frequency_mhz !== "number" || !Number.isFinite(frequency_mhz)) return null;
+  if (typeof load_avg_1m !== "number" || !Number.isFinite(load_avg_1m)) return null;
+  if (typeof load_avg_5m !== "number" || !Number.isFinite(load_avg_5m)) return null;
+  if (typeof load_avg_15m !== "number" || !Number.isFinite(load_avg_15m)) return null;
+  if (typeof cpu_line !== "string" || cpu_line.length === 0) return null;
+  return {
+    model,
+    logical_cores,
+    physical_cores,
+    frequency_mhz,
+    load_avg_1m,
+    load_avg_5m,
+    load_avg_15m,
+    cpu_line,
+    sampled_at: new Date().toISOString(),
+  };
+};
+
+const getOrCreateCpuTelemetryBuffer = (state: EngageWorkflowState): CpuTelemetryBuffer => {
+  const existing = cpuTelemetryBuffers.get(state.workflowSessionId);
+  if (existing) return existing;
+  const created: CpuTelemetryBuffer = {
+    workflowSessionId: state.workflowSessionId,
+    userId: state.userId,
+    sessionId: state.sessionId,
+    samples: [],
+    lastUpdatedAt: new Date().toISOString(),
+  };
+  cpuTelemetryBuffers.set(state.workflowSessionId, created);
+  return created;
+};
+
+const buildCpuTelemetryText = (buffer: CpuTelemetryBuffer): string => {
+  return [
+    "Troubleshooting CPU telemetry snapshot.",
+    `workflow_session_id: ${buffer.workflowSessionId}`,
+    `sample_count: ${buffer.samples.length}`,
+    buffer.samples.length > 0
+      ? `latest_sample_at: ${buffer.samples[buffer.samples.length - 1]?.sampled_at ?? ""}`
+      : "latest_sample_at: none",
+  ].join("\n");
+};
+
+const notifyCpuTelemetryResourceUpdated = async (workflowSessionId: string): Promise<void> => {
+  const uri = toTroubleshootingCpuResourceUri(workflowSessionId);
+  if (!resourceSubscriptions.has(uri)) return;
+  await server.server.sendResourceUpdated({ uri });
+};
+
+const applyCpuTelemetrySample = (workflowSessionId: string, sample: CpuTelemetrySample) => {
+  const state = getAnyWorkflowStateByWorkflowSessionId(workflowSessionId);
+  if (!state) return;
+  const current = getOrCreateCpuTelemetryBuffer(state);
+  current.samples = [...current.samples, sample];
+  if (current.samples.length > MAX_CPU_TELEMETRY_ROWS) {
+    current.samples = current.samples.slice(current.samples.length - MAX_CPU_TELEMETRY_ROWS);
+  }
+  current.lastUpdatedAt = new Date().toISOString();
+  current.lastErrorCode = undefined;
+  cpuTelemetryBuffers.set(workflowSessionId, current);
+};
+
+const updateCpuTelemetryError = (workflowSessionId: string, errorCode: string) => {
+  const state = getAnyWorkflowStateByWorkflowSessionId(workflowSessionId);
+  if (!state) return;
+  const current = getOrCreateCpuTelemetryBuffer(state);
+  current.lastUpdatedAt = new Date().toISOString();
+  current.lastErrorCode = errorCode;
+  cpuTelemetryBuffers.set(workflowSessionId, current);
+};
+
+const collectCpuTelemetryTick = async (workflowSessionId: string): Promise<void> => {
+  const state = getAnyWorkflowStateByWorkflowSessionId(workflowSessionId);
+  if (!state) {
+    const existingJob = cpuTelemetryJobs.get(workflowSessionId);
+    if (existingJob) {
+      clearInterval(existingJob.timer);
+      cpuTelemetryJobs.delete(workflowSessionId);
+    }
+    return;
+  }
+  const result = await handleGetCpuInformation({});
+  if (result.isError) {
+    updateCpuTelemetryError(workflowSessionId, String(result.structuredContent?.code ?? "cpu_info_unavailable"));
+    return;
+  }
+  const sample = toCpuTelemetrySample(result.structuredContent);
+  if (!sample) {
+    updateCpuTelemetryError(workflowSessionId, "partial_parse");
+    return;
+  }
+  applyCpuTelemetrySample(workflowSessionId, sample);
+  await notifyCpuTelemetryResourceUpdated(workflowSessionId);
+};
+
+const startCpuTelemetryJobIfNeeded = (workflowSessionId: string) => {
+  if (cpuTelemetryJobs.has(workflowSessionId)) return;
+  const job: CpuTelemetryJob = {
+    inFlight: false,
+    timer: setInterval(() => {
+      const current = cpuTelemetryJobs.get(workflowSessionId);
+      if (!current || current.inFlight) return;
+      current.inFlight = true;
+      cpuTelemetryJobs.set(workflowSessionId, current);
+      void collectCpuTelemetryTick(workflowSessionId).finally(() => {
+        const latest = cpuTelemetryJobs.get(workflowSessionId);
+        if (!latest) return;
+        latest.inFlight = false;
+        cpuTelemetryJobs.set(workflowSessionId, latest);
+      });
+    }, CPU_TELEMETRY_INTERVAL_MS),
+  };
+  job.timer.unref?.();
+  cpuTelemetryJobs.set(workflowSessionId, job);
+};
+
+const stopCpuTelemetryJobIfIdle = (workflowSessionId: string) => {
+  const count = cpuTelemetrySubscriberCounts.get(workflowSessionId) ?? 0;
+  if (count > 0) return;
+  const existing = cpuTelemetryJobs.get(workflowSessionId);
+  if (!existing) return;
+  clearInterval(existing.timer);
+  cpuTelemetryJobs.delete(workflowSessionId);
 };
 
 const normalizeUserId = (candidate: unknown): string | null => {
@@ -1367,10 +1545,49 @@ server.registerResource(
   },
 );
 
+server.registerResource(
+  "engage-troubleshooting-cpu-telemetry",
+  new ResourceTemplate("resource://engage/troubleshooting/cpu/{workflowSessionId}", { list: undefined }),
+  {
+    title: "Engage troubleshooting CPU telemetry",
+    description: "Provides rolling, session-scoped CPU telemetry samples for troubleshooting UI.",
+    mimeType: "application/json",
+  },
+  async (_uri, params) => {
+    const workflowSessionId = String(params.workflowSessionId ?? "").trim();
+    const workflowState = getAnyWorkflowStateByWorkflowSessionId(workflowSessionId);
+    const buffer = workflowState ? getOrCreateCpuTelemetryBuffer(workflowState) : undefined;
+    const payload = {
+      workflow_session_id: workflowSessionId,
+      sample_count: buffer?.samples.length ?? 0,
+      samples: buffer?.samples ?? [],
+      text: buffer ? buildCpuTelemetryText(buffer) : "Troubleshooting CPU telemetry is unavailable for this session.",
+      error_code: buffer?.lastErrorCode,
+    };
+    return {
+      contents: [
+        {
+          uri: toTroubleshootingCpuResourceUri(workflowSessionId),
+          mimeType: "application/json",
+          text: JSON.stringify(payload),
+        },
+      ],
+    };
+  },
+);
+
 server.server.setRequestHandler(SubscribeRequestSchema, async (request) => {
   const uri = String(request.params.uri ?? "").trim();
   if (uri.startsWith("resource://engage/sosreport/jobs/")) {
     resourceSubscriptions.add(uri);
+  }
+  const telemetryWorkflowSessionId = getWorkflowSessionIdFromCpuResourceUri(uri);
+  if (telemetryWorkflowSessionId) {
+    resourceSubscriptions.add(uri);
+    const currentCount = cpuTelemetrySubscriberCounts.get(telemetryWorkflowSessionId) ?? 0;
+    cpuTelemetrySubscriberCounts.set(telemetryWorkflowSessionId, currentCount + 1);
+    startCpuTelemetryJobIfNeeded(telemetryWorkflowSessionId);
+    void collectCpuTelemetryTick(telemetryWorkflowSessionId).catch(() => {});
   }
   return {};
 });
@@ -1379,6 +1596,18 @@ server.server.setRequestHandler(UnsubscribeRequestSchema, async (request) => {
   const uri = String(request.params.uri ?? "").trim();
   if (uri.startsWith("resource://engage/sosreport/jobs/")) {
     resourceSubscriptions.delete(uri);
+  }
+  const telemetryWorkflowSessionId = getWorkflowSessionIdFromCpuResourceUri(uri);
+  if (telemetryWorkflowSessionId) {
+    const currentCount = cpuTelemetrySubscriberCounts.get(telemetryWorkflowSessionId) ?? 0;
+    const nextCount = Math.max(0, currentCount - 1);
+    if (nextCount === 0) {
+      cpuTelemetrySubscriberCounts.delete(telemetryWorkflowSessionId);
+      resourceSubscriptions.delete(uri);
+    } else {
+      cpuTelemetrySubscriberCounts.set(telemetryWorkflowSessionId, nextCount);
+    }
+    stopCpuTelemetryJobIfIdle(telemetryWorkflowSessionId);
   }
   return {};
 });

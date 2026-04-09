@@ -461,3 +461,105 @@ test("021 workflow/resource/skill contracts include troubleshooting as step 2", 
   const step2 = skillContract.requiredSequence?.find((step) => step.step === 2);
   assert.equal(step2?.name, "troubleshooting_cpu_review");
 });
+
+test("022 contracts and runtime support troubleshooting CPU telemetry resource semantics", async () => {
+  const base = path.join(process.cwd(), "specs", "022-cpu-resource-ui", "contracts");
+  const telemetryContractRaw = await fs.readFile(
+    path.join(base, "engage-cpu-telemetry-resource.contract.v1.json"),
+    "utf8",
+  );
+  const telemetryContract = JSON.parse(telemetryContractRaw) as {
+    resource?: { uriTemplate?: string; updateIntervalSeconds?: number; maxRows?: number };
+    subscriptionSemantics?: { subscribeMethod?: string; unsubscribeMethod?: string; sendResourceUpdatedRequired?: boolean };
+  };
+  assert.equal(
+    telemetryContract.resource?.uriTemplate,
+    "resource://engage/troubleshooting/cpu/{workflow_session_id}",
+  );
+  assert.equal(telemetryContract.resource?.updateIntervalSeconds, 1);
+  assert.equal(telemetryContract.resource?.maxRows, 5);
+  assert.equal(telemetryContract.subscriptionSemantics?.subscribeMethod, "resources/subscribe");
+  assert.equal(telemetryContract.subscriptionSemantics?.unsubscribeMethod, "resources/unsubscribe");
+  assert.equal(telemetryContract.subscriptionSemantics?.sendResourceUpdatedRequired, true);
+
+  const workflowContractRaw = await fs.readFile(
+    path.join(base, "engage-troubleshooting-live-workflow.contract.v1.json"),
+    "utf8",
+  );
+  const workflowContract = JSON.parse(workflowContractRaw) as {
+    sequence?: Array<{ step: number; name: string; requiredResource?: string }>;
+  };
+  const troubleshootingStep = (workflowContract.sequence ?? []).find((step) => step.step === 2);
+  assert.equal(troubleshootingStep?.name, "troubleshooting_live_cpu_review");
+  assert.equal(
+    troubleshootingStep?.requiredResource,
+    "resource://engage/troubleshooting/cpu/{workflow_session_id}",
+  );
+
+  process.env.NODE_ENV = "test";
+  const { createApp } = await import("../../server.js");
+  const app = createApp();
+  const srv = app.listen(0);
+  const port = (srv.address() as { port: number }).port;
+  const mcpUrl = `http://127.0.0.1:${port}/mcp`;
+  let sessionId: string | undefined;
+  let id = 1;
+  const jsonRpc = async (method: string, params?: unknown) => {
+    const response = await fetch(mcpUrl, {
+      method: "POST",
+      headers: {
+        "content-type": "application/json",
+        accept: "application/json, text/event-stream",
+        ...(sessionId ? { "mcp-session-id": sessionId } : {}),
+      },
+      body: JSON.stringify({ jsonrpc: "2.0", id: id++, method, params }),
+    });
+    assert.equal(response.ok, true);
+    if (!sessionId) sessionId = response.headers.get("mcp-session-id") ?? undefined;
+    const payload = (await response.json()) as JsonRpcResponse;
+    if ("error" in payload) throw new Error(payload.error.message);
+    return payload.result;
+  };
+  try {
+    await jsonRpc("initialize", {
+      protocolVersion: "2024-11-05",
+      capabilities: {},
+      clientInfo: { name: "engage-telemetry-contract", version: "1.0.0" },
+    });
+    await fetch(mcpUrl, {
+      method: "POST",
+      headers: {
+        "content-type": "application/json",
+        accept: "application/json, text/event-stream",
+        ...(sessionId ? { "mcp-session-id": sessionId } : {}),
+      },
+      body: JSON.stringify({ jsonrpc: "2.0", method: "initialized" }),
+    });
+    const started = (await jsonRpc("tools/call", {
+      name: "start_engage_red_hat_support",
+      arguments: {},
+    })) as { structuredContent?: { workflow_session_id?: string } };
+    const workflowSessionId = String(started.structuredContent?.workflow_session_id ?? "");
+    assert.ok(workflowSessionId.length > 0);
+
+    await jsonRpc("tools/call", { name: "select_engage_product", arguments: { product: "linux" } });
+    const uri = `resource://engage/troubleshooting/cpu/${workflowSessionId}`;
+    await jsonRpc("resources/subscribe", { uri });
+    const read = (await jsonRpc("resources/read", { uri })) as {
+      contents?: Array<{ text?: string }>;
+    };
+    const payload = JSON.parse(String(read.contents?.[0]?.text ?? "{}")) as {
+      workflow_session_id?: string;
+      sample_count?: number;
+      samples?: unknown[];
+      text?: string;
+    };
+    assert.equal(payload.workflow_session_id, workflowSessionId);
+    assert.equal(typeof payload.sample_count, "number");
+    assert.equal(Array.isArray(payload.samples), true);
+    assert.equal(typeof payload.text, "string");
+    await jsonRpc("resources/unsubscribe", { uri });
+  } finally {
+    srv.close();
+  }
+});

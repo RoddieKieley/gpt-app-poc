@@ -1,6 +1,8 @@
 import { CPU_INFO_REQUIRED_FIELDS, type CpuInfo, type CpuInfoField, type CpuInfoParseResult } from "./cpu-info-model.js";
 
-const MODEL_LINE_RE = /^\s*(model name|hardware|model)\s*:\s*(.+)\s*$/im;
+const MODEL_NAME_LINE_RE = /^\s*model name\s*:\s*(.+)\s*$/im;
+const HARDWARE_LINE_RE = /^\s*hardware\s*:\s*(.+)\s*$/im;
+const MODEL_LINE_RE = /^\s*model\s*:\s*(.+)\s*$/im;
 const LOGICAL_CORES_RE = /^\s*(siblings|cpu\(s\))\s*:\s*(\d+)\s*$/im;
 const PHYSICAL_CORES_RE = /^\s*(cpu cores|core\(s\) per socket)\s*:\s*(\d+)\s*$/im;
 const FREQUENCY_RE = /^\s*(cpu mhz|max mhz|min mhz)\s*:\s*([0-9.]+)\s*$/im;
@@ -49,10 +51,14 @@ export const parseCpuInfoFromRaw = (rawText: string): CpuInfoParseResult => {
   const cpuInfo: Partial<CpuInfo> = {};
   const parseWarnings: string[] = [];
 
+  // Prefer "model name" over generic "model" lines (which may be numeric IDs).
+  const modelNameMatch = firstMatch(normalized, MODEL_NAME_LINE_RE);
+  const hardwareMatch = firstMatch(normalized, HARDWARE_LINE_RE);
   const modelMatch = firstMatch(normalized, MODEL_LINE_RE);
-  if (modelMatch) {
-    cpuInfo.model = modelMatch[2].trim();
-    cpuInfo.cpu_line = modelMatch[0].trim();
+  const selectedModelMatch = modelNameMatch ?? hardwareMatch ?? modelMatch;
+  if (selectedModelMatch) {
+    cpuInfo.model = selectedModelMatch[1].trim();
+    cpuInfo.cpu_line = selectedModelMatch[0].trim();
   }
 
   const logicalMatch = firstMatch(normalized, LOGICAL_CORES_RE);

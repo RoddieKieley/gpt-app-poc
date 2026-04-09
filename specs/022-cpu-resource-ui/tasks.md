@@ -17,9 +17,9 @@
 
 **Purpose**: Prepare shared contracts and fixture scaffolding used by all telemetry stories.
 
-- [ ] T001 Align telemetry contract artifacts with implementation task scope in `specs/022-cpu-resource-ui/contracts/engage-cpu-telemetry-resource.contract.v1.json`
-- [ ] T002 [P] Add MCP subscription/read telemetry examples for implementers in `specs/022-cpu-resource-ui/contracts/engage-cpu-telemetry-subscription.openapi.yaml`
-- [ ] T003 [P] Capture workflow lifecycle expectations for troubleshooting telemetry in `specs/022-cpu-resource-ui/contracts/engage-troubleshooting-live-workflow.contract.v1.json`
+- [X] T001 Align telemetry contract artifacts with implementation task scope in `specs/022-cpu-resource-ui/contracts/engage-cpu-telemetry-resource.contract.v1.json`
+- [X] T002 [P] Add MCP subscription/read telemetry examples for implementers in `specs/022-cpu-resource-ui/contracts/engage-cpu-telemetry-subscription.openapi.yaml`
+- [X] T003 [P] Capture workflow lifecycle expectations for troubleshooting telemetry in `specs/022-cpu-resource-ui/contracts/engage-troubleshooting-live-workflow.contract.v1.json`
 
 ---
 
@@ -29,10 +29,10 @@
 
 **⚠️ CRITICAL**: No user story work can begin until this phase is complete.
 
-- [ ] T004 Add telemetry resource URI constants and session key helpers in `server.ts`
-- [ ] T005 Implement server-side telemetry type aliases/interfaces (sample, buffer, job state) in `server.ts`
-- [ ] T006 Implement shared widget telemetry state shape (`telemetry_resource_uri`, `telemetry_subscribed`, `telemetry_rows`) in `src/mcp-app/state.ts`
-- [ ] T007 Add troubleshooting step props contract for dynamic row input in `src/mcp-app/step-content.tsx`
+- [X] T004 Add telemetry resource URI constants and session key helpers in `server.ts`
+- [X] T005 Implement server-side telemetry type aliases/interfaces (sample, buffer, job state) in `server.ts`
+- [X] T006 Implement shared widget telemetry state shape (`telemetry_resource_uri`, `telemetry_subscribed`, `telemetry_rows`) in `src/mcp-app/state.ts`
+- [X] T007 Add troubleshooting step props contract for dynamic row input in `src/mcp-app/step-content.tsx`
 
 **Checkpoint**: Foundation ready - telemetry user stories can now begin.
 
@@ -46,18 +46,18 @@
 
 ### Tests for User Story 1
 
-- [ ] T008 [P] [US1] Add integration test for telemetry subscribe/read/live-update flow in `tests/integration/sosreport-generate.resource-subscribe.test.ts`
-- [ ] T009 [P] [US1] Add contract assertions for telemetry resource URI shape and subscription semantics in `tests/contract/engage-red-hat-support.contract.test.ts`
+- [X] T008 [P] [US1] Add integration test for telemetry subscribe/read/live-update flow in `tests/integration/sosreport-generate.resource-subscribe.test.ts`
+- [X] T009 [P] [US1] Add contract assertions for telemetry resource URI shape and subscription semantics in `tests/contract/engage-red-hat-support.contract.test.ts`
 
 ### Implementation for User Story 1
 
-- [ ] T010 [US1] Register CPU telemetry `ResourceTemplate` read handler in `server.ts`
-- [ ] T011 [US1] Implement telemetry notification dispatcher using `sendResourceUpdated` for subscribed URIs in `server.ts`
-- [ ] T012 [US1] Extend MCP subscribe/unsubscribe handlers to track telemetry resource subscriptions in `server.ts`
-- [ ] T013 [US1] Implement widget subscribe/read handlers for troubleshooting mount in `src/mcp-app.ts`
-- [ ] T014 [US1] Implement widget resource-update handling and table rerender state updates in `src/mcp-app.ts`
-- [ ] T015 [US1] Render dynamic troubleshooting CPU rows from widget telemetry state in `src/mcp-app/step-content.tsx`
-- [ ] T016 [US1] Wire telemetry rows and lifecycle callbacks into step composition in `src/mcp-app/App.tsx`
+- [X] T010 [US1] Register CPU telemetry `ResourceTemplate` read handler in `server.ts`
+- [X] T011 [US1] Implement telemetry notification dispatcher using `sendResourceUpdated` for subscribed URIs in `server.ts`
+- [X] T012 [US1] Extend MCP subscribe/unsubscribe handlers to track telemetry resource subscriptions in `server.ts`
+- [X] T013 [US1] Implement widget subscribe/read handlers for troubleshooting mount in `src/mcp-app.ts`
+- [X] T014 [US1] Implement widget resource-update handling and table rerender state updates in `src/mcp-app.ts`
+- [X] T015 [US1] Render dynamic troubleshooting CPU rows from widget telemetry state in `src/mcp-app/step-content.tsx`
+- [X] T016 [US1] Wire telemetry rows and lifecycle callbacks into step composition in `src/mcp-app/App.tsx`
 
 **Checkpoint**: User Story 1 is independently functional with live row updates.
 
@@ -76,10 +76,10 @@
 
 ### Implementation for User Story 2
 
-- [ ] T019 [US2] Implement in-memory buffer manager (append, trim to latest 10) in `server.ts`
-- [ ] T020 [US2] Implement per-session 1-second telemetry job runner calling `get_cpu_information` path in `server.ts`
-- [ ] T021 [US2] Add transient tick failure handling that preserves subsequent update ticks in `server.ts`
-- [ ] T022 [US2] Update troubleshooting table presentation for readable rolling rows and RHDS-consistent formatting in `src/mcp-app/rhds-step0.css`
+- [X] T019 [US2] Implement in-memory buffer manager (append, trim to latest 10) in `server.ts`
+- [X] T020 [US2] Implement per-session 1-second telemetry job runner calling `get_cpu_information` path in `server.ts`
+- [X] T021 [US2] Add transient tick failure handling that preserves subsequent update ticks in `server.ts`
+- [X] T022 [US2] Update troubleshooting table presentation for readable rolling rows and RHDS-consistent formatting in `src/mcp-app/rhds-step0.css`
 
 **Checkpoint**: User Story 2 is independently functional with stable rolling-window behavior.
 
@@ -94,14 +94,14 @@
 ### Tests for User Story 3
 
 - [ ] T023 [P] [US3] Add integration test for session isolation across concurrent telemetry resources in `tests/integration/engage-red-hat-support.workflow.test.ts`
-- [ ] T024 [P] [US3] Add regression coverage for four-step navigation with troubleshooting cleanup behavior in `tests/regression/engage-four-step-navigation.test.ts`
+- [X] T024 [P] [US3] Add regression coverage for four-step navigation with troubleshooting cleanup behavior in `tests/regression/engage-four-step-navigation.test.ts`
 
 ### Implementation for User Story 3
 
 - [ ] T025 [US3] Enforce session ownership lookup for telemetry resource reads and updates in `server.ts`
-- [ ] T026 [US3] Stop and dispose per-session telemetry interval jobs when last telemetry subscriber unsubscribes in `server.ts`
-- [ ] T027 [US3] Implement widget unsubscribe cleanup on troubleshooting step exit/unmount in `src/mcp-app.ts`
-- [ ] T028 [US3] Guard step transition/gating to avoid stale telemetry updates outside troubleshooting in `src/mcp-app.ts`
+- [X] T026 [US3] Stop and dispose per-session telemetry interval jobs when last telemetry subscriber unsubscribes in `server.ts`
+- [X] T027 [US3] Implement widget unsubscribe cleanup on troubleshooting step exit/unmount in `src/mcp-app.ts`
+- [X] T028 [US3] Guard step transition/gating to avoid stale telemetry updates outside troubleshooting in `src/mcp-app.ts`
 
 **Checkpoint**: User Story 3 is independently functional with strict isolation and deterministic cleanup.
 
@@ -111,9 +111,9 @@
 
 **Purpose**: Final compatibility checks, documentation sync, and full-surface regression confidence.
 
-- [ ] T029 [P] Update skill sequence language to reflect live troubleshooting telemetry before sos generation in `skills/engage-red-hat-support/SKILL.md`
+- [X] T029 [P] Update skill sequence language to reflect live troubleshooting telemetry before sos generation in `skills/engage-red-hat-support/SKILL.md`
 - [ ] T030 [P] Update contract-test expectations for tools/list and schema-shape compatibility in `tests/contract/cpu-information-tools.contract.test.ts`
-- [ ] T031 [P] Update MCP surface regression expectations for new telemetry resource behavior without breaking existing tools in `tests/regression/mcp-tool-surface-preservation.test.ts`
+- [X] T031 [P] Update MCP surface regression expectations for new telemetry resource behavior without breaking existing tools in `tests/regression/mcp-tool-surface-preservation.test.ts`
 - [ ] T032 Run full verification commands and record outcomes in `specs/022-cpu-resource-ui/quickstart.md`
 
 ---

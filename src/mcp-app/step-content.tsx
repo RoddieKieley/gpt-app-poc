@@ -8,6 +8,17 @@ type Step1Props = {
 };
 
 type Step2Props = {
+  rows: Array<{
+    sampled_at: string;
+    model: string;
+    logical_cores: number;
+    physical_cores: number;
+    frequency_mhz: number;
+    load_avg_1m: number;
+    load_avg_5m: number;
+    load_avg_15m: number;
+    cpu_line: string;
+  }>;
   onContinue: () => void;
 };
 
@@ -47,17 +58,6 @@ type Step4Props = {
   onDisconnect: () => void;
 };
 
-const TROUBLESHOOTING_CPU_ROW = {
-  model: "Intel(R) Xeon(R) CPU E5-2670 v3 @ 2.30GHz",
-  logical_cores: 24,
-  physical_cores: 12,
-  frequency_mhz: 2294.68,
-  load_avg_1m: 0.18,
-  load_avg_5m: 0.22,
-  load_avg_15m: 0.25,
-  cpu_line: "model name\t: Intel(R) Xeon(R) CPU E5-2670 v3 @ 2.30GHz",
-} as const;
-
 export function Step1Content(props: Step1Props) {
   const { product, onProductChange, onContinue } = props;
 
@@ -86,41 +86,57 @@ export function Step1Content(props: Step1Props) {
 }
 
 export function Step2Content(props: Step2Props) {
-  const { onContinue } = props;
+  const { rows, onContinue } = props;
+  const latestRow = rows.length > 0 ? rows[rows.length - 1] : null;
 
   return (
     <section className="rhds-step-form rhds-step-form--step2">
       <div className="rhds-field-group">
         <h2 className="rhds-step-heading">Troubleshooting: CPU information</h2>
         <p className="rhds-input-hint">
-          Review this local CPU snapshot before generating sosreport.
+          Review the rolling local CPU telemetry before generating sosreport.
         </p>
       </div>
+      <div className="rhds-cpu-static">
+        <h3 className="rhds-cpu-static__title">CPU summary</h3>
+        {latestRow ? (
+          <dl className="rhds-cpu-static__list">
+            <dt>Model</dt>
+            <dd>{latestRow.model}</dd>
+            <dt>Logical cores</dt>
+            <dd>{latestRow.logical_cores}</dd>
+            <dt>Physical cores</dt>
+            <dd>{latestRow.physical_cores}</dd>
+          </dl>
+        ) : (
+          <p className="rhds-input-hint">Waiting for first sample to populate CPU summary...</p>
+        )}
+      </div>
       <div className="rhds-table-wrap">
-        <table className="rhds-table" aria-label="CPU information snapshot">
+        <table className="rhds-table" aria-label="CPU information telemetry">
           <thead>
             <tr>
-              <th scope="col">Model</th>
-              <th scope="col">Logical cores</th>
-              <th scope="col">Physical cores</th>
+              <th scope="col">Sampled at</th>
               <th scope="col">Frequency (MHz)</th>
               <th scope="col">Load avg (1m)</th>
               <th scope="col">Load avg (5m)</th>
               <th scope="col">Load avg (15m)</th>
-              <th scope="col">CPU line</th>
             </tr>
           </thead>
           <tbody>
-            <tr>
-              <td>{TROUBLESHOOTING_CPU_ROW.model}</td>
-              <td>{TROUBLESHOOTING_CPU_ROW.logical_cores}</td>
-              <td>{TROUBLESHOOTING_CPU_ROW.physical_cores}</td>
-              <td>{TROUBLESHOOTING_CPU_ROW.frequency_mhz}</td>
-              <td>{TROUBLESHOOTING_CPU_ROW.load_avg_1m}</td>
-              <td>{TROUBLESHOOTING_CPU_ROW.load_avg_5m}</td>
-              <td>{TROUBLESHOOTING_CPU_ROW.load_avg_15m}</td>
-              <td>{TROUBLESHOOTING_CPU_ROW.cpu_line}</td>
-            </tr>
+            {rows.length === 0 ? (
+              <tr>
+                <td colSpan={5}>Waiting for telemetry samples...</td>
+              </tr>
+            ) : rows.map((row) => (
+              <tr key={row.sampled_at}>
+                <td>{row.sampled_at}</td>
+                <td>{row.frequency_mhz}</td>
+                <td>{row.load_avg_1m}</td>
+                <td>{row.load_avg_5m}</td>
+                <td>{row.load_avg_15m}</td>
+              </tr>
+            ))}
           </tbody>
         </table>
       </div>

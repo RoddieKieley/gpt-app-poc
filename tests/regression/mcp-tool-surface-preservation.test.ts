@@ -26,6 +26,7 @@ const REQUIRED_RESOURCES = [
   "ui://engage-red-hat-support/steps/jira-attach.html",
   "skill://engage-red-hat-support/SKILL.md",
 ] as const;
+const TROUBLESHOOTING_CPU_RESOURCE_PREFIX = "resource://engage/troubleshooting/cpu/";
 
 test("MCP tool surface includes existing and new tools", async () => {
   process.env.NODE_ENV = "test";
@@ -98,6 +99,12 @@ test("MCP tool surface includes existing and new tools", async () => {
     for (const required of REQUIRED_RESOURCES) {
       assert.ok(uris.has(required), `missing resource ${required}`);
     }
+    const dynamicTelemetryListed = [...uris].some((uri) => String(uri ?? "").startsWith(TROUBLESHOOTING_CPU_RESOURCE_PREFIX));
+    assert.equal(
+      dynamicTelemetryListed,
+      false,
+      "dynamic troubleshooting telemetry resources should be discoverable by template/read, not static resources/list",
+    );
   } finally {
     srv.close();
   }

@@ -30,6 +30,11 @@ This is the primary UI-first skill for engage support workflows.
    - Run `get_cpu_information` and review these fields before diagnostics generation:
      `model`, `logical_cores`, `physical_cores`, `frequency_mhz`, `load_avg_1m`,
      `load_avg_5m`, `load_avg_15m`, and `cpu_line`.
+   - In UI contexts, troubleshooting uses session-scoped telemetry at
+     `resource://engage/troubleshooting/cpu/{workflow_session_id}` with 1-second
+     updates and a rolling latest-10 row window.
+   - If your client supports resources, subscribe/read this URI and refresh table
+     state from returned `samples` until ready to continue.
    - In UI contexts, confirm the troubleshooting table step is complete, then continue.
 3. Step 3 - Generate and fetch sos report:
    - For text/headless clients, first ask the user to explicitly approve invasive diagnostics.

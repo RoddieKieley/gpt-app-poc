@@ -46,7 +46,7 @@
   "telemetryRules": {
     "tickIntervalSeconds": 1,
     "appendPerTick": 1,
-    "maxRows": 10,
+    "maxRows": 5,
     "overflowPolicy": "drop_oldest",
     "crossSessionIsolation": true,
     "transientTickFailureDoesNotStopFutureTicks": true

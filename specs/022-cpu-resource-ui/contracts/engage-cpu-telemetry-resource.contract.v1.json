@@ -6,7 +6,7 @@
     "uriTemplate": "resource://engage/troubleshooting/cpu/{workflow_session_id}",
     "scope": "session",
     "updateIntervalSeconds": 1,
-    "maxRows": 10
+    "maxRows": 5
   },
   "payload": {
     "requiredFields": [
@@ -29,7 +29,7 @@
     "ordering": "oldest_to_newest",
     "rollingWindow": {
       "dropPolicy": "drop_oldest",
-      "maxRows": 10
+      "maxRows": 5
     },
     "source": {
       "tool": "get_cpu_information",

@@ -108,10 +108,10 @@ components:
         sample_count:
           type: integer
           minimum: 0
-          maximum: 10
+          maximum: 5
         samples:
           type: array
-          maxItems: 10
+          maxItems: 5
           items:
             $ref: "#/components/schemas/CpuTelemetrySample"
         text:
